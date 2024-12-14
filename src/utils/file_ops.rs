@@ -1,41 +1,20 @@
-use std::collections::{HashSet, VecDeque};
-use std::path::Path;
-use std::fs;
+use ignore::WalkBuilder;
 
-// Collects all the directories starting from a given root
-pub fn collect_directories(root: &Path) -> Vec<String> {
-	let mut directories = Vec::new();
-	let mut queue = VecDeque::new();
-	let mut visited = HashSet::new();
+pub fn collect_directories(root: &str) -> Vec<String> {
+    let mut directories = Vec::new();
 
-	queue.push_back(root.to_path_buf());
-	visited.insert(root.to_path_buf());
+    let walker = WalkBuilder::new(root)
+        .hidden(true) // Skip dot directories by default
+        .git_ignore(true) // Respect .gitignore files
+        .build();
 
-	// While there are still directories to visit
-	while let Some(current_dir) = queue.pop_front() {
+    for result in walker {
+        if let Ok(entry) = result {
+            if entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false) {
+                directories.push(entry.path().to_string_lossy().into_owned());
+            }
+        }
+    }
 
-		// If we have already visited this directory, skip it
-		if !visited.insert(current_dir.clone()) {
-			continue;
-		}
-
-		// Get an iterator over the entries in the current directory
-		if let Ok(entries) = fs::read_dir(&current_dir) {
-			for entry in entries.flatten() {
-				let path = entry.path();
-
-				println!("Path: {:?}", path);
-
-				// If the entry is a directory, add it to the queue
-				if path.is_dir() {
-					if let Some(directory) = path.to_str() {
-						directories.push(directory.to_string());
-					}
-					queue.push_back(path);
-				}
-			}
-		}
-	}
-
-	directories
+    directories
 }
