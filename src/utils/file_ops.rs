@@ -1,5 +1,6 @@
 use ignore::WalkBuilder;
 
+/// Collects all directories in a given root directory
 pub fn collect_directories(root: &str) -> Vec<String> {
     let mut directories = Vec::new();
 
