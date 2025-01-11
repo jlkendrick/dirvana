@@ -2,6 +2,7 @@ mod utils;
 
 use utils::file_ops;
 use utils::inv_index;
+use utils::bk_tree;
 
 use crossterm::{
 	event::{self, Event, KeyCode},
@@ -11,6 +12,7 @@ use std::{io::{self, Write}, result::Result};
 
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+
 	// Get starting directory from user
 	print!("Enter the starting directory: ");
 	io::stdout().flush().unwrap();
@@ -21,9 +23,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 	// Collect directories
 	let directories = file_ops::collect_directories(start_dir);
+	println!("{}", directories[0]);
 
-	// Build inverted index
-	let index = inv_index::InvertedIndex::build(&directories);
+	// Build bk-tree
+	let mut bk_tree = bk_tree::BKTree::new();
+	for dir in directories.iter() {
+		bk_tree.insert(dir);
+	}
 
 	// Enable raw mode for real-time input
 	enable_raw_mode()?;
@@ -48,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 					KeyCode::Enter => {
 						query = query.trim().to_string();
 						println!("\n Query: {}", query);
-						print_query_results(&query, &index);
+						print_query_results(&query, &bk_tree);
 					}
 					KeyCode::Esc => {
 						println!("\nExiting...");
@@ -73,7 +79,7 @@ fn print_current_query(query: &str) {
 	io::stdout().flush().unwrap();
 }
 
-fn print_query_results(query: &str, index: &inv_index::InvertedIndex) {
+fn print_query_results(query: &str, bk_tree: &bk_tree::BKTree) {
 	const MAX_RESULTS: usize = 10;
 
 	// Clear previous line
@@ -81,15 +87,15 @@ fn print_query_results(query: &str, index: &inv_index::InvertedIndex) {
 
 	// Print current filter and matching results
 	println!("Filter: {} | Matching directories: ", query);
-	let matching_dirs = index.search(query);
-	for dir in matching_dirs.unwrap_or(&Vec::new()).iter().take(MAX_RESULTS) {
-		println!("{}", dir);
+	let matching_dirs = bk_tree.search(query, 15);
+	for dir in matching_dirs.iter().take(MAX_RESULTS) {
+		println!(" - {}", dir);
 	}
 
 	// Check if there are more results
-	if matching_dirs.unwrap_or(&Vec::new()).len() > MAX_RESULTS {
-		println!("... and {} more", matching_dirs.unwrap().len() - MAX_RESULTS);
+	if matching_dirs.len() > MAX_RESULTS {
+		println!("... and {} more", matching_dirs.len() - MAX_RESULTS);
 	}
-
+	
 	io::stdout().flush().unwrap();
 }
