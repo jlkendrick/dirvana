@@ -1,7 +1,6 @@
 mod utils;
 
 use utils::file_ops;
-use utils::inv_index;
 use utils::bk_tree;
 
 use crossterm::{
@@ -87,7 +86,7 @@ fn print_query_results(query: &str, bk_tree: &bk_tree::BKTree) {
 
 	// Print current filter and matching results
 	println!("Filter: {} | Matching directories: ", query);
-	let matching_dirs = bk_tree.search(query, 15);
+	let matching_dirs = bk_tree.search(query, 3);
 	for dir in matching_dirs.iter().take(MAX_RESULTS) {
 		println!(" - {}", dir);
 	}

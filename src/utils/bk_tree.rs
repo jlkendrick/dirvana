@@ -1,8 +1,10 @@
+use crate::utils::paths::Paths;
+
 use std::collections::HashMap;
 use strsim::levenshtein;
 
 pub struct BKTree {
-    tree: HashMap<String, String>,
+    tree: HashMap<String, Paths>,
 }
 
 impl BKTree {
@@ -13,16 +15,15 @@ impl BKTree {
     }
 
     pub fn insert(&mut self, path: &str) {
-        let reversed_path = path.chars().rev().collect::<String>();
-        self.tree.insert(reversed_path, path.to_string());
+        let dir_name = path.split('/').last().unwrap().to_string();
+        self.tree.entry(dir_name).or_insert(Paths::new()).add(path);
     }
 
     pub fn search(&self, query: &str, max_distance: usize) -> Vec<String> {
-        let reversed_query = query.chars().rev().collect::<String>();
         self.tree
             .keys()
-            .filter(|key| levenshtein(&reversed_query, key) <= max_distance)
-            .filter_map(|key| self.tree.get(key)).cloned()
+            .filter(|key| levenshtein(key, query) <= max_distance)
+            .flat_map(|key| self.tree.get(key).unwrap().get())
             .collect()
     }
 }
