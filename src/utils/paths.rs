@@ -35,121 +35,114 @@ use std::rc::Rc;
 
 type NodePtr = Rc<RefCell<Node>>;
 
-// Node of a doubly linked list
 #[derive(Clone)]
 struct Node {
-	value: String,
-	prev: Option<NodePtr>,
-	next: Option<NodePtr>,
+    value: String,
+    prev: Option<NodePtr>,
+    next: Option<NodePtr>,
 }
 
 impl Node {
-	fn new(value: String) -> Self {
-		Node {
-			value,
-			prev: None,
-			next: None
-		}
-	}
+  fn new(value: String) -> Self {
+        Node {
+            value,
+            prev: None,
+            next: None,
+        }
+    }
 }
 
-// LRU cache
-struct LRUCache {
-	cache: HashMap<String, NodePtr>,
-	head: Option<NodePtr>,
-	tail: Option<NodePtr>
+pub struct LRUCache {
+    cache: HashMap<String, NodePtr>,
+    head: Option<NodePtr>,
+    tail: Option<NodePtr>,
 }
 
 impl LRUCache {
-	pub fn new() -> Self {
-		LRUCache {
-			cache: HashMap::new(),
-			head: None,
-			tail: None
-		}
-	}
+    pub fn new() -> Self {
+        let head = Rc::new(RefCell::new(Node::new(String::new())));
+        let tail = Rc::new(RefCell::new(Node::new(String::new())));
 
-	// Helper insert function to insert a node at the end of the list
+        head.borrow_mut().next = Some(tail.clone());
+        tail.borrow_mut().prev = Some(head.clone());
+
+        LRUCache {
+            cache: HashMap::new(),
+            head: Some(head),
+            tail: Some(tail),
+        }
+    }
+
+	// Inserts a node at the front of the LRU cache
+    fn insert_front(&mut self, path: &str) {
+        let new_node = Rc::new(RefCell::new(Node::new(path.to_string())));
+
+        let old_head = self.head.as_ref().unwrap().borrow().next.clone();
+        new_node.borrow_mut().next = old_head.clone();
+        new_node.borrow_mut().prev = self.head.clone();
+        self.head.as_ref().unwrap().borrow_mut().next = Some(new_node.clone());
+        if let Some(old_head) = old_head {
+            old_head.borrow_mut().prev = Some(new_node.clone());
+        }
+    }
+
+	// Inserts a node at the back of the LRU cache
 	fn insert_back(&mut self, path: &str) {
 		let new_node = Rc::new(RefCell::new(Node::new(path.to_string())));
 		
-		match self.tail.take() {
-			Some(old_tail) => {
-				new_node.borrow_mut().prev = Some(old_tail.clone());
-				old_tail.borrow_mut().next = Some(new_node.clone());
-				self.tail = old_tail.borrow().next.clone();
-			}
-			None => {
-				self.head = Some(new_node.clone());
-				self.tail = Some(new_node.clone());
-			}
+		let old_tail = self.tail.as_ref().unwrap().borrow().prev.clone();
+		new_node.borrow_mut().prev = old_tail.clone();
+		new_node.borrow_mut().next = self.tail.clone();
+		self.tail.as_ref().unwrap().borrow_mut().prev = Some(new_node.clone());
+		if let Some(old_tail) = old_tail {
+			old_tail.borrow_mut().next = Some(new_node.clone());
 		}
 	}
 
-	// Helper insert function to insert a node at the front of the list
-	fn insert_front(&mut self, path: &str) {
-		let new_node = Rc::new(RefCell::new(Node::new(path.to_string())));
+	// Removes a node from the LRU cache
+    fn remove(&mut self, node: NodePtr) {
+        let prev = node.borrow().prev.clone();
+        let next = node.borrow().next.clone();
 
-		match self.head.take() {
-			Some(old_head) => {
-				new_node.borrow_mut().next = Some(old_head.clone());
-				old_head.borrow_mut().prev = Some(new_node.clone());
-				self.head = Some(new_node.clone());
-			}
-			None => {
-				self.head = Some(new_node.clone());
-				self.tail = Some(new_node.clone());
-			}
-		}
-	}
+        if let Some(p) = prev.clone() {
+            p.borrow_mut().next = next.clone();
+        }
+        if let Some(n) = next {
+            n.borrow_mut().prev = prev;
+        }
+    }
 
-	// Helper function to remove a node from the list
-	fn remove(&mut self, node: NodePtr) {
-		let prev = node.borrow().prev.clone();
-		let next = node.borrow().next.clone();
+	// Indicates to the LRU cache that a path was accessed
+    pub fn access(&mut self, path: &str) {
+        if let Some(node) = self.cache.get(path) {
+            self.remove(node.clone());
+            self.insert_front(path);
+            self.cache.insert(path.to_string(), self.head.as_ref().unwrap().borrow().next.clone().unwrap());
+        }
+    }
 
-		if let Some(p) = prev.clone() {
-			p.borrow_mut().next = next.clone();
-		} else {
-			self.head = next.clone();
-		}
+	// Adds a path to the LRU cache. Primarily used when constructing the BKTree  (during initialization)
+    pub fn add(&mut self, path: &str) {
+        if let Some(_) = self.cache.get(path) {
+            self.access(path);
+        } else {
+            self.insert_back(path);
+            self.cache.insert(path.to_string(), self.tail.as_ref().unwrap().borrow().prev.clone().unwrap());
+        }
+    }
 
-		if let Some(n) = next.clone() {
-			n.borrow_mut().prev = prev;
-		} else {
-			self.tail = prev;
-		}
-	}
+	// Gets all paths in their current order determined by the LRU cache
+    pub fn read_order(&self) -> Vec<String> {
+        let mut paths = Vec::new();
+        let mut current = self.head.as_ref().unwrap().borrow().next.clone();
 
-	// Get all paths in their current order determined by the LRU cache
-	fn read_order(&self) -> Vec<String> {
-		let mut paths = Vec::new();
-		let mut current = self.head.clone();
+        while let Some(node) = current {
+            if !node.borrow().value.is_empty() {
+                paths.push(node.borrow().value.clone());
+            }
+            current = node.borrow().next.clone();
+        }
 
-		while let Some(node) = current {
-			paths.push(node.borrow().value.clone());
-			current = node.borrow().next.clone();
-		}
-
-		paths
-	}
-
-	// Add a path to the LRU cache. For use during initial insertion
-	fn add(&mut self, path: &str) {
-		if let Some(_) = self.cache.get(path) {
-			return
-		} else {
-			self.insert_back(path);
-			self.cache.insert(path.to_string(), self.tail.clone().unwrap());
-		}
-	}
-
-	// Access a path, moving it to the front of the list
-	fn access(&mut self, path: &str) {
-		if let Some(node) = self.cache.get(path) {
-			self.remove(node.clone());
-			self.insert_front(path);
-		}
-	}
-
+        paths
+    }
 }
