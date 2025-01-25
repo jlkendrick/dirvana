@@ -2,9 +2,9 @@
 #define DIRECTORYCOMPLETER_H
 
 #include "RecentlyAccessedCache.h"
+#include "PathMap.h"
 
 #include <string>
-#include <vector>
 
 class DirectoryCompleter {
 public:
@@ -15,13 +15,13 @@ public:
 	~DirectoryCompleter() = default;
 
 	// Getters
-	int get_size() const { return directories.get_size(); }
+	int get_size() const { return directories.size; }
 
 private:
-	std::string rootdir;
-	RecentlyAccessedCache directories;
+	string rootdir;
+	PathMap directories;
 
-	// Constructor helper functions
+	// Private helper functions
 	void collect_directories();
 };
 

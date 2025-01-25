@@ -3,6 +3,7 @@
 
 #include "Node.h"
 
+#include <memory>
 #include <string>
 
 using std::string;
@@ -12,22 +13,18 @@ public:
 
 	// Constructor and destructor
 	DoublyLinkedList();
-	~DoublyLinkedList();
-
-	// Getters
-	int get_size() const { return size; }
+	~DoublyLinkedList() = default;
 
 	// Insertion
-	void insert_front(Node* node);
-	void insert_back(Node* node);
+	void insert_front(std::shared_ptr<Node> node);
+	void insert_back(std::shared_ptr<Node> node);
 
 	// Deletion
-	void delete_at(Node* node);
+	void delete_at(std::shared_ptr<Node> node);
 
 private:
-	Node* head;
-	Node* tail;
-	int size;
+	std::shared_ptr<Node> head;
+	std::shared_ptr<Node> tail;
 	
 };
 

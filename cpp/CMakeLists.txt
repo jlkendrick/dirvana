@@ -10,6 +10,7 @@ set(SOURCES
 	src/main.cpp
 
 	src/impl/DirectoryCompleter.cpp
+	src/impl/PathMap.cpp
 	src/impl/RecentlyAccessedCache.cpp
 
 	src/impl/utils/DoublyLinkedList.cpp

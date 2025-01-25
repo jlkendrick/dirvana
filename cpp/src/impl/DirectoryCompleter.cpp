@@ -1,10 +1,17 @@
 #include "DirectoryCompleter.h"
+
+#include "PathMap.h"
+
+#include <memory>
 #include <iostream>
 #include <filesystem>
+
 
 namespace fs = std::filesystem;
 
 DirectoryCompleter::DirectoryCompleter(const std::string& rootdir) : rootdir(rootdir) {
+	directories = PathMap();
+
 	collect_directories();
 }
 
@@ -18,7 +25,7 @@ void DirectoryCompleter::collect_directories() {
 				if (entry.is_directory())
 					// Skip the entire directory
 					it.disable_recursion_pending();
-					
+
 				continue;
 			}
 
