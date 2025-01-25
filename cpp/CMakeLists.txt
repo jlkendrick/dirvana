@@ -2,6 +2,18 @@ cmake_minimum_required(VERSION 3.10)
 project(dirvana)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ledit")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(dirvana main.cpp)
+include_directories(include include/utils)
+
+set(SOURCES
+	src/main.cpp
+
+	src/impl/DirectoryCompleter.cpp
+	src/impl/RecentlyAccessedCache.cpp
+
+	src/impl/utils/DoublyLinkedList.cpp
+	src/impl/utils/Node.cpp
+)
+
+add_executable(dirvana ${SOURCES})
