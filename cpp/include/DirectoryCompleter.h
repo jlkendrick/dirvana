@@ -5,23 +5,27 @@
 #include "PathMap.h"
 
 #include <string>
+#include <vector>
 
 class DirectoryCompleter {
 public:
-	// Constructor
+	
+	// Custom constructor which initializes the completer with all of the directories in the given root directory
+	// by inserting them into the PathMap
 	DirectoryCompleter(const std::string& rootdir);
-
-	// Destructor
 	~DirectoryCompleter() = default;
 
-	// Getters
+	// Finds the matching cache for the given directory name and returns the paths in that cache
+	std::vector<std::string> complete(const std::string& dir) const;
+
+	// Returns the number of directories in the completer
 	int get_size() const { return directories.size; }
 
 private:
-	string rootdir;
+	std::string rootdir;
 	PathMap directories;
 
-	// Private helper functions
+	// Private function used by the constructor to collect all of the directories in the root directory
 	void collect_directories();
 };
 

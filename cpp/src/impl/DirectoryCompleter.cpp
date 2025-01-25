@@ -10,8 +10,6 @@
 namespace fs = std::filesystem;
 
 DirectoryCompleter::DirectoryCompleter(const std::string& rootdir) : rootdir(rootdir) {
-	directories = PathMap();
-
 	collect_directories();
 }
 
@@ -36,4 +34,8 @@ void DirectoryCompleter::collect_directories() {
 	} catch (const fs::filesystem_error& e) {
 		std::cerr << e.what() << std::endl;
 	}
+}
+
+std::vector<std::string> DirectoryCompleter::complete(const std::string& dir) const {
+	return directories.get(dir);
 }

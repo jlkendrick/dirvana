@@ -16,7 +16,6 @@ set(LIB_SOURCES
     src/impl/PathMap.cpp
     src/impl/RecentlyAccessedCache.cpp
     src/impl/utils/DoublyLinkedList.cpp
-    src/impl/utils/Node.cpp
 )
 
 # Create a library for shared application code

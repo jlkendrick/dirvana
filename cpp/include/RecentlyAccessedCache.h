@@ -8,22 +8,31 @@
 #include <string>
 #include <unordered_map>
 
+// RecentlyAccessedCache is a cache of recently accessed paths.
+// It uses a map from paths to Nodes for quick access to the path's position in the cache.
+// The prioritization is done by reordering the nodes in a DoublyLinkedList.
 class RecentlyAccessedCache {
 public:
 
-	// Constructor
-	// RecentlyAccessedCache();
 
-	// Getters
-	int get_size() const { return size; }
-
+	// Constructs a new Node with the given path and adds it to the default position in the cache (back)
 	void add(const std::string& path);
+
+	// Promotes the given path to the front of the cache. Consists of removing the node from its current position
+	// and inserting it at the front of the DoublyLinkedList.
 	void promote(const std::string& path);
+
+	// Returns the paths in the cache in the order determined by the DoublyLinkedList
+	std::vector<std::string> get() const;
+
+	// Returns the size of the cache
+	int get_size() const { return size; }
 
 private:
 	std::unordered_map<std::string, std::shared_ptr<Node>> cache;
 	DoublyLinkedList order;
 
+	// Total number of paths in the cache
 	int size = 0;
 };
 

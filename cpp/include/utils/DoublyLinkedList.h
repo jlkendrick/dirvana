@@ -6,26 +6,35 @@
 #include <memory>
 #include <string>
 
-using std::string;
-
+// DoublyLinkedList is a simple doubly linked list implementation that is used by the RecentlyAccessedCache
+// to keep track of the order of the nodes in the cache.
 class DoublyLinkedList {
+private:
+
+	std::shared_ptr<Node> head;
+	std::shared_ptr<Node> tail;
+
 public:
 
-	// Constructor and destructor
+	// Constructs an empty DoublyLinkedList with dummy nodes for head and tail to
+	// avoid edge cases when inserting or deleting nodes.
 	DoublyLinkedList();
 	~DoublyLinkedList() = default;
 
-	// Insertion
+	// Inserts a node at the front of the list
 	void insert_front(std::shared_ptr<Node> node);
+
+	// Inserts a node at the back of the list
 	void insert_back(std::shared_ptr<Node> node);
 
-	// Deletion
+	// Deletes the given node from the list using the node's pointers
 	void delete_at(std::shared_ptr<Node> node);
 
-private:
-	std::shared_ptr<Node> head;
-	std::shared_ptr<Node> tail;
-	
+	// Returns the dummy head of the list
+	std::shared_ptr<Node> get_dummy_head() const { return head; }
+
+	// Returns the dummy tail of the list
+	std::shared_ptr<Node> get_dummy_tail() const { return tail; }
 };
 
 #endif // DOUBLYLINKEDLIST_H
