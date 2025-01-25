@@ -14,7 +14,6 @@
 class RecentlyAccessedCache {
 public:
 
-
 	// Constructs a new Node with the given path and adds it to the default position in the cache (back)
 	void add(const std::string& path);
 
@@ -23,7 +22,10 @@ public:
 	void promote(const std::string& path);
 
 	// Returns the paths in the cache in the order determined by the DoublyLinkedList
-	std::vector<std::string> get() const;
+	std::vector<std::string> get_paths() const;
+
+	// Returns true if the given path is in the cache, false otherwise
+	bool contains(const std::string& path) const { return cache.find(path)!= cache.end(); }
 
 	// Returns the size of the cache
 	int get_size() const { return size; }

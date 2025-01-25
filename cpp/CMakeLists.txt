@@ -8,13 +8,16 @@ set(CMAKE_C_COMPILER /usr/bin/clang)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
 # Define include directories
-include_directories(include include/utils)
+include_directories(include include/utils include/caches)
 
 # Define source files
 set(LIB_SOURCES
     src/impl/DirectoryCompleter.cpp
     src/impl/PathMap.cpp
-    src/impl/RecentlyAccessedCache.cpp
+
+    src/impl/caches/RecentlyAccessedCache.cpp
+    src/impl/caches/FrequencyBasedCache.cpp
+    
     src/impl/utils/DoublyLinkedList.cpp
 )
 
@@ -32,6 +35,8 @@ include_directories(${GTEST_INCLUDE_DIRS})
 # Define test source files
 set(TEST_SOURCES
     tests/test_DirectoryCompleter.cpp
+    tests/test_FrequencyBasedCache.cpp
+    tests/test_RecentlyAccessedCache.cpp
 )
 
 # Create the test executable

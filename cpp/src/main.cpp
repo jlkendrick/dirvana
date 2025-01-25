@@ -5,7 +5,8 @@
 
 using namespace std;
 
-int main() {
+int main(int argc, char* argv[]) {
+	
 	string root = "/Users/jameskendrick/Code/Projects/dirvana/cpp/mockfs";
 	cout << "Initializing Completer with root directory: " << root << endl;
 
