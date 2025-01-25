@@ -23,8 +23,8 @@ public:
 	void update_position(const std::string& path);
 
 	// Returns the paths in the cache ordered by access frequency
-	std::vector<std::string> get_paths() const;
-	
+	std::vector<std::string> get_all_paths() const;
+
 	// Returns true if the cache contains the given path, false otherwise
 	bool contains(const std::string& path) const { return cache.find(path) != cache.end(); }
 

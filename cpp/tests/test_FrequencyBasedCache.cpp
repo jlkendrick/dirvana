@@ -28,7 +28,7 @@ TEST(FrequencyBasedCache, AddingPaths) {
 	EXPECT_TRUE(cache.contains("/path/to/dir3"));
 
 	// Verify initial order (during initialization, we insert at the back)
-	vector<string> paths = cache.get_paths();
+	vector<string> paths = cache.get_all_paths();
 	EXPECT_EQ(paths.size(), 3);
 	EXPECT_EQ(paths[0], "/path/to/dir1");
 	EXPECT_EQ(paths[1], "/path/to/dir2");
@@ -51,7 +51,7 @@ TEST(FrequencyBasedCache, FrequencyOrdering) {
 	cache.add("/path/to/dir2"); // count: 2
 
 	// Verify frequency-based ordering
-	vector<string> paths = cache.get_paths();
+	vector<string> paths = cache.get_all_paths();
 	EXPECT_EQ(paths.size(), 3);
 	EXPECT_EQ(paths[0], "/path/to/dir1"); // Most frequent (3)
 	EXPECT_EQ(paths[1], "/path/to/dir2"); // Second most frequent (2)
@@ -67,7 +67,7 @@ TEST(FrequencyBasedCache, DuplicateHandling) {
 	cache.add("/path/to/dir1"); // Should increment frequency, not size
 
 	EXPECT_EQ(cache.get_size(), 2);
-	vector<string> paths = cache.get_paths();
+	vector<string> paths = cache.get_all_paths();
 	EXPECT_EQ(paths[0], "/path/to/dir1"); // Higher frequency
 	EXPECT_EQ(paths[1], "/path/to/dir2"); // Lower frequency
 }

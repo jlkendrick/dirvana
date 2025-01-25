@@ -34,7 +34,7 @@ public:
 	void delete_at(std::shared_ptr<Node> node);
 
 	// Returns a vector of paths from all nodes in the list in order
-	std::vector<std::string> get_paths() const;
+	std::vector<std::string> get_all_paths() const;
 
 	// Returns the dummy head of the list
 	std::shared_ptr<Node> get_dummy_head() const { return head; }

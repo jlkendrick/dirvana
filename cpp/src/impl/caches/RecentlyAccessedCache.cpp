@@ -31,6 +31,6 @@ void RecentlyAccessedCache::promote(const std::string& path) {
 	order.insert_front(node);
 }
 
-std::vector<std::string> RecentlyAccessedCache::get_paths() const {
-	return order.get_paths();
+std::vector<std::string> RecentlyAccessedCache::get_all_paths() const {
+	return order.get_all_paths();
 }

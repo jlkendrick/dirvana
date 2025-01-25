@@ -49,6 +49,6 @@ void FrequencyBasedCache::update_position(const std::string& path) {
 	order.insert_back(node_to_move);
 }
 
-std::vector<std::string> FrequencyBasedCache::get_paths() const {
-	return order.get_paths();
+std::vector<std::string> FrequencyBasedCache::get_all_paths() const {
+	return order.get_all_paths();
 }

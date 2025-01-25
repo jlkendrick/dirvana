@@ -21,7 +21,7 @@ struct PathMap {
 	void add(const std::string& path);
 
 	// Returns the paths in the cache for the given directory name
-	std::vector<std::string> get_paths(const std::string& dir) const;
+	std::vector<std::string> get_all_paths(const std::string& dir) const;
 
 	// Map of directory names to caches of recently accessed paths
 	std::unordered_map<std::string, RecentlyAccessedCache> map;

@@ -54,7 +54,7 @@ void DoublyLinkedList::delete_at(std::shared_ptr<Node> node) {
 	node->next->prev = node->prev;
 }
 
-std::vector<std::string> DoublyLinkedList::get_paths() const {
+std::vector<std::string> DoublyLinkedList::get_all_paths() const {
 	std::vector<std::string> paths;
 	
 	// Iterate through the list and add the paths to the vector

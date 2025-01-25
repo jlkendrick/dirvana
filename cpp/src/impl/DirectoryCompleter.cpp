@@ -38,5 +38,5 @@ void DirectoryCompleter::collect_directories() {
 }
 
 std::vector<std::string> DirectoryCompleter::complete(const std::string& dir) const {
-	return directories.get_paths(dir);
+	return directories.get_all_paths(dir);
 }

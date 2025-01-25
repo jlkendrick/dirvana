@@ -22,7 +22,7 @@ public:
 	void promote(const std::string& path);
 
 	// Returns the paths in the cache in the order determined by the DoublyLinkedList
-	std::vector<std::string> get_paths() const;
+	std::vector<std::string> get_all_paths() const;
 
 	// Returns true if the given path is in the cache, false otherwise
 	bool contains(const std::string& path) const { return cache.find(path)!= cache.end(); }
