@@ -18,7 +18,7 @@ void PathMap::add(const std::string& path) {
 	// Add the path to the cache, this will create a new cache if it doesn't exist
 	map[dir].add(path);
 
-	std::cout << "Added " << path << " to cache for " << dir << " with size " << map[dir].get_size() << std::endl;
+	// std::cout << "Added " << path << " to cache for " << dir << " with size " << map[dir].get_size() << std::endl;
 
 	size++;
 }

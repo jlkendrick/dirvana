@@ -1,3 +1,5 @@
+#include <gtest/gtest.h>
+
 #include "DirectoryCompleter.h"
 
 #include <iostream>
@@ -5,10 +7,9 @@
 
 using namespace std;
 
-int main() {
+TEST(DirectoryCompleter, Initialization) {
 	string root = "/Users/jameskendrick/Code/Projects/dirvana/cpp/mockfs";
-	cout << "Initializing Completer with root directory: " << root << endl;
-
 	DirectoryCompleter completer(root);
-	cout << "Completer initialized with " << completer.get_size() << " directories" << endl;
-} 
+
+	EXPECT_EQ(completer.get_size(), 8);
+}
