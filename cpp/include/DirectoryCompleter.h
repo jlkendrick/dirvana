@@ -18,6 +18,9 @@ public:
 	// Finds the matching cache for the given directory name and returns the paths in that cache
 	std::vector<std::string> complete(const std::string& dir) const;
 
+	// Indicates that the given path has been accessed and it's position in the cache should be updated
+	void access(const std::string& path) { directories.add(path); }
+
 	// Returns the number of directories in the completer
 	int get_size() const { return directories.size; }
 

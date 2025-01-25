@@ -27,6 +27,7 @@ void DirectoryCompleter::collect_directories() {
 				continue;
 			}
 
+			// Else, add the directory to the PathMap
 			if (fs::is_directory(entry))
 				directories.add(entry.path().string());
 		}
