@@ -19,6 +19,7 @@ set(LIB_SOURCES
     src/impl/caches/FrequencyBasedCache.cpp
     
     src/impl/utils/DoublyLinkedList.cpp
+    src/impl/utils/DLLTraverser.cpp
 )
 
 # Create a library for shared application code
@@ -35,8 +36,12 @@ include_directories(${GTEST_INCLUDE_DIRS})
 # Define test source files
 set(TEST_SOURCES
     tests/test_DirectoryCompleter.cpp
-    tests/test_FrequencyBasedCache.cpp
+    tests/test_PathMap.cpp
+
     tests/test_RecentlyAccessedCache.cpp
+    tests/test_FrequencyBasedCache.cpp
+
+    tests/test_DoublyLinkedList.cpp
 )
 
 # Create the test executable
