@@ -18,7 +18,12 @@ struct PathMap {
 	// Ex. Adding "/Users/jameskendrick/Code/Projects/dirvana/cpp/src" will add it to the cache for "src"
 	// then adding "/Users/jameskendrick/Code/Projects/courtvision/src" will add it to that same cache
 	// that way, users can simply type the directory name and get the most recently accessed paths
-	void add(const std::string& path);
+	void add(const std::string& path, const std::string& dirname = "");
+
+	// Helper function to return the deepest directory name in a path
+	// Ex. get_deepest_dir("/Users/jameskendrick/Code/Projects/dirvana/cpp/src") will return "src"
+	// We return a pair of bool and string to ensure that the path is valid
+	std::pair<bool, std::string> get_deepest_dir(const std::string& path) const;
 
 	// Returns the paths in the cache for the given directory name
 	std::vector<std::string> get_all_paths(const std::string& dir) const;

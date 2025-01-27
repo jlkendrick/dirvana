@@ -3,15 +3,14 @@
 #include <string>
 #include <iostream>
 
-void PathMap::add(const std::string& path) {
-	// Get the deepest directory name
-	size_t pos = path.find_last_of('/');
-	if (pos >= std::string::npos)
+void PathMap::add(const std::string& path, const std::string& dirname) {
+	// If the dirname was not passed (when called from tests), get it from the path
+	auto res = dirname == "" ? get_deepest_dir(path) : std::make_pair(true, dirname);
+	if (!res.first)
 		return;
-	std::string dir = path.substr(pos + 1);
-	
+
 	// Add the path to the cache, this will create a new cache if it doesn't exist
-	map[dir].add(path);
+	map[res.second].add(path);
 
 	size++;
 }
@@ -22,4 +21,12 @@ std::vector<std::string> PathMap::get_all_paths(const std::string& dir) const {
 		return std::vector<std::string>();
 
 	return map.at(dir).get_all_paths();
+}
+
+std::pair<bool, std::string> PathMap::get_deepest_dir(const std::string& path) const {
+	size_t pos = path.find_last_of('/');
+	if (pos >= std::string::npos)
+		return std::make_pair(false, "");
+
+	return std::make_pair(true, path.substr(pos + 1));
 }

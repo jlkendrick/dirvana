@@ -58,3 +58,14 @@ TEST(DirectoryCompleter, Access) {
 	completer.access(root + "/1/1/1");
 	check(root, completer.complete("1"), {"/1/1/1", "/1/1", "/1"});
 }
+
+TEST(DirectoryCompleter, Exclusion) {
+	string root = "/Users/jameskendrick/Code/Projects/dirvana/cpp/mockfs";
+	vector<string> exclude = {"1"};
+	DirectoryCompleter completer(root, exclude);
+
+	EXPECT_EQ(completer.get_size(), 6);
+
+	check(root, completer.complete("1"), {});
+	check(root, completer.complete("4"), {"/4", "/3/4", "/2/2/4"});
+}

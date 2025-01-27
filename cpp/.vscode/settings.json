@@ -69,6 +69,12 @@
     "utility": "cpp",
     "format": "cpp",
     "stop_token": "cpp",
-    "thread": "cpp"
+    "thread": "cpp",
+    "deque": "cpp",
+    "forward_list": "cpp",
+    "list": "cpp",
+    "unordered_set": "cpp",
+    "text_encoding": "cpp",
+    "queue": "cpp"
   }
 }
