@@ -5,6 +5,7 @@
 #include "PathMap.h"
 #include "DLLTraverser.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -23,7 +24,7 @@ public:
 	~DirectoryCompleter() = default;
 
 	// Returns the doubly linked list that can be used to construct the traverser
-	const DoublyLinkedList& get_list_for(const std::string& dir) const;
+	const std::shared_ptr<DoublyLinkedList> get_list_for(const std::string& dir) const;
 
 	bool has_matches(const std::string& dir) const { return directories.contains(dir); }
 

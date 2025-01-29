@@ -39,7 +39,7 @@ void DirectoryCompleter::collect_directories() {
 	}
 }
 
-const DoublyLinkedList& DirectoryCompleter::get_list_for(const std::string& dir) const {
+const std::shared_ptr<DoublyLinkedList> DirectoryCompleter::get_list_for(const std::string& dir) const {
 	return directories.get_list_for(dir);
 }
 

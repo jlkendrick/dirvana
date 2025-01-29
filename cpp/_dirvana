@@ -1,0 +1,15 @@
+#compdef dirvana
+
+# The partial is the current word being completed
+local partial="${words[CURRENT]}"
+
+# The root is the current working directory used by Zsh
+local root="$PWD"
+
+# Call tool
+local completions
+completions=("${(@f)$(dirvana-complete "$partial" "$root")}")
+
+# Add the completions to the Zsh completion system
+compadd -U -a completions
+return 0

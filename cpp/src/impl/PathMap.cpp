@@ -15,11 +15,11 @@ void PathMap::add(const std::string& path, const std::string& dirname) {
 	size++;
 }
 
-const DoublyLinkedList& PathMap::get_list_for(const std::string& dir) const {
+const std::shared_ptr<DoublyLinkedList> PathMap::get_list_for(const std::string& dir) const {
 	// If the query directory is not in the map, return an empty list
 	if (map.find(dir) == map.end())
-		return DoublyLinkedList();
-	return map.at(dir).get_list();
+		return std::make_shared<DoublyLinkedList>();
+	return std::make_shared<DoublyLinkedList>(map.at(dir).get_list());
 }
 
 std::vector<std::string> PathMap::get_all_paths(const std::string& dir) const {
