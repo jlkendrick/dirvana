@@ -1,4 +1,4 @@
-#compdef dirvana
+#compdef dv
 
 # The partial is the current word being completed
 local partial="${words[CURRENT]}"
