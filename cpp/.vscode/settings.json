@@ -75,6 +75,11 @@
     "list": "cpp",
     "unordered_set": "cpp",
     "text_encoding": "cpp",
-    "queue": "cpp"
+    "queue": "cpp",
+    "execution": "cpp",
+    "numbers": "cpp",
+    "semaphore": "cpp",
+    "stack": "cpp",
+    "numeric": "cpp"
   }
 }

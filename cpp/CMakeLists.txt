@@ -8,18 +8,23 @@ set(CMAKE_C_COMPILER /usr/bin/clang)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 
 # Define include directories
-include_directories(include include/utils include/caches)
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/utils
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/caches
+)
 
 # Define source files
 set(LIB_SOURCES
     src/impl/DirectoryCompleter.cpp
     src/impl/PathMap.cpp
-
+    
     src/impl/caches/RecentlyAccessedCache.cpp
     src/impl/caches/FrequencyBasedCache.cpp
     
     src/impl/utils/DoublyLinkedList.cpp
     src/impl/utils/DLLTraverser.cpp
+    src/impl/utils/TerminalHandler.cpp
 )
 
 # Create a library for shared application code

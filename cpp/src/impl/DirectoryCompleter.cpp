@@ -39,7 +39,11 @@ void DirectoryCompleter::collect_directories() {
 	}
 }
 
-std::vector<std::string> DirectoryCompleter::complete(const std::string& dir) const {
+const DoublyLinkedList& DirectoryCompleter::get_list_for(const std::string& dir) const {
+	return directories.get_list_for(dir);
+}
+
+std::vector<std::string> DirectoryCompleter::get_all_matches(const std::string& dir) const {
 	return directories.get_all_paths(dir);
 }
 

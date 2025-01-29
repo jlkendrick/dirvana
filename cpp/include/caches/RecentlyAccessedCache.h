@@ -21,6 +21,9 @@ public:
 	// and inserting it at the front of the DoublyLinkedList.
 	void promote(const std::string& path);
 
+	// Returns a reference to the doubly linked list that can be used to construct the traverser
+	const DoublyLinkedList& get_list() const { return order; }
+
 	// Returns the paths in the cache in the order determined by the DoublyLinkedList
 	std::vector<std::string> get_all_paths() const;
 

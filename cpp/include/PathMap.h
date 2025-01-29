@@ -25,8 +25,14 @@ struct PathMap {
 	// We return a pair of bool and string to ensure that the path is valid
 	std::pair<bool, std::string> get_deepest_dir(const std::string& path) const;
 
+	// Returns a reference to the DLL that is used to construct the traverser
+	const DoublyLinkedList& get_list_for(const std::string& dir) const;
+
 	// Returns the paths in the cache for the given directory name
 	std::vector<std::string> get_all_paths(const std::string& dir) const;
+
+	// Returns true if the map contains the given directory name
+	bool contains(const std::string& dir) const { return map.find(dir) != map.end(); }
 
 	// Map of directory names to caches of recently accessed paths
 	std::unordered_map<std::string, RecentlyAccessedCache> map;

@@ -3,6 +3,7 @@
 
 #include "RecentlyAccessedCache.h"
 #include "PathMap.h"
+#include "DLLTraverser.h"
 
 #include <string>
 #include <vector>
@@ -21,8 +22,13 @@ public:
 
 	~DirectoryCompleter() = default;
 
+	// Returns the doubly linked list that can be used to construct the traverser
+	const DoublyLinkedList& get_list_for(const std::string& dir) const;
+
+	bool has_matches(const std::string& dir) const { return directories.contains(dir); }
+
 	// Finds the matching cache for the given directory name and returns the paths in that cache
-	std::vector<std::string> complete(const std::string& dir) const;
+	std::vector<std::string> get_all_matches(const std::string& dir) const;
 
 	// Indicates that the given path has been accessed and it's position in the cache should be updated
 	void access(const std::string& path) { directories.add(path); }
