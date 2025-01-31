@@ -19,19 +19,27 @@ DirectoryCompleter::DirectoryCompleter(const std::string& rootdir, const std::ve
 
 void DirectoryCompleter::collect_directories() {
 	try {
-		for (auto it = fs::recursive_directory_iterator(rootdir); it != fs::recursive_directory_iterator(); ++it) {
+		fs::recursive_directory_iterator it(rootdir, fs::directory_options::skip_permission_denied);
+		fs::recursive_directory_iterator end;
+		
+		while (it != end) {
 			const auto& entry = *it;
 
 			// Get the deepest directory name
 			std::string dir_name = get_deepest_dir(entry.path().string());
 
-			// If the entry is not a directory or the directory name is empty or should be excluded, skip it and it's subdirectories
-			if (!fs::is_directory(entry) || dir_name == "" || should_exclude(dir_name)) {
-				it.disable_recursion_pending();
-				continue;
+			// If the entry is a directory and it's not in the exclude list, add it to the PathMap
+			if (fs::is_directory(entry)) {
+				if (dir_name != "" && !should_exclude(dir_name)) {
+					directories.add(entry.path().string(), dir_name);
+				
+				// Otherwise, don't add it to the PathMap and disable recursion into it's children
+				} else {
+					it.disable_recursion_pending();
+				}
 			}
 
-			directories.add(entry.path().string(), dir_name);
+			++it;
 		}
 		
 	} catch (const fs::filesystem_error& e) {

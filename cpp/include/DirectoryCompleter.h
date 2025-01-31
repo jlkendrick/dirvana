@@ -42,7 +42,7 @@ private:
 	PathMap directories;
 
 	// Stores the names of the directories that we should skip when initializing the PathMap
-	std::vector<std::string> exclude = { "node_modules", "bin", "obj", "build" };
+	std::vector<std::string> exclude = { "node_modules", "bin", "obj", "build", "Library" };
 
 	// Returns true if the given directory should be excluded from the PathMap
 	bool should_exclude(const std::string& dir) const;
