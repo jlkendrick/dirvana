@@ -35,6 +35,9 @@ struct PathMap {
 	// Returns true if the map contains the given directory name
 	bool contains(const std::string& dir) const { return map.find(dir) != map.end(); }
 
+	// Returns the total number of paths in the map (sum of all caches)
+	int get_size() const;
+
 	// Map of directory names to caches of recently accessed paths
 	std::unordered_map<std::string, RecentlyAccessedCache> map;
 

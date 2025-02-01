@@ -9,10 +9,8 @@ void PathMap::add(const std::string& path, const std::string& dirname) {
 	if (!res.first)
 		return;
 
-	// Add the path to the cache, this will create a new cache if it doesn't exist
+	// Add the path to the cache, this will create a new cache if it doesn't exist and promote the path if the path is already in the cache
 	map[res.second].add(path);
-
-	size++;
 }
 
 const std::shared_ptr<DoublyLinkedList> PathMap::get_list_for(const std::string& dir) const {
@@ -36,4 +34,11 @@ std::pair<bool, std::string> PathMap::get_deepest_dir(const std::string& path) c
 		return std::make_pair(false, "");
 
 	return std::make_pair(true, path.substr(pos + 1));
+}
+
+int PathMap::get_size() const {
+	int size = 0;
+	for (auto& entry : map)
+		size += entry.second.get_size();
+	return size;
 }

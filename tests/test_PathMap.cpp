@@ -48,14 +48,14 @@ TEST_F(PathMapTest, SizeTracking) {
 	EXPECT_EQ(new_map.size, 0);
 
 	new_map.add("/path/to/dir1");
-	EXPECT_EQ(new_map.size, 1);
+	EXPECT_EQ(new_map.get_size(), 1);
 
 	new_map.add("/another/path/to/dir1");
-	EXPECT_EQ(new_map.size, 2);
+	EXPECT_EQ(new_map.get_size(), 2);
 
 	// Invalid path should not increase size
 	new_map.add("invalid_path");
-	EXPECT_EQ(new_map.size, 2);
+	EXPECT_EQ(new_map.get_size(), 2);
 }
 
 TEST_F(PathMapTest, CacheOrdering) {
