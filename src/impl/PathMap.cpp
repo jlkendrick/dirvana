@@ -42,3 +42,7 @@ int PathMap::get_size() const {
 		size += entry.second.get_size();
 	return size;
 }
+
+void PathMap::bulk_load(const std::string& dirname, const std::vector<std::string>& paths) {
+    map[dirname].bulk_load(paths);
+}

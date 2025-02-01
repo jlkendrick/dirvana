@@ -10,24 +10,28 @@
 #include <filesystem>
 
 using json = nlohmann::json;
+using ordered_json = nlohmann::ordered_json;
 namespace fs = std::filesystem;
 
 DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
     // If arguments are not empty, override the default values
     if (!args.init_path.empty())
-        init_path = std::move(args.init_path);
+      init_path = std::move(args.init_path);
     if (!args.cache_path.empty())
-        this->cache_path = std::move(args.cache_path);
+      this->cache_path = std::move(args.cache_path);
+		else
+			this->cache_path = get_cache_path();
     if (!args.exclude.empty())
-        exclusion_rules = std::move(args.exclude);
+      exclusion_rules = std::move(args.exclude);
     
     if (args.build)
-        collect_directories();
+      collect_directories();
     else
-        load();
+      load();
 }
 
 void DirectoryCompleter::collect_directories() {
+	std::cout << "Scanning directories..." << std::endl;
 	try {
 		fs::recursive_directory_iterator it(init_path, fs::directory_options::skip_permission_denied);
 		fs::recursive_directory_iterator end;
@@ -58,33 +62,65 @@ void DirectoryCompleter::collect_directories() {
 }
 
 void DirectoryCompleter::save() const {
-	json j;
+    std::cout << "Saving cache..." << std::endl;
+    ordered_json j = ordered_json::array();
+    for (const auto& [dir, cache] : directories.map) {
+        ordered_json entry;
+        entry["dir"] = dir;
 
-	for (const auto& [dir, cache] : directories.map) {
-		j[dir] = cache.get_all_paths();
-	}
+				ordered_json paths = ordered_json::array();
+				for (const auto& path : cache.get_all_paths())
+					paths.push_back(path);
+				entry["paths"] = paths;
 
-	std::ofstream file(cache_path);
-	if (file.is_open()) {
-		file << j.dump(4);
-		file.close();
-	} else
-		std::cerr << "Unable to open file for writing: " << cache_path << std::endl;
+				if (dir == "static") {
+					std::cout << "Order before saving: " << std::endl;
+					for (const auto& path : directories.get_all_paths(dir)) {
+						std::cout << path << std::endl;
+					}
+				}
+
+        j.push_back(entry);
+    }
+    std::ofstream file(cache_path);
+    if (file.is_open()) {
+        file << j.dump(4);
+        file.close();
+    } else {
+        std::cerr << "Unable to open file for writing: " << cache_path << std::endl;
+    }
 }
 
 void DirectoryCompleter::load() {
+	std::cout << "Loading cache..." << std::endl;
 	std::ifstream file(cache_path);
 	if (file.is_open()) {
-		json j;
+		ordered_json j;
 		file >> j;
 		file.close();
 
-		for (json::iterator it = j.begin(); it != j.end(); ++it) {
-			std::string dir = it.key();
-			auto& paths = it.value();
-
+		for (const auto& entry : j) {
+			std::string dir = entry["dir"];
+			ordered_json paths = entry["paths"];
+			std::vector<std::string> paths_vec;
 			for (const auto& path : paths) {
-				directories.add(path, dir);
+				paths_vec.push_back(path.get<std::string>());
+			}
+
+			if (dir == "static") {
+				std::cout << "Order after loading: " << std::endl;
+				for (const auto& path : paths) {
+					std::cout << "XX" << path << std::endl;
+				}
+			}
+
+			directories.bulk_load(dir, paths_vec);
+
+			if (dir == "static") {
+				std::cout << "Order after loading: " << std::endl;
+				for (const auto& path : directories.get_all_paths(dir)) {
+					std::cout << "ZZ" << path << std::endl;
+				}
 			}
 		}
 	} else
@@ -139,4 +175,20 @@ std::string DirectoryCompleter::get_deepest_dir(const std::string& path) const {
 
 	std::string dir = path.substr(pos + 1);
 	return dir;
+}
+
+std::string DirectoryCompleter::get_cache_path() const {
+	const char* xdgCacheHome = std::getenv("XDG_CACHE_HOME");
+	std::string cacheDir;
+
+	if (xdgCacheHome) {
+		cacheDir = std::string(xdgCacheHome) + "/dirvana/";
+	} else {
+		cacheDir = std::string(std::getenv("HOME")) + "/.cache/dirvana/";
+	}
+
+	// Ensure the directory exists
+	std::filesystem::create_directories(cacheDir);
+
+	return cacheDir + "cache.json";
 }

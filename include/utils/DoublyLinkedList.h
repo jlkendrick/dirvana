@@ -41,6 +41,9 @@ public:
 
 	// Returns the dummy tail of the list
 	std::shared_ptr<Node> get_dummy_tail() const { return tail; };
+
+	// Clears the list by setting the head and tail pointers to each other
+	void clear();
 };
 
 #endif // DOUBLYLINKEDLIST_H

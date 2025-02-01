@@ -58,8 +58,10 @@ private:
 	PathMap directories;
 
 	std::string init_path = std::getenv("HOME");
-	std::string cache_path = "cache.json";
+	std::string cache_path;
 
+	// Helper function to get the cache path
+	std::string get_cache_path() const;
 
 	// Returns true if the given directory should be excluded from the PathMap
 	bool should_exclude(const std::string& dir) const;
@@ -79,7 +81,6 @@ private:
 		// Exclude common auto-generated directories
 		{ ExclusionType::Exact, "node_modules" },
 		{ ExclusionType::Exact, "bower_components" },
-		{ ExclusionType::Exact, "build" },
 		{ ExclusionType::Exact, "dist" },
 		{ ExclusionType::Exact, "out" },
 		{ ExclusionType::Exact, "target" },
@@ -89,7 +90,8 @@ private:
 		{ ExclusionType::Exact, "venv" },
 		{ ExclusionType::Exact, "env" },
 		{ ExclusionType::Exact, "obj" },
-		{ ExclusionType::Exact, "go" },
+		{ ExclusionType::Exact, "pkg" },
+		{ ExclusionType::Exact, "bin" },
 		
 		// Suffix rules
 		{ ExclusionType::Suffix, "sdk" },

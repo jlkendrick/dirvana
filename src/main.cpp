@@ -1,17 +1,20 @@
 #include "DirectoryCompleter.h"
 
+#include <thread>
 #include <iostream>
 #include <string>
 
 using namespace std;
 
 void build() {
+	cout << "Building DirectoryCompleter..." << endl;
 	// To build the DirectoryCompleter, we need to create it and save it to a file
 	DirectoryCompleter completer(DCArgs{ .build= true });
 	completer.save();
 }
 
 void update(const string& path) {
+	cout << "Updating DirectoryCompleter..." << endl;
 	// To update the DirectoryCompleter, we need to load it, access the path, and re-save it
 	DirectoryCompleter completer(DCArgs{ .build= false });
 	completer.access(path);
@@ -19,12 +22,14 @@ void update(const string& path) {
 }
 
 void query(const string& partial) {
+	cout << "Querying DirectoryCompleter..." << endl;
+	std::this_thread::sleep_for(std::chrono::seconds(2));
 	// To query the DirectoryCompleter, we need to load it and print the matches
 	DirectoryCompleter completer(DCArgs{ .build= false });
 	auto matches = completer.get_all_matches(partial);
-	for (const auto& match : matches) {
-		cout << match << endl;
-	}
+	// for (const auto& match : matches) {
+	// 	cout << match << endl;
+	// }
 }
 
 // Arguments that can be passed to the program

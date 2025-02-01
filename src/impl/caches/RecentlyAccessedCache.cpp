@@ -22,6 +22,21 @@ void RecentlyAccessedCache::add(const std::string& path) {
 	size++;
 }
 
+void RecentlyAccessedCache::bulk_load(const std::vector<std::string>& paths) {
+	// Clear existing cache and order list if needed
+	cache.clear();
+	order.clear();
+	size = 0;
+	
+	// Add paths in the given order
+	for (const auto& path : paths) {
+		std::shared_ptr<Node> node = std::make_shared<Node>(path);
+		cache.insert({path, node});
+		order.insert_back(node);
+		size++;
+	}
+}
+
 void RecentlyAccessedCache::promote(const std::string& path) {
 	// Get the node from the cache
 	std::shared_ptr<Node> node = cache.at(path);

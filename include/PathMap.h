@@ -21,6 +21,9 @@ struct PathMap {
 	// that way, users can simply type the directory name and get the most recently accessed paths
 	void add(const std::string& path, const std::string& dirname = "");
 
+	// Bulk load a list of paths into the cache for the given directory name
+	void bulk_load(const std::string& dirname, const std::vector<std::string>& paths);
+
 	// Helper function to return the deepest directory name in a path
 	// Ex. get_deepest_dir("/Users/jameskendrick/Code/Projects/dirvana/cpp/src") will return "src"
 	// We return a pair of bool and string to ensure that the path is valid

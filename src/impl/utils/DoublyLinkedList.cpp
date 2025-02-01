@@ -66,3 +66,9 @@ std::vector<std::string> DoublyLinkedList::get_all_paths() const {
 
 	return paths;
 }
+
+void DoublyLinkedList::clear() {
+	// Clear the list by setting the head and tail to point to each other
+	head->next = tail;
+	tail->prev = head;
+}

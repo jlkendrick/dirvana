@@ -17,6 +17,9 @@ public:
 	// Constructs a new Node with the given path and adds it to the default position in the cache (back)
 	void add(const std::string& path);
 
+	// Bulk loads a list of paths into the cache. This is used when loading the cache from a file.
+	void bulk_load(const std::vector<std::string>& paths);
+
 	// Promotes the given path to the front of the cache. Consists of removing the node from its current position
 	// and inserting it at the front of the DoublyLinkedList.
 	void promote(const std::string& path);
