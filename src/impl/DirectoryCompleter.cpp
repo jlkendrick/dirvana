@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
     // If arguments are not empty, override the default values
     if (!args.init_path.empty())
-        rootdir = std::move(args.init_path);
+        init_path = std::move(args.init_path);
     if (!args.cache_path.empty())
         this->cache_path = std::move(args.cache_path);
     if (!args.exclude.empty())
@@ -29,7 +29,7 @@ DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
 
 void DirectoryCompleter::collect_directories() {
 	try {
-		fs::recursive_directory_iterator it(rootdir, fs::directory_options::skip_permission_denied);
+		fs::recursive_directory_iterator it(init_path, fs::directory_options::skip_permission_denied);
 		fs::recursive_directory_iterator end;
 		
 		while (it != end) {

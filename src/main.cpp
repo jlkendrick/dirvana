@@ -6,36 +6,32 @@
 using namespace std;
 
 void build() {
-	// Build the DirectoryCompleter and save it to a file (use 'build=true' constructor)
+	// To build the DirectoryCompleter, we need to create it and save it to a file
 	DirectoryCompleter completer(DCArgs{ .build= true });
 	completer.save();
 }
 
 void update(const string& path) {
-	// Load the DirectoryCompleter (use 'build=false' constructor)
+	// To update the DirectoryCompleter, we need to load it, access the path, and re-save it
 	DirectoryCompleter completer(DCArgs{ .build= false });
-
-	// Update the accessed entry
 	completer.access(path);
-
-	// Save the DirectoryCompleter to a file
 	completer.save();
 }
 
 void query(const string& partial) {
-	// Load the DirectoryCompleter (use 'build=false' constructor)
+	// To query the DirectoryCompleter, we need to load it and print the matches
 	DirectoryCompleter completer(DCArgs{ .build= false });
-
-	// Get the matches for the partial path
 	auto matches = completer.get_all_matches(partial);
-
-	// Print the matches
 	for (const auto& match : matches) {
 		cout << match << endl;
 	}
 }
 
-
+// Arguments that can be passed to the program
+// 'dv build' - Build the DirectoryCompleter and save it to a file
+// 'dv update <path>' - Update the DirectoryCompleter by promoting the given path
+// 'dv <partial>' - Query the DirectoryCompleter for matches to the partial path
+// 'dv -- <partial>' - Used to bypass potential name conflicts with the above commands, functions the same as 'query'
 int main(int argc, char* argv[]) {
 	if (argc < 2)
 		// We expect at least 1 argument, the command
@@ -46,8 +42,8 @@ int main(int argc, char* argv[]) {
 		// Build (or re-build) the DirectoryCompleter and save it to a file
 		build();
 		return 0;
+	
 	} else if (command == "update") {
-		// Load the DirectoryCompleter, update the accessed entry, and save it to a file
 		// First, we need to check if we have an argument for the path
 		if (argc < 3)
 			// We expect at least 2 arguments, the command and the path

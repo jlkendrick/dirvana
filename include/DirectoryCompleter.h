@@ -55,7 +55,6 @@ public:
 	void load();
 
 private:
-	std::string rootdir;
 	PathMap directories;
 
 	std::string init_path = std::getenv("HOME");
@@ -89,14 +88,15 @@ private:
 		{ ExclusionType::Exact, "cache" },
 		{ ExclusionType::Exact, "venv" },
 		{ ExclusionType::Exact, "env" },
-		{ ExclusionType::Exact, ".env" },
 		{ ExclusionType::Exact, "obj" },
+		{ ExclusionType::Exact, "go" },
 		
-		// Suffix rule: Exclude directories ending with "sdk"
+		// Suffix rules
 		{ ExclusionType::Suffix, "sdk" },
+		{ ExclusionType::Suffix, "Library" }
 
-		// Contains rule: Exclude directories containing "release"
-		{ ExclusionType::Contains, "release" }
+		// Contains rules
+		// { ExclusionType::Contains, "release" }
 	};
 };
 
