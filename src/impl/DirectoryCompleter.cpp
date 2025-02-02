@@ -31,7 +31,6 @@ DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
 }
 
 void DirectoryCompleter::collect_directories() {
-	std::cout << "Scanning directories..." << std::endl;
 	try {
 		fs::recursive_directory_iterator it(init_path, fs::directory_options::skip_permission_denied);
 		fs::recursive_directory_iterator end;
@@ -62,66 +61,41 @@ void DirectoryCompleter::collect_directories() {
 }
 
 void DirectoryCompleter::save() const {
-    std::cout << "Saving cache..." << std::endl;
-    ordered_json j = ordered_json::array();
-    for (const auto& [dir, cache] : directories.map) {
-        ordered_json entry;
-        entry["dir"] = dir;
+	json j;
+	for (const auto& [dir, cache] : directories.map) {
+		json entry;
+		entry["dir"] = dir;
+		
 
-				ordered_json paths = ordered_json::array();
-				for (const auto& path : cache.get_all_paths())
-					paths.push_back(path);
-				entry["paths"] = paths;
+		ordered_json paths = ordered_json::array();
+		for (const auto& path : cache.get_all_paths())
+			paths.push_back(path);
+		entry["paths"] = paths;
 
-				if (dir == "static") {
-					std::cout << "Order before saving: " << std::endl;
-					for (const auto& path : directories.get_all_paths(dir)) {
-						std::cout << path << std::endl;
-					}
-				}
-
-        j.push_back(entry);
-    }
-    std::ofstream file(cache_path);
-    if (file.is_open()) {
-        file << j.dump(4);
-        file.close();
-    } else {
-        std::cerr << "Unable to open file for writing: " << cache_path << std::endl;
-    }
+		j.push_back(entry);
+	}
+	std::ofstream file(cache_path);
+	if (file.is_open()) {
+		file << j.dump(4);
+		file.close();
+	} else {
+		std::cerr << "Unable to open file for writing: " << cache_path << std::endl;
+	}
 }
 
 void DirectoryCompleter::load() {
-	std::cout << "Loading cache..." << std::endl;
 	std::ifstream file(cache_path);
 	if (file.is_open()) {
-		ordered_json j;
+		json j;
 		file >> j;
 		file.close();
 
 		for (const auto& entry : j) {
 			std::string dir = entry["dir"];
 			ordered_json paths = entry["paths"];
-			std::vector<std::string> paths_vec;
-			for (const auto& path : paths) {
-				paths_vec.push_back(path.get<std::string>());
-			}
 
-			if (dir == "static") {
-				std::cout << "Order after loading: " << std::endl;
-				for (const auto& path : paths) {
-					std::cout << "XX" << path << std::endl;
-				}
-			}
-
-			directories.bulk_load(dir, paths_vec);
-
-			if (dir == "static") {
-				std::cout << "Order after loading: " << std::endl;
-				for (const auto& path : directories.get_all_paths(dir)) {
-					std::cout << "ZZ" << path << std::endl;
-				}
-			}
+			for (const auto& path : paths)
+				directories.add(path.get<std::string>(), dir);
 		}
 	} else
 		std::cerr << "Unable to open file for reading: " << cache_path << std::endl;
