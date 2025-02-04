@@ -1,0 +1,19 @@
+#compdef dv
+
+zstyle ':completion:*' list-grouped yes
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list '' 'r:|=*'
+
+setopt menucomplete
+setopt autolist
+
+_dv() {
+  local partial
+  partial="${words[CURRENT]}"
+
+  local completions
+  completions=("${(@f)$(dv-binary "$partial")}")
+  
+  compadd -U -V 'Available Options' -- "${completions[@]}"
+}
+compdef _dv dv

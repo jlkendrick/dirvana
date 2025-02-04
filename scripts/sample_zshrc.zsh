@@ -1,31 +1,14 @@
-# ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
-# | | | | | | | | | | | | | | | | | | | | | | |
-# The other content of your existing .zshrc file.
+fpath=(~/.zsh/completions $fpath)
+autoload -Uz compinit && compinit
 
+# The other content of your existing .zshrc file #
+# ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃ ⌃  #
+# | | | | | | | | | | | | | | | | | | | | | | |  #
+# | | | | | | | | | | | | | | | | | | | | | | |  #
+# ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄  #
+# The other content of your existing .zshrc file #
 
-# Add the following somewhere in your .zshrc file:
-zstyle ':completion:*' list-grouped yes
-zstyle ':completion:*' menu select
-zstyle ':completion:*' matcher-list '' 'r:|=*'
-
-setopt menucomplete
-setopt autolist
-
-autoload -Uz compinit && compinit -u
-
-# --------------- TAB completion for dv ---------------
-_dv() {
-  local partial
-  partial="${words[CURRENT]}"
-
-  local completions
-  completions=("${(@f)$(dv-binary "$partial")}")
-  
-  compadd -U -V 'Available Options' -- "${completions[@]}"
-}
-compdef _dv dv
-
-# ---------------- ENTER handler for dv ---------------
+# ------ Command handler ------ #
 dv() {
   if [[ $# -eq 0 ]]; then
     echo "Usage: dv <directory> + ('tab' and/or 'enter') | dv rebuild + 'enter' | dv -- <directory> + 'enter'"
