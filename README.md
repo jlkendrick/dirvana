@@ -7,7 +7,7 @@ Dirvana enhances `cd` by integrating **custom autocompletion** into Zsh's comple
 
 ## Installation
 
-### **1️⃣ Download the Binary**
+### **1️⃣ Install the Binary**
 Dirvana requires its compiled binary (`dv-binary`, which can be found in the `build/` directory of this repo). Download it or build the project and move it to a directory in your `PATH`, such as `/usr/local/bin`:
 
 ```sh
@@ -31,7 +31,6 @@ cp _dv ~/.zsh/completions
 Add the completion script to your Zsh configuration file (e.g., `~/.zshrc`):
 
 ```sh
-# Example: Add to ~/.zshrc
 fpath=(~/.zsh/completions $fpath)
 autoload -Uz compinit && compinit
 ```
@@ -40,14 +39,12 @@ autoload -Uz compinit && compinit
 Add the following function to your Zsh configuration file (e.g., `~/.zshrc`):
 
 ```sh
-# Example: Add to ~/.zshrc
 dv() {
   if [[ $# -eq 0 ]]; then
     echo "Usage: dv <directory> + ('tab' and/or 'enter') | dv rebuild + 'enter' | dv -- <directory> + 'enter'"
     return 1
   fi
 
-  # If '--' is given as the first argument, treat the second argument as a directory and bypass special handling.
   if [[ "$1" == "--" ]]; then
     if [[ -z "$2" ]]; then
       echo "Usage: dv -- <directory>"
