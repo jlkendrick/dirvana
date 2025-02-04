@@ -1,5 +1,5 @@
 # Dirvana
-**An intelligent directory navigation tool with Zsh-powered autocompletion.**  
+**A simple directory navigation tool with Zsh-powered autocompletion.**  
 
 Dirvana enhances `cd` by integrating **custom autocompletion** into Zsh's completion system, enabling fast and efficient movement across large filesystems.
 
