@@ -31,6 +31,7 @@ cp _dv ~/.zsh/completions
 Add the completion script to your Zsh configuration file (e.g., `~/.zshrc`):
 
 ```sh
+# Use the path where you copied the completion script
 fpath=(~/.zsh/completions $fpath)
 autoload -Uz compinit && compinit
 ```
@@ -87,7 +88,7 @@ You can now use `dv` how you would normally use `cd`, with the added benefit of 
 
 ```sh
 # Navigate to a directory
-dv src + 'Tab' = dv path1/to/src # Consecutive 'Tab' presses cycle through possible 
+dv src + 'Tab' = dv path1/to/src # Autocompletes to top match and displays a menu of other matches. Consecutive 'Tab' presses cycle through matches.
 
 # After getting the desired directory, press 'Enter' to navigate to it
 dv path2/to/src + 'Enter' = # Navigates to 'path2/to/src'
