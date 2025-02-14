@@ -16,4 +16,3 @@ _dv() {
   
   compadd -U -V 'Available Options' -- "${completions[@]}"
 }
-compdef _dv dv
