@@ -64,10 +64,10 @@ TEST(RecentlyAccessedCache, DuplicateHandling) {
 	// Add the same path multiple times
 	cache.add("/path/to/dir2");
 	cache.add("/path/to/dir1");
-	cache.add("/path/to/dir1"); // Should promote dir1
+	cache.add("/path/to/dir1"); // Should do nothing
 
 	EXPECT_EQ(cache.get_size(), 2);
 	vector<string> paths = cache.get_all_paths();
-	EXPECT_EQ(paths[0], "/path/to/dir1");
-	EXPECT_EQ(paths[1], "/path/to/dir2");
+	EXPECT_EQ(paths[0], "/path/to/dir2");
+	EXPECT_EQ(paths[1], "/path/to/dir1");
 }

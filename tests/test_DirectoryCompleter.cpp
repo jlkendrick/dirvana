@@ -95,6 +95,37 @@ TEST(DirectoryCompleter, Exclusion) {
 	EXPECT_EQ(completer4.get_size(), 0);
 }
 
+TEST(DirectoryCompleter, Refresh) {
+	// First create a completer with strict exclusion rules
+	string root = "/Users/jameskendrick/Code/Projects/dirvana/mockfs";
+	vector<ExclusionRule> exclude = {
+		{ ExclusionType::Exact, "custom_rule_check" },
+		{ ExclusionType::Exact, "1" },
+		{ ExclusionType::Prefix, "." }
+	};
+	string cache_path = "test-refresh-cache.json";
+	DirectoryCompleter original(DCArgs{ .init_path = root, .exclude = exclude, .cache_path = cache_path });
+
+	// Verify initial state with strict exclusion
+	EXPECT_EQ(original.get_size(), 6);
+
+	// Save the current state
+	original.save();
+
+	// Create a new completer with relaxed rules and refresh enabled
+	vector<ExclusionRule> relaxed_exclude = {
+		{ ExclusionType::Prefix, "." }
+	};
+	DirectoryCompleter refreshed(DCArgs{ .build = false, .refresh = true, .init_path = root, .exclude = relaxed_exclude, .cache_path = cache_path });
+
+	// Verify that previously excluded directories are now included
+	EXPECT_EQ(refreshed.get_size(), 15);
+	
+	// Verify specific directories are now accessible
+	auto matches = refreshed.get_all_matches("1");
+	check(root, matches, {"/1", "/1/1", "/1/1/1"});
+}
+
 TEST(DirectoryCompleter, SaveAndLoad) {
 	// Create a DirectoryCompleter with known data
 	string root = "/Users/jameskendrick/Code/Projects/dirvana/mockfs";
@@ -102,6 +133,7 @@ TEST(DirectoryCompleter, SaveAndLoad) {
 		{ ExclusionType::Prefix, "."},
     { ExclusionType::Exact, "custom_rule_check" },
   };
+
 	string cache_path = "test-cache.json";
 	DirectoryCompleter original(DCArgs{ .init_path = root, .exclude = exclude, .cache_path = cache_path });
 
@@ -114,7 +146,7 @@ TEST(DirectoryCompleter, SaveAndLoad) {
 	original.save();
 
 	// Create a new completer instance and load the saved state
-	DirectoryCompleter loaded(DCArgs{ false, root, exclude, cache_path });
+	DirectoryCompleter loaded(DCArgs{ false, false, root, exclude, cache_path });
 
 	// Verify the loaded completer has the same matches
 	auto loaded_matches_1 = loaded.get_all_matches("1");

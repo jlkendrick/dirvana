@@ -26,8 +26,12 @@ DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
     
     if (args.build)
       collect_directories();
-    else
+    else {
       load();
+			if (args.refresh)
+				// Collecting direcories when we have already loaded them will preserve the existing data, while adding new directories
+				collect_directories();
+		}
 }
 
 void DirectoryCompleter::collect_directories() {
@@ -43,13 +47,12 @@ void DirectoryCompleter::collect_directories() {
 
 			// If the entry is a directory and it's not in the exclude list, add it to the PathMap
 			if (fs::is_directory(entry)) {
-				if (dir_name != "" && !should_exclude(dir_name)) {
+				if (dir_name != "" && !should_exclude(dir_name))
 					directories.add(entry.path().string(), dir_name);
 				
 				// Otherwise, don't add it to the PathMap and disable recursion into it's children
-				} else {
+				else
 					it.disable_recursion_pending();
-				}
 			}
 
 			++it;

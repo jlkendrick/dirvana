@@ -42,7 +42,7 @@ public:
 	std::vector<std::string> get_all_matches(const std::string& dir) const;
 
 	// Indicates that the given path has been accessed and it's position in the cache should be updated
-	void access(const std::string& path) { directories.add(path); }
+	void access(const std::string& path) { directories.access(path, get_deepest_dir(path)); }
 
 	// Returns the number of directories in the completer
 	int get_size() const { return directories.get_size(); }
@@ -104,6 +104,7 @@ private:
 
 struct DCArgs {
 	bool build = true;
+	bool refresh = false;
 	std::string init_path = "";
 	std::vector<DirectoryCompleter::ExclusionRule> exclude = {};
 	std::string cache_path = "";

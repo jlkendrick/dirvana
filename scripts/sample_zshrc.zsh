@@ -16,14 +16,12 @@ autoload -Uz compinit && compinit
 # ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄ ⌄  #
 # The other content of your existing .zshrc file #
 
-# ------ Command handler ------ #
 dv() {
   if [[ $# -eq 0 ]]; then
-    echo "Usage: dv <directory> + ('tab' and/or 'enter') | dv rebuild + 'enter' | dv -- <directory> + 'enter'"
+    echo "Usage: dv <directory> + ('tab' or 'enter') | dv rebuild + 'enter' | dv -- <directory> + 'enter'"
     return 1
   fi
 
-  # If '--' is given as the first argument, treat the second argument as a directory and bypass special handling.
   if [[ "$1" == "--" ]]; then
     if [[ -z "$2" ]]; then
       echo "Usage: dv -- <directory>"
@@ -47,3 +45,5 @@ dv() {
       ;;
   esac
 }
+
+dv-binary refresh &> /dev/null & disown

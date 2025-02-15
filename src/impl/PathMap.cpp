@@ -4,13 +4,23 @@
 #include <iostream>
 
 void PathMap::add(const std::string& path, const std::string& dirname) {
-	// If the dirname was not passed (when called from tests), get it from the path
-	auto res = dirname == "" ? get_deepest_dir(path) : std::make_pair(true, dirname);
+	// Get the deepest directory name in the path which is the key for the cache
+	auto res = dirname.empty() ? get_deepest_dir(path) : std::make_pair(true, dirname);
 	if (!res.first)
 		return;
 
-	// Add the path to the cache, this will create a new cache if it doesn't exist and promote the path if the path is already in the cache
+	// Add the path to the cache or do nothing if the path is already in the cache, this will also create a new cache if needed
 	map[res.second].add(path);
+}
+
+void PathMap::access(const std::string& path, const std::string& dirname) {
+	// If the dirname was not passed (when called from tests), get it from the path
+	auto res = dirname.empty() ? get_deepest_dir(path) : std::make_pair(true, dirname);
+	if (!res.first)
+		return;
+
+	// Access the path in the cache
+	map[res.second].access(path);
 }
 
 const std::shared_ptr<DoublyLinkedList> PathMap::get_list_for(const std::string& dir) const {

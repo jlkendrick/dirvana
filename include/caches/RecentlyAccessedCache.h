@@ -17,6 +17,10 @@ public:
 	// Constructs a new Node with the given path and adds it to the default position in the cache (back)
 	void add(const std::string& path);
 
+	// Accesses the given path in the cache. If the path is already in the cache, it is promoted to the front.
+	// If the path is not in the cache, it is added to the back.
+	void access(const std::string& path);
+
 	// Bulk loads a list of paths into the cache. This is used when loading the cache from a file.
 	void bulk_load(const std::vector<std::string>& paths);
 
