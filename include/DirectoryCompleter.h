@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 class DirectoryCompleter;
 struct DCArgs;
@@ -39,7 +40,7 @@ public:
 	bool has_matches(const std::string& dir) const { return directories.contains(dir); }
 
 	// Finds the matching cache for the given directory name and returns the paths in that cache
-	std::vector<std::string> get_all_matches(const std::string& dir) const;
+	std::vector<std::string> get_all_matches(const std::string& dir = "") const;
 
 	// Indicates that the given path has been accessed and it's position in the cache should be updated
 	void access(const std::string& path) { directories.access(path, get_deepest_dir(path)); }
@@ -52,7 +53,7 @@ public:
 
 	// Functions to save and load the completer from a JSON file
 	void save() const;
-	void load();
+	void load(std::unordered_set<std::string>& old_dirs);
 
 private:
 	PathMap directories;
@@ -63,14 +64,17 @@ private:
 	// Helper function to get the cache path
 	std::string get_cache_path() const;
 
+	// Re-scans the root directory to add/remove directories
+	void refresh_directories(std::unordered_set<std::string>& old_dirs);
+
 	// Returns true if the given directory should be excluded from the PathMap
-	bool should_exclude(const std::string& dir) const;
+	bool should_exclude(const std::string& dir, const std::string& path = "") const;
 
 	// Helper function to get the deepest directory name of a given path
 	std::string get_deepest_dir(const std::string& path) const;
 
 	// Private function used by the constructor to collect all of the directories in the root directory
-	void collect_directories();
+	std::vector<std::pair<std::string, std::string>> collect_directories();
 
 
 	// Stores excludsion rules for directories

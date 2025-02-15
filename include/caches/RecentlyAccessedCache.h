@@ -17,6 +17,9 @@ public:
 	// Constructs a new Node with the given path and adds it to the default position in the cache (back)
 	void add(const std::string& path);
 
+	// Removes the given path from the cache. If the path is not in the cache, nothing happens.
+	void remove(const std::string& path);
+
 	// Accesses the given path in the cache. If the path is already in the cache, it is promoted to the front.
 	// If the path is not in the cache, it is added to the back.
 	void access(const std::string& path);

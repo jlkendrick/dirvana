@@ -13,6 +13,16 @@ void PathMap::add(const std::string& path, const std::string& dirname) {
 	map[res.second].add(path);
 }
 
+void PathMap::remove(const std::string& path, const std::string& dirname) {
+	// If the dirname was not passed (when called from tests), get it from the path
+	auto res = dirname.empty() ? get_deepest_dir(path) : std::make_pair(true, dirname);
+	if (!res.first)
+		return;
+
+	// Remove the path from the cache
+	map[res.second].remove(path);
+}
+
 void PathMap::access(const std::string& path, const std::string& dirname) {
 	// If the dirname was not passed (when called from tests), get it from the path
 	auto res = dirname.empty() ? get_deepest_dir(path) : std::make_pair(true, dirname);
@@ -31,6 +41,15 @@ const std::shared_ptr<DoublyLinkedList> PathMap::get_list_for(const std::string&
 }
 
 std::vector<std::string> PathMap::get_all_paths(const std::string& dir) const {
+	// If no directory is passed, return all paths in the map
+	if (dir.empty()) {
+		std::vector<std::string> all_paths;
+		for (const auto& entry : map)
+			for (const auto& path : entry.second.get_all_paths())
+				all_paths.push_back(path);
+		return all_paths;
+	}
+
 	// If the query directory is not in the map, return an empty vector
 	if (map.find(dir) == map.end())
 		return std::vector<std::string>();

@@ -21,6 +21,21 @@ void RecentlyAccessedCache::add(const std::string& path) {
 	size++;
 }
 
+void RecentlyAccessedCache::remove(const std::string& path) {
+	// If the path is not in the cache, do nothing
+	if (!this->contains(path))
+		return;
+
+	// Get the node from the cache
+	std::shared_ptr<Node> node = cache.at(path);
+
+	// Remove the node from the cache and the list
+	cache.erase(path);
+	order.delete_at(node);
+
+	size--;
+}
+
 void RecentlyAccessedCache::access(const std::string& path) {
 	// If the path is already in the cache, promote it
 	if (this->contains(path)) {

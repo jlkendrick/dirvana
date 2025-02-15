@@ -21,6 +21,8 @@ struct PathMap {
 	// that way, users can simply type the directory name and get the most recently accessed paths
 	void add(const std::string& path, const std::string& dirname = "");
 
+	void remove(const std::string& path, const std::string& dirname = "");
+
 	// Access the given path in the cache for the directory name
 	void access(const std::string& path, const std::string& dirname = "");
 
@@ -36,7 +38,7 @@ struct PathMap {
 	const std::shared_ptr<DoublyLinkedList> get_list_for(const std::string& dir) const;
 
 	// Returns the paths in the cache for the given directory name
-	std::vector<std::string> get_all_paths(const std::string& dir) const;
+	std::vector<std::string> get_all_paths(const std::string& dir = "") const;
 
 	// Returns true if the map contains the given directory name
 	bool contains(const std::string& dir) const { return map.find(dir) != map.end(); }
