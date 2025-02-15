@@ -28,21 +28,29 @@ cp _dv ~/.zsh/completions
 ```
 
 ### **3️⃣ Enable the Completion Script**
-Add the completion script to your Zsh configuration file (e.g., `~/.zshrc`):
+Add the completion script to your Zsh configuration file (e.g., `~/.zshrc`) along with the following configuration options:
 
 ```sh
 # Use the path where you copied the completion script
 fpath=(~/.zsh/completions $fpath)
+
+zstyle ':completion:*' list-grouped yes
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list '' 'r:|=*'
+
+setopt menucomplete
+setopt autolist
+
 autoload -Uz compinit && compinit
 ```
 
-### **4️⃣ Add the command handler**
+### **4️⃣ Add the Command Handler**
 Add the following function to your Zsh configuration file (e.g., `~/.zshrc`):
 
 ```sh
 dv() {
   if [[ $# -eq 0 ]]; then
-    echo "Usage: dv <directory> + ('tab' and/or 'enter') | dv rebuild + 'enter' | dv -- <directory> + 'enter'"
+    echo "Usage: dv <directory> + ('tab' or 'enter') | dv rebuild + 'enter' | dv -- <directory> + 'enter'"
     return 1
   fi
 
@@ -69,7 +77,10 @@ dv() {
       ;;
   esac
 }
+
+dv-binary refresh &> /dev/null & disown
 ```
+Note: to see a sample Zsh configuration file, refer to the `scripts/sample.zshrc` file in this repo.
 
 ### **5️⃣ Reload Zsh Configuration**
 Reload your Zsh configuration to apply the changes:
