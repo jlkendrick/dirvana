@@ -23,7 +23,7 @@ set(LIB_SOURCES
     # src/impl/caches/FrequencyBasedCache.cpp
     
     src/impl/utils/DoublyLinkedList.cpp
-    src/impl/utils/DLLTraverser.cpp
+    # src/impl/utils/DLLTraverser.cpp
 )
 
 # Create a library for shared application code
@@ -43,9 +43,9 @@ target_link_libraries(dv-binary dirvana_lib)
 #     tests/test_PathMap.cpp
 
 #     tests/test_RecentlyAccessedCache.cpp
-#     tests/test_FrequencyBasedCache.cpp
+#     # tests/test_FrequencyBasedCache.cpp
 
-#     tests/test_DoublyLinkedList.cpp
+#     # tests/test_DoublyLinkedList.cpp
 # )
 
 # # Create the test executable

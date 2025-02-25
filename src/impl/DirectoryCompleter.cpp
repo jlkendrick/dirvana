@@ -130,9 +130,9 @@ void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
 		std::cerr << "Unable to open file for reading: " << cache_path << std::endl;
 }
 
-const std::shared_ptr<DoublyLinkedList> DirectoryCompleter::get_list_for(const std::string& dir) const {
-	return directories.get_list_for(dir);
-}
+// const std::shared_ptr<DoublyLinkedList> DirectoryCompleter::get_list_for(const std::string& dir) const {
+// 	return directories.get_list_for(dir);
+// }
 
 std::vector<std::string> DirectoryCompleter::get_all_matches(const std::string& dir) const {
 	return directories.get_all_paths(dir);

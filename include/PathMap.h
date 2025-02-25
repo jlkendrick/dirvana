@@ -26,16 +26,13 @@ struct PathMap {
 	// Access the given path in the cache for the directory name
 	void access(const std::string& path, const std::string& dirname = "");
 
-	// Bulk load a list of paths into the cache for the given directory name
-	void bulk_load(const std::string& dirname, const std::vector<std::string>& paths);
-
 	// Helper function to return the deepest directory name in a path
 	// Ex. get_deepest_dir("/Users/jameskendrick/Code/Projects/dirvana/cpp/src") will return "src"
 	// We return a pair of bool and string to ensure that the path is valid
 	std::pair<bool, std::string> get_deepest_dir(const std::string& path) const;
 
 	// Returns a reference to the DLL that is used to construct the traverser
-	const std::shared_ptr<DoublyLinkedList> get_list_for(const std::string& dir) const;
+	// const std::shared_ptr<DoublyLinkedList> get_list_for(const std::string& dir) const;
 
 	// Returns the paths in the cache for the given directory name
 	std::vector<std::string> get_all_paths(const std::string& dir = "") const;
@@ -47,7 +44,8 @@ struct PathMap {
 	int get_size() const;
 
 	// Map of directory names to caches of recently accessed paths
-	std::unordered_map<std::string, RecentlyAccessedCache> map;
+	// Here is where we can switch between the two implementations of V1 (self-implemented) and V2 (std::list)
+	std::unordered_map<std::string, RecentlyAccessedCacheV2> map;
 
 	// Total number of paths in the map
 	int size = 0;

@@ -33,12 +33,12 @@ void PathMap::access(const std::string& path, const std::string& dirname) {
 	map[res.second].access(path);
 }
 
-const std::shared_ptr<DoublyLinkedList> PathMap::get_list_for(const std::string& dir) const {
-	// If the query directory is not in the map, return an empty list
-	if (map.find(dir) == map.end())
-		return std::make_shared<DoublyLinkedList>();
-	return std::make_shared<DoublyLinkedList>(map.at(dir).get_list());
-}
+// const std::shared_ptr<DoublyLinkedList> PathMap::get_list_for(const std::string& dir) const {
+// 	// If the query directory is not in the map, return an empty list
+// 	if (map.find(dir) == map.end())
+// 		return std::make_shared<DoublyLinkedList>();
+// 	return std::make_shared<DoublyLinkedList>(map.at(dir).get_list());
+// }
 
 std::vector<std::string> PathMap::get_all_paths(const std::string& dir) const {
 	// If no directory is passed, return all paths in the map
@@ -70,8 +70,4 @@ int PathMap::get_size() const {
 	for (auto& entry : map)
 		size += entry.second.get_size();
 	return size;
-}
-
-void PathMap::bulk_load(const std::string& dirname, const std::vector<std::string>& paths) {
-    map[dirname].bulk_load(paths);
 }

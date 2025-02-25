@@ -4,14 +4,16 @@
 #include "Node.h"
 #include "DoublyLinkedList.h"
 
+#include <list>
 #include <memory>
 #include <string>
 #include <unordered_map>
 
-// RecentlyAccessedCache is a cache of recently accessed paths.
+// ------------------------------------------- SELF-IMPLEMENTED RECENTLY ACCESSED CACHE -------------------------------------------
+// RecentlyAccessedCacheV1 is a cache of recently accessed paths.
 // It uses a map from paths to Nodes for quick access to the path's position in the cache.
 // The prioritization is done by reordering the nodes in a DoublyLinkedList.
-class RecentlyAccessedCache {
+class RecentlyAccessedCacheV1 {
 public:
 
 	// Constructs a new Node with the given path and adds it to the default position in the cache (back)
@@ -23,9 +25,6 @@ public:
 	// Accesses the given path in the cache. If the path is already in the cache, it is promoted to the front.
 	// If the path is not in the cache, it is added to the back.
 	void access(const std::string& path);
-
-	// Bulk loads a list of paths into the cache. This is used when loading the cache from a file.
-	void bulk_load(const std::vector<std::string>& paths);
 
 	// Promotes the given path to the front of the cache. Consists of removing the node from its current position
 	// and inserting it at the front of the DoublyLinkedList.
@@ -48,6 +47,29 @@ private:
 	DoublyLinkedList order;
 
 	// Total number of paths in the cache
+	int size = 0;
+};
+
+// ------------------------------------------- STD LIBRARY RECENTLY ACCESSED CACHE -------------------------------------------
+// Same as RecentlyAccessedCacheV1 but uses std::list instead of a custom doubly linked list, see V1 for comments
+class RecentlyAccessedCacheV2 {
+public:
+	
+	void add(const std::string& path);
+	void remove(const std::string& path);
+	void access(const std::string& path);
+	void promote(const std::string& path);
+
+	const std::list<std::string>& get_list() const { return order; }
+	std::vector<std::string> get_all_paths() const;
+
+	bool contains(const std::string& path) const { return cache.find(path)!= cache.end(); }
+	int get_size() const { return size; }
+
+private:
+	std::unordered_map<std::string, std::list<std::string>::iterator> cache;
+	std::list<std::string> order;
+
 	int size = 0;
 };
 

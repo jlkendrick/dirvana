@@ -17,17 +17,8 @@ struct DCArgs;
 class DirectoryCompleter {
 public:
 
-	// Exclusion rules for directories
-	enum class ExclusionType {
-		Exact,
-		Prefix,
-		Suffix,
-		Contains
-	};
-	struct ExclusionRule {
-		ExclusionType type;
-		std::string pattern;
-	};
+	enum class ExclusionType { Exact, Prefix, Suffix, Contains };
+	struct ExclusionRule { ExclusionType type; std::string pattern; };
 
 	// Constructs a new DirectoryCompleter with the specified variables or the default values
 	DirectoryCompleter(const DCArgs& args);
@@ -76,8 +67,7 @@ private:
 	// Private function used by the constructor to collect all of the directories in the root directory
 	std::vector<std::pair<std::string, std::string>> collect_directories();
 
-
-	// Stores excludsion rules for directories
+	// Stores exclusion rules for directories
 	std::vector<ExclusionRule> exclusion_rules = {
 		// Exclude dot directories
 		{ ExclusionType::Prefix, "." },
@@ -105,6 +95,8 @@ private:
 		// { ExclusionType::Contains, "release" }
 	};
 };
+
+// ----------------------------------- UTILITIES -----------------------------------
 
 struct DCArgs {
 	bool build = true;
