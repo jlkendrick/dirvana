@@ -49,11 +49,13 @@ Add the following function to your Zsh configuration file (e.g., `~/.zshrc`):
 
 ```sh
 dv() {
+  # Unrecognized command
   if [[ $# -eq 0 ]]; then
     echo "Usage: dv <directory> + ('tab' or 'enter') | dv rebuild + 'enter' | dv -- <directory> + 'enter'"
     return 1
   fi
 
+  # Check if command bypasser was used
   if [[ "$1" == "--" ]]; then
     if [[ -z "$2" ]]; then
       echo "Usage: dv -- <directory>"
@@ -63,16 +65,29 @@ dv() {
     return $?
   fi
 
+  # Handle commands
   case "$1" in
     rebuild)
+      # Rebuild
       dv-binary rebuild
       ;;
     *)
-      if cd "$1"; then
+      # Otherwise, try to change directory
+      if cd "$1" 2>/dev/null; then
         dv-binary update "$1"
       else
-        echo "Error: Could not change directory to '$1'"
-        return 1
+        # If the directory doesn't exist, try to match
+        local matches
+        matches=($(dv-binary "$1"))
+
+        # If there is a match, cd into the first match
+        if [[ ${#matches[@]} -gt 0 ]]; then
+          cd "${matches[1]}" && dv-binary update "${matches[1]}"
+        else
+          # If there are no matches, print an error message
+          echo "dv-error: Could not change directory to '$1'"
+          return 1
+        fi
       fi
       ;;
   esac
@@ -99,10 +114,13 @@ You can now use `dv` how you would normally use `cd`, with the added benefit of 
 
 ```sh
 # Navigate to a directory
-dv src + 'Tab' = dv path1/to/src # Autocompletes to top match and displays a menu of other matches. Consecutive 'Tab' presses cycle through matches.
+dv project + 'Tab' = dv path/to/project # Autocompletes to top match and displays a menu of other matches. Consecutive 'Tab' presses cycle through matches.
 
-# After getting the desired directory, press 'Enter' to navigate to it
-dv path2/to/src + 'Enter' = # Navigates to 'path2/to/src'
+# After getting the desired directory, press 'Enter' to navigate to it.
+dv another/path/to/project + 'Enter' = # Navigates to 'path2/to/src' (executes 'cd path2/to/src').
+
+# Quick-navigate to a directory
+dv project + 'Enter' = # Tries to 'cd' into 'project' (if it exists) or finds the first match and navigates to it.
 
 # If you make/delete directories, you can rebuild the database with 'dv rebuild'
 dv rebuild + 'Enter' = # Rebuilds the database
