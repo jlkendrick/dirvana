@@ -33,21 +33,21 @@ add_library(dirvana_lib ${LIB_SOURCES})
 add_executable(dv-binary src/main.cpp)
 target_link_libraries(dv-binary dirvana_lib)
 
-# # Find and configure Google Test
-# find_package(GTest REQUIRED)
-# include_directories(${GTEST_INCLUDE_DIRS})
+# Find and configure Google Test
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
 
-# # Define test source files
-# set(TEST_SOURCES
-#     tests/test_DirectoryCompleter.cpp
-#     tests/test_PathMap.cpp
+# Define test source files
+set(TEST_SOURCES
+    tests/test_DirectoryCompleter.cpp
+    tests/test_PathMap.cpp
 
-#     tests/test_RecentlyAccessedCache.cpp
-#     # tests/test_FrequencyBasedCache.cpp
+    tests/test_RecentlyAccessedCache.cpp
+    # tests/test_FrequencyBasedCache.cpp
 
-#     # tests/test_DoublyLinkedList.cpp
-# )
+    # tests/test_DoublyLinkedList.cpp
+)
 
-# # Create the test executable
-# add_executable(test ${TEST_SOURCES})
-# target_link_libraries(test dirvana_lib GTest::GTest GTest::Main pthread)
+# Create the test executable
+add_executable(test ${TEST_SOURCES})
+target_link_libraries(test dirvana_lib GTest::GTest GTest::Main pthread)

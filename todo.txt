@@ -1,3 +1,0 @@
-1. When dv + 'partial' is 'enter'-ed, generate completions and cd into the first match. If there are none, say so.
-	- Essentially a way to bypass the 'tab' part in 'tab'-ing to get the completion, and then 'enter'-ing to cd into the first match.
-2. Implement way to do completions based on prefix or fuzzy matching without changing the main API so I can switch between versions.

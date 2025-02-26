@@ -1,0 +1,62 @@
+--------------------------------------------------------- TODO ------------------------------------------------------
+1. (done) When dv + 'partial' is 'enter'-ed, generate completions and cd into the first match. If there are none, say so.
+	- Essentially a way to bypass the 'tab' part in 'tab'-ing to get the completion, and then 'enter'-ing to cd into the first match.
+2. (done) Add new version of RecentlyAccessedCache that uses the standard library list.
+3. Move argument parsing out of the Zsh function and into the C++ tool
+	- Instead of validating and constructing calls to the program in the Zsh function, simply relay the command to the C++ executable
+		that then processes the argument and carries out the logic.
+	- See NOTES below for further explanation
+4. Implement way to do completions based on prefix or fuzzy matching without changing the main API so I can switch between versions.
+
+--------------------------------------------------------- NOTES ------------------------------------------------------
+Arguments that can be passed to the program:
+
+------------- -tab flag ---------------------
+-tab means the binary was called from a tab completion script
+The only thing we do here is:
+	1) Expect the partial path as the last argument
+	2) Query the DirectoryCompleter using the partial path
+	3) Append matches to the end of the commands that came after "dv" and before the partial path
+In most cases, this handles calls like "dv-binary dv dirvana" which would be processed like
+	1) The last argument (the partial) is "dirvana"
+	2) The only match is "/path/to/dirvana"
+	3) Append matches to "" since there is nothing between "dv" and "dirvana" in the arguments so "compadd" "/path/to/dirvana"
+However, we want this to also support:
+If this is called with "dirvana-binary -tab dv code dirvana", then
+	1) The partial path is "dirvana"
+	2) The only match is "/path/to/dirvana"
+  3) Notice "code" is an extra command between "dv" and "dirvana" so what we "compadd" is "code /path/to/dirvana"
+That way, when Zsh fills the completion, what is displayed in the command line goes from
+	"dv code dirvana" --> "dv code /path/to/dirvana" 
+which can then we handled by the _dv enter function as described below.
+
+------------- -enter flag --------------------
+-enter means the binary was called from a enter key press (the _dv enter function)
+What we do here is:
+	1) Check if the bypass flag ("--") was passed, if so
+		1a) Skip to 4)
+  2) Check if the program was called with the "rebuild" command
+		2a) If so, rebuild the DirectoryCompleter from scratch and save it to a file, resetting order, Exit
+  3) Check if the program was called with the "refresh" command
+		3a) If so, rebuild the DirectoryCompleter while preserving the existing data and save it to a file, Exit
+	Now we know we either have:
+		i) a full path to 'cd' into, or
+		ii) a partial path to 'cd' into after finding matches (quick-nav feature)
+		iii) a full path with a preceeding command that we just need to execute (most likely came from --tab complete)
+		iiii) a partial path with a preceeding command that we need to execute after finding matches for the parital (quick-nav + nested command feature)
+		To indentify what steps to take:	
+	4) Check if the number of arguments after "dv" is 1
+		4a) If so, go into step 5) with the last and only argument being the path
+		4b) If not, then we are dealing with a command so add it to the "current_command" (enable cases iii and iiii) 
+				and go into step 5) with the last argument being the path
+	5) Check whether the path is a partial or a full path
+		5a) If it is a full-path, set "result" to the first match (enable cases i and iii)
+		5b) If it is a partial, query the DirectoryCompleter, set "result" to the first match (enables cases ii and iiii)
+	6) Check if "current_command" is empty
+		6a) If so, we do "cd {result} (covers cases i and ii)
+		6b) If not, return command "{current_command} + {result}" (covers cases iii and iiii)
+Summary:
+	Case i    = 4a + 5a + 6a
+	Case ii   = 4a + 5b + 6a
+	Case iii  = 4b + 5a + 6b
+	Case iiii = 4b + 5b + 6b
