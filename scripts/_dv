@@ -1,11 +1,8 @@
 #compdef dv
 
 _dv() {
-  local partial
-  partial="${words[CURRENT]}"
-
   local completions
-  completions=("${(@f)$(dv-binary "$partial")}")
+  completions=("${(@f)$(dv-binary -tab "${words[@]}")}")
   
   compadd -U -V 'Available Options' -- "${completions[@]}"
 }

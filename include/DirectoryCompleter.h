@@ -20,6 +20,9 @@ public:
 	enum class ExclusionType { Exact, Prefix, Suffix, Contains };
 	struct ExclusionRule { ExclusionType type; std::string pattern; };
 
+	// Default blank constructor
+	DirectoryCompleter() = default;
+
 	// Constructs a new DirectoryCompleter with the specified variables or the default values
 	DirectoryCompleter(const DCArgs& args);
 
