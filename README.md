@@ -1,7 +1,7 @@
 # Dirvana
 **An intelligent directory navigation and command augmentation tool built for Zsh.**  
 
-Dirvana (`dv`) is designed to streamline working with directories in the terminal by providing autocompletion for directory paths. By default, `dv` wraps the `cd` command but when prefixed before another directory command (e.g., `ls`, `rm`, `mv`, etc.), it suggests relevant directory paths, allowing for quick navigation and command execution. The quick-nav feature further accelerates workflows by instantly selecting and executing the command on the best match. See [Usage](#usage) for more details.
+Dirvana (`dv`) is designed to streamline working with directories in the terminal by providing autocompletion for directory paths. By default, `dv` wraps the `cd` command but can also provide completions when prefixed before another directory command (e.g., `ls`, `rm`, `mv`, etc.), allowing for quick navigation and command execution. The quick-nav feature instantly executes the current command with the current best match. See [Usage](#usage) for more details.
 
 ---
 
@@ -93,7 +93,7 @@ You now have access to the `dv` command, here are some examples of how to use it
 # --------- Navigating to a directory ---------
 dv project + 'Tab' = dv path/to/project # Autocompletes to top match and displays a menu of other matches. Consecutive 'Tab' presses cycle through matches.
 # After getting the desired directory, press 'Enter' to navigate to it.
-dv another/path/to/project + 'Enter' = # Navigates to 'path2/to/src' (executes 'cd path2/to/src').
+dv another/path/to/project + 'Enter' = # Navigates to 'another/path/to/project' (executes 'cd another/path/to/project').
 #            -- or (quick-nav) --
 dv project + 'Enter' = # Tries to 'cd' into 'project' (if it exists) or finds the first match and navigates to it (in this case will 'cd' into 'path/to/project').
 
