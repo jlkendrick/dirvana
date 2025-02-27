@@ -1,7 +1,7 @@
 # Dirvana
-**A simple directory navigation tool with Zsh-powered autocompletion.**  
+**An intelligent directory navigation and command augmentation tool built for Zsh.**  
 
-Dirvana enhances `cd` by integrating **custom autocompletion** into Zsh's completion system, enabling fast and efficient movement across large filesystems.
+Dirvana (`dv`) is designed to streamline working with directories in the terminal by providing autocompletion for directory paths. By default, `dv` wraps the `cd` command but when prefixed before another directory command (e.g., `ls`, `rm`, `mv`, etc.), it suggests relevant directory paths, allowing for quick navigation and command execution. The quick-nav feature further accelerates workflows by instantly selecting and executing the command on the best match. See [Usage](#usage) for more details.
 
 ---
 
@@ -24,10 +24,12 @@ Dirvana also requires a Zsh completion script (`_dv` which can be found in the `
 ```sh
 # Example: Copy to ~/.zsh/completions (adjust if needed)
 mkdir -p ~/.zsh/completions
-
 cp _dv ~/.zsh/completions
-# or, manually copy the following function into the file you created (~/.zsh/completions/_dv)
+```
 
+or, manually copy the following function into the file you created (~/.zsh/completions/_dv)
+
+```sh
 #compdef dv
 _dv() {
   local completions
@@ -86,8 +88,7 @@ source ~/.zshrc
 
 ## Usage
 
-You now have access to the `dv` command, which provides autocompletion for directory navigation. By default, it wraps the `cd` command, but you can also use it to run other commands.
-Here are some examples of how to use `dv`:
+You now have access to the `dv` command, here are some examples of how to use it:
 ```sh
 # --------- Navigating to a directory ---------
 dv project + 'Tab' = dv path/to/project # Autocompletes to top match and displays a menu of other matches. Consecutive 'Tab' presses cycle through matches.
