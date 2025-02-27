@@ -24,7 +24,17 @@ Dirvana also requires a Zsh completion script (`_dv` which can be found in the `
 ```sh
 # Example: Copy to ~/.zsh/completions (adjust if needed)
 mkdir -p ~/.zsh/completions
+
 cp _dv ~/.zsh/completions
+# or, manually copy the following function into the file you created (~/.zsh/completions/_dv)
+
+#compdef dv
+_dv() {
+  local completions
+  completions=("${(@f)$(dv-binary -tab "${words[@]}")}")
+  
+  compadd -U -V 'Available Options' -- "${completions[@]}"
+}
 ```
 
 ### **3️⃣ Enable the Completion Script**
@@ -49,51 +59,17 @@ Add the following function to your Zsh configuration file (e.g., `~/.zshrc`):
 
 ```sh
 dv() {
-  # Unrecognized command
-  if [[ $# -eq 0 ]]; then
-    echo "Usage: dv <directory> + ('tab' or 'enter') | dv rebuild + 'enter' | dv -- <directory> + 'enter'"
-    return 1
+  local cmd
+  cmd=$(dv-binary -enter dv "$@")
+
+  if [[ -n "$cmd" ]]; then
+    eval "$cmd"
+  else
+    echo "dv-error: No command found for '$*'"
   fi
-
-  # Check if command bypasser was used
-  if [[ "$1" == "--" ]]; then
-    if [[ -z "$2" ]]; then
-      echo "Usage: dv -- <directory>"
-      return 1
-    fi
-    cd "$2" && dv-binary update "$2"
-    return $?
-  fi
-
-  # Handle commands
-  case "$1" in
-    rebuild)
-      # Rebuild
-      dv-binary rebuild
-      ;;
-    *)
-      # Otherwise, try to change directory
-      if cd "$1" 2>/dev/null; then
-        dv-binary update "$1"
-      else
-        # If the directory doesn't exist, try to match
-        local matches
-        matches=($(dv-binary "$1"))
-
-        # If there is a match, cd into the first match
-        if [[ ${#matches[@]} -gt 0 ]]; then
-          cd "${matches[1]}" && dv-binary update "${matches[1]}"
-        else
-          # If there are no matches, print an error message
-          echo "dv-error: Could not change directory to '$1'"
-          return 1
-        fi
-      fi
-      ;;
-  esac
 }
 
-dv-binary refresh &> /dev/null & disown
+dv-binary -enter dv refresh &> /dev/null & disown
 ```
 Note: to see a sample Zsh configuration file, refer to the `scripts/sample.zshrc` file in this repo.
 
@@ -110,23 +86,33 @@ source ~/.zshrc
 
 ## Usage
 
-You can now use `dv` how you would normally use `cd`, with the added benefit of improved autocompletion using `Tab`. For example:
-
+You now have access to the `dv` command, which provides autocompletion for directory navigation. By default, it wraps the `cd` command, but you can also use it to run other commands.
+Here are some examples of how to use `dv`:
 ```sh
-# Navigate to a directory
+# --------- Navigating to a directory ---------
 dv project + 'Tab' = dv path/to/project # Autocompletes to top match and displays a menu of other matches. Consecutive 'Tab' presses cycle through matches.
-
 # After getting the desired directory, press 'Enter' to navigate to it.
 dv another/path/to/project + 'Enter' = # Navigates to 'path2/to/src' (executes 'cd path2/to/src').
+#            -- or (quick-nav) --
+dv project + 'Enter' = # Tries to 'cd' into 'project' (if it exists) or finds the first match and navigates to it (in this case will 'cd' into 'path/to/project').
 
-# Quick-navigate to a directory
-dv project + 'Enter' = # Tries to 'cd' into 'project' (if it exists) or finds the first match and navigates to it.
+# ----------- Running a command ---------
+# You can also run commands with 'dv' (e.g., 'ls', 'rm', 'mv', etc.)
+dv code project + 'Tab' = dv code path/to/project # Autocompletes to top match and displays a menu of other matches. Consecutive 'Tab' presses cycle through matches.
+# After getting the desired directory, press 'Enter' to run the command.
+dv code another/path/to/project + 'Enter' = # Runs 'code path/to/project' (opens the directory in VSCode).
+#            -- or (quick-nav) --
+dv code project + 'Enter' = # Tries to 'code' into 'project' (if it exists) or finds the first match and runs the command on it (in this case will open up 'path/to/project' in VSCode).
 
-# If you make/delete directories, you can rebuild the database with 'dv rebuild'
+# --------- Other utility commands ---------
+# If you wish, you can rebuild the database from scratch with 'dv rebuild', however, this will reset all your previous history.
 dv rebuild + 'Enter' = # Rebuilds the database
 
-# If needed, you can also bypass commands by using '--'
-dv -- rebuild + 'Enter' = # Navigates to 'rebuild'
+# To refresh the database to account for new/deleted directories, use 'dv refresh'. This will not reset your history.
+dv refresh + 'Enter' = # Refreshes the database
+
+# If needed, you can also bypass commands by using '--'. Below is one example but you can use it with any command.
+dv -- rebuild + 'Enter' = # Will try to cd into 'rebuild' (if it exists) or find the first match and run the command on it (in this case will 'cd' into 'rebuild').
 ```
 
 Dirvana will remember the directories you visit and use this information to provide better autocompletion suggestions in the case of similarly named directories.

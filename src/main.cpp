@@ -40,9 +40,8 @@ vector<string> query(const string& partial, const DirectoryCompleter& completer)
 int main(int argc, char* argv[]) {
 	// Write the arguments to a file for debugging
 	// ofstream io_file("/Users/jameskendrick/Code/Projects/dirvana/build/debug_io.txt", ios::app);
-	// for (int i = 0; i < argc; i++) {
+	// for (int i = 0; i < argc; i++)
 		// io_file << argv[i] << " ";
-	// }
 	// io_file << endl;
 
 	// Need at least 2 arguments: program name and a flag
@@ -77,7 +76,7 @@ int main(int argc, char* argv[]) {
 		// Print the matches with appropriate prefixes for zsh completion
 		for (const auto& match : matches) {
 			if (!prefix.empty()) {
-				cout << prefix << " ";
+				// cout << prefix << " ";
 				// io_file << prefix << " ";
 			}
 			cout << match << endl;
@@ -114,6 +113,7 @@ int main(int argc, char* argv[]) {
 			rebuild();
 			// io_file << "-------------------------------" << endl;
 			// io_file.close();
+			cout << "echo Rebuild complete" << endl;
 			return 0;
 		}
 			
@@ -122,6 +122,7 @@ int main(int argc, char* argv[]) {
 			refresh();
 			// io_file << "-------------------------------" << endl;
 			// io_file.close();
+			cout << "echo Refresh complete" << endl;
 			return 0;
 		}
 			
@@ -183,6 +184,7 @@ int main(int argc, char* argv[]) {
 
 		// Create a single DirectoryCompleter instance to avoid repeated construction
 		DirectoryCompleter completer(DCArgs{ .build= false });
+
 		if (path.find('/') != string::npos || path.find('~') == 0) {
 			// Case i or iii: Full path
 			result = path;
@@ -203,6 +205,7 @@ int main(int argc, char* argv[]) {
 
 		// Access the path in the DirectoryCompleter (will extract the partial)
 		completer.access(result);
+		completer.save(); // Save the updated DirectoryCompleter
 			
 		// Step 6: Generate the appropriate command
 		if (current_command.empty()) {

@@ -4,5 +4,5 @@ _dv() {
   local completions
   completions=("${(@f)$(dv-binary -tab "${words[@]}")}")
   
-  compadd -U -V 'Available Options' -- "${completions[@]}"
+  compadd -Q -U -V 'Available Options' -- "${completions[@]}"
 }
