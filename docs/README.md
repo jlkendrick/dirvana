@@ -7,7 +7,19 @@ Dirvana (`dv`) is designed to streamline working with directories in the termina
 
 ## Installation
 
-### **1️⃣ Install the Binary**
+### Automatic Installation (recommended)
+To install Dirvana, run the following command in your terminal:
+
+```sh
+curl -fsSL https://jlkendrick.github.io/dirvana/docs/install.sh | bash
+```
+
+<center>---- or ----</center>
+
+\
+If you prefer to install Dirvana manually, follow these steps:
+### Manual Installation
+#### **1️⃣ Install the Binary**
 Dirvana requires its compiled binary (`dv-binary`, which can be found in the `build/` directory of this repo). Download it or build the project and move it to a directory in your `PATH`, such as `/usr/local/bin`:
 
 ```sh
@@ -18,7 +30,7 @@ chmod +x /usr/local/bin/dv-binary
 source scripts/move_binary.sh
 ```
 
-### **2️⃣ Copy the Zsh Completion Script**
+#### **2️⃣ Copy the Zsh Completion Script**
 Dirvana also requires a Zsh completion script (`_dv` which can be found in the `scripts/` directory of this repo) to enable autocompletion. To enable it, copy the script to your Zsh completion directory:
 
 ```sh
@@ -39,7 +51,7 @@ _dv() {
 }
 ```
 
-### **3️⃣ Enable the Completion Script**
+#### **3️⃣ Enable the Completion Script**
 Add the completion script to your Zsh configuration file (e.g., `~/.zshrc`) along with the following configuration options:
 
 ```sh
@@ -56,7 +68,7 @@ setopt autolist
 autoload -Uz compinit && compinit
 ```
 
-### **4️⃣ Add the Command Handler**
+#### **4️⃣ Add the Command Handler**
 Add the following function to your Zsh configuration file (e.g., `~/.zshrc`):
 
 ```sh
@@ -75,15 +87,12 @@ dv-binary -enter dv refresh &> /dev/null & disown
 ```
 Note: to see a sample Zsh configuration file, refer to the `scripts/sample.zshrc` file in this repo.
 
-### **5️⃣ Reload Zsh Configuration**
+#### **5️⃣ Reload Zsh Configuration**
 Reload your Zsh configuration to apply the changes:
 
 ```sh
 source ~/.zshrc
 ```
-
-### **6️⃣ Done!**
-
 ---
 
 ## Usage
