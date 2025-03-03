@@ -28,11 +28,34 @@ mkdir -p "$COMPLETION_DIR"
 curl -fsSL "https://raw.githubusercontent.com/jlkendrick/dirvana/main/docs/scripts/_dv" -o "$COMPLETION_DIR/_dv"
 echo "✅ Tab completion script installed to $COMPLETION_DIR/_dv"
 
-# Ensure the completion directory is in fpath
+# Add required configurations to .zshrc
+echo "⏸️ Configuring .zshrc..."
 ZSHRC="$HOME/.zshrc"
-if ! grep -q "fpath=($COMPLETION_DIR" "$ZSHRC"; then
-  echo "fpath=($COMPLETION_DIR \$fpath)" >> "$ZSHRC"
-  echo "✅ Added fpath configuration to $ZSHRC"
+TEMP_ZSHRC="$HOME/.zshrc.tmp"
+
+# Define the required lines
+REQUIRED_LINES=$(cat <<EOF 
+fpath=($COMPLETION_DIR \$fpath)
+
+zstyle ':completion:*' list-grouped yes
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list '' 'r:|=*'
+  
+setopt menucomplete
+setopt autolist
+  
+autoload -Uz compinit && compinit -u
+
+EOF
+)
+
+# Add missing lines to the top of .zshrc
+if ! grep -Fxq "fpath=($COMPLETION_DIR \$fpath)" "$ZSHRC"; then
+  (echo "$REQUIRED_LINES"; cat "$ZSHRC") > "$TEMP_ZSHRC"
+  mv "$TEMP_ZSHRC" "$ZSHRC"
+  echo "✅ Added required configurations to $ZSHRC"
+else
+  echo "✅ Required configurations already present in $ZSHRC"
 fi
 
 # Add enter handler function to .zshrc
@@ -42,14 +65,12 @@ if ! grep -q "dv() {" "$ZSHRC"; then
 # Dirvana Enter Handler
 dv() {
   local cmd
-  cmd=\$(dv-binary -enter dv "\$@")
+  cmd=$(dv-binary -enter dv "$@")
 
-  if [[ -n "\$cmd" ]]; then
-    # If the command is not empty, execute it
-    eval "\$cmd"
+  if [[ -n "$cmd" ]]; then
+    eval "$cmd"
   else
-    # If the command is empty, print an error message
-    echo "dv-error: No command found for '\$*'"
+    echo "dv-error: No command found for '$*'"
   fi
 }
 EOF
