@@ -1,6 +1,6 @@
 #include "DirectoryCompleter.h"
 
-#include "PathMap.h"
+#include "Helpers.h"
 #include "nlohmann/json.hpp"
 
 #include <memory>
@@ -48,11 +48,12 @@ std::vector<std::pair<std::string, std::string>> DirectoryCompleter::collect_dir
 			const auto& entry = *it;
 
 			// Get the deepest directory name
-			std::string dir_name = get_deepest_dir(entry.path().string());
+			std::pair<bool, std::string> res = get_deepest_dir(entry.path().string());
 
 			// If the entry is a directory and it's not in the exclude list, add it to the PathMap
 			if (fs::is_directory(entry)) {
-				if (dir_name != "" && !should_exclude(dir_name, entry.path().string()))
+				std::string dir_name = res.second;
+				if (res.first && !should_exclude(dir_name, entry.path().string()))
 					dirs.push_back({entry.path().string(), dir_name});
 				
 				// Otherwise, don't add it to the PathMap and disable recursion into it's children
@@ -130,14 +131,6 @@ void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
 		std::cerr << "Unable to open file for reading: " << cache_path << std::endl;
 }
 
-// const std::shared_ptr<DoublyLinkedList> DirectoryCompleter::get_list_for(const std::string& dir) const {
-// 	return directories.get_list_for(dir);
-// }
-
-std::vector<std::string> DirectoryCompleter::get_all_matches(const std::string& dir) const {
-	return directories.get_all_paths(dir);
-}
-
 bool DirectoryCompleter::should_exclude(const std::string& dirname, const std::string& path) const {
 	// Check if the directory should be excluded based on the exclusion rules
 	for (const auto& rule : exclusion_rules) {
@@ -168,16 +161,6 @@ bool DirectoryCompleter::should_exclude(const std::string& dirname, const std::s
 	}
 
 	return false;
-}
-
-std::string DirectoryCompleter::get_deepest_dir(const std::string& path) const {
-	// Return the deepest directory name or "" if it is invalid
-	size_t pos = path.find_last_of('/');
-	if (pos >= std::string::npos)
-		return "";
-
-	std::string dir = path.substr(pos + 1);
-	return dir;
 }
 
 std::string DirectoryCompleter::get_cache_path() const {

@@ -1,9 +1,11 @@
 #include <gtest/gtest.h>
 
-#include "PathMap.h"
+#include "DirectoryCompleter.h"
 
 #include <string>
 #include <vector>
+
+using PathMap = DirectoryCompleter::PathMap;
 
 class PathMapTest : public ::testing::Test {
 protected:

@@ -18,12 +18,8 @@ include_directories(
 set(LIB_SOURCES
     src/impl/DirectoryCompleter.cpp
     src/impl/PathMap.cpp
-    
     src/impl/caches/RecentlyAccessedCache.cpp
-    # src/impl/caches/FrequencyBasedCache.cpp
-    
-    src/impl/utils/DoublyLinkedList.cpp
-    # src/impl/utils/DLLTraverser.cpp
+    src/impl/utils/Helpers.cpp
 )
 
 # Create a library for shared application code
@@ -37,17 +33,14 @@ target_link_libraries(dv-binary dirvana_lib)
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
-# # Define test source files
-# set(TEST_SOURCES
-#     tests/test_DirectoryCompleter.cpp
-#     tests/test_PathMap.cpp
+# Define test source files
+set(TEST_SOURCES
+    tests/test_DirectoryCompleter.cpp
+    tests/test_PathMap.cpp
 
-#     tests/test_RecentlyAccessedCache.cpp
-#     # tests/test_FrequencyBasedCache.cpp
+    tests/test_RecentlyAccessedCache.cpp
+)
 
-#     # tests/test_DoublyLinkedList.cpp
-# )
-
-# # Create the test executable
-# add_executable(test ${TEST_SOURCES})
-# target_link_libraries(test dirvana_lib GTest::GTest GTest::Main pthread)
+# Create the test executable
+add_executable(test ${TEST_SOURCES})
+target_link_libraries(test dirvana_lib GTest::GTest GTest::Main pthread)

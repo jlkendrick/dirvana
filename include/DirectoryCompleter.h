@@ -2,8 +2,7 @@
 #define DIRECTORYCOMPLETER_H
 
 #include "RecentlyAccessedCache.h"
-#include "PathMap.h"
-#include "DLLTraverser.h"
+#include "Helpers.h"
 
 #include <cstdlib>
 #include <memory>
@@ -11,70 +10,88 @@
 #include <vector>
 #include <unordered_set>
 
+// We do this so DCArgs can access the members of DirectoryCompleter
 class DirectoryCompleter;
 struct DCArgs;
 
+// DirectoryCompleter is the main class that sets up the caches and is the main API for the main program
 class DirectoryCompleter {
 public:
 
-	enum class ExclusionType { Exact, Prefix, Suffix, Contains };
-	struct ExclusionRule { ExclusionType type; std::string pattern; };
-
-	// Default blank constructor
-	DirectoryCompleter() = default;
-
-	// Constructs a new DirectoryCompleter with the specified variables or the default values
+	// Constructors and destructor
 	DirectoryCompleter(const DCArgs& args);
-
+	DirectoryCompleter() = default;
 	~DirectoryCompleter() = default;
 
-	// Returns the doubly linked list that can be used to construct the traverser
-	const std::shared_ptr<DoublyLinkedList> get_list_for(const std::string& dir) const;
-
-	bool has_matches(const std::string& dir) const { return directories.contains(dir); }
-
-	// Finds the matching cache for the given directory name and returns the paths in that cache
-	std::vector<std::string> get_all_matches(const std::string& dir = "") const;
-
-	// Indicates that the given path has been accessed and it's position in the cache should be updated
-	void access(const std::string& path) { directories.access(path, get_deepest_dir(path)); }
-
-	// Returns the number of directories in the completer
-	int get_size() const { return directories.get_size(); }
-
-	// Adds an exclusion rule to the completer
+	// Functions needed to get matches and update the cache ordering (proxies to PathMap so see PathMap for details)
+	std::vector<std::string> get_all_matches(const std::string& dir = "") const {return directories.get_all_paths(dir); }
+	void access(const std::string& path) { directories.access(path, get_deepest_dir(path).second); }
+	// const std::shared_ptr<DoublyLinkedList> get_match_iter(const std::string& dir) const;
+	
+	// Members needed to manage exclusion rules for directory names
+	enum class ExclusionType { Exact, Prefix, Suffix, Contains };
+	struct ExclusionRule { ExclusionType type; std::string pattern; };
 	void add_exclusion_rule(const ExclusionRule& rule) { exclusion_rules.push_back(rule); }
-
+	
 	// Functions to save and load the completer from a JSON file
 	void save() const;
 	void load(std::unordered_set<std::string>& old_dirs);
+	
+	// Utility functions (proxies to PathMap)
+	int get_size() const { return directories.get_size(); }
+	bool has_matches(const std::string& dir) const { return directories.contains(dir); }
+
+	// PathMap is the primary data structure that holds all the directories.
+	// It is a map of the deepest directory name to a cache of recently accessed paths
+	// which have that directory name.
+	struct PathMap {
+
+		PathMap() = default;
+
+		// Adds a new path to the cache containing other paths with the same directory name
+		// Ex. Adding "/Users/jameskendrick/Code/Projects/dirvana/cpp/src" will add it to the cache for "src"
+		// then adding "/Users/jameskendrick/Code/Projects/courtvision/src" will add it to that same cache
+		// that way, users can simply type the directory name and get the most recently accessed paths
+		void add(const std::string& path, const std::string& dirname = "");
+		void remove(const std::string& path, const std::string& dirname = "");
+		// Access the given path in the cache for the directory name
+		void access(const std::string& path, const std::string& dirname = "");
+
+		// Returns the paths in the cache for the given directory name
+		std::vector<std::string> get_all_paths(const std::string& dir = "") const;
+
+		// Returns true if the map contains the given directory name
+		bool contains(const std::string& dir) const { return map.find(dir) != map.end(); }
+		// Returns the total number of paths in the map (sum of all caches)
+		int get_size() const;
+
+		// Map of directory names to caches of recently accessed paths
+		// Here is where we can switch between the two implementations of V1 (self-implemented) and V2 (std::list)
+		std::unordered_map<std::string, RecentlyAccessedCacheV2> map;
+
+		// Total number of paths in the map
+		int size = 0;
+	};
 
 private:
 	PathMap directories;
 
 	std::string init_path = std::getenv("HOME");
 	std::string cache_path;
-
-	// Helper function to get the cache path
-	std::string get_cache_path() const;
+	std::string get_cache_path() const; // Loads the cache path from the environment variable or uses the default path (used in the constructor)
 
 	// Re-scans the root directory to add/remove directories
 	void refresh_directories(std::unordered_set<std::string>& old_dirs);
 
-	// Returns true if the given directory should be excluded from the PathMap
-	bool should_exclude(const std::string& dir, const std::string& path = "") const;
-
-	// Helper function to get the deepest directory name of a given path
-	std::string get_deepest_dir(const std::string& path) const;
-
+	// Private functions to collect directories and check for exclusions when building the caches
 	// Private function used by the constructor to collect all of the directories in the root directory
 	std::vector<std::pair<std::string, std::string>> collect_directories();
-
+	// Returns true if the given directory should be excluded from the PathMap
+	bool should_exclude(const std::string& dir, const std::string& path = "") const;
 	// Stores exclusion rules for directories
 	std::vector<ExclusionRule> exclusion_rules = {
 		// Exclude dot directories
 		{ ExclusionType::Prefix, "." },
-
 		// Exclude common auto-generated directories
 		{ ExclusionType::Exact, "node_modules" },
 		{ ExclusionType::Exact, "bower_components" },
@@ -89,18 +106,15 @@ private:
 		{ ExclusionType::Exact, "obj" },
 		{ ExclusionType::Exact, "pkg" },
 		{ ExclusionType::Exact, "bin" },
-		
 		// Suffix rules
 		{ ExclusionType::Suffix, "sdk" },
-		{ ExclusionType::Suffix, "Library" }
-
+		{ ExclusionType::Suffix, "Library" },
 		// Contains rules
-		// { ExclusionType::Contains, "release" }
+		{ ExclusionType::Contains, "release" }
 	};
 };
 
-// ----------------------------------- UTILITIES -----------------------------------
-
+// DCArgs is a struct that holds the arguments for the DirectoryCompleter
 struct DCArgs {
 	bool build = true;
 	bool refresh = false;

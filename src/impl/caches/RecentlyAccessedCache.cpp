@@ -1,65 +1,63 @@
 #include "RecentlyAccessedCache.h"
 
-#include "Node.h"
-
 #include <memory>
 #include <iostream>
 #include <string>
 #include <vector>
 
 // ------------------------------------------- SELF-IMPLEMENTED RECENTLY ACCESSED CACHE -------------------------------------------
-void RecentlyAccessedCacheV1::add(const std::string& path) {
-	// If the path is already in the cache, do nothing. This should only happen when 'refreshing' the cache, 
-	// in which case we preserve the existing order and put new paths at the back
-	if (this->contains(path))
-		return;
+// void RecentlyAccessedCacheV1::add(const std::string& path) {
+// 	// If the path is already in the cache, do nothing. This should only happen when 'refreshing' the cache, 
+// 	// in which case we preserve the existing order and put new paths at the back
+// 	if (this->contains(path))
+// 		return;
 
-	// Create a new node and add it to the cache and the back of the list
-	std::shared_ptr<Node> node = std::make_shared<Node>(path);
-	cache.insert({path, node}); // Path is guaranteed to be unique here
-	order.insert_back(node);
+// 	// Create a new node and add it to the cache and the back of the list
+// 	std::shared_ptr<Node> node = std::make_shared<Node>(path);
+// 	cache.insert({path, node}); // Path is guaranteed to be unique here
+// 	order.insert_back(node);
 	
-	size++;
-}
+// 	size++;
+// }
 
-void RecentlyAccessedCacheV1::remove(const std::string& path) {
-	// If the path is not in the cache, do nothing
-	if (!this->contains(path))
-		return;
+// void RecentlyAccessedCacheV1::remove(const std::string& path) {
+// 	// If the path is not in the cache, do nothing
+// 	if (!this->contains(path))
+// 		return;
 
-	// Get the node from the cache
-	std::shared_ptr<Node> node = cache.at(path);
+// 	// Get the node from the cache
+// 	std::shared_ptr<Node> node = cache.at(path);
 
-	// Remove the node from the cache and the list
-	cache.erase(path);
-	order.delete_at(node);
+// 	// Remove the node from the cache and the list
+// 	cache.erase(path);
+// 	order.delete_at(node);
 
-	size--;
-}
+// 	size--;
+// }
 
-void RecentlyAccessedCacheV1::access(const std::string& path) {
-	// If the path is already in the cache, promote it
-	if (this->contains(path)) {
-		promote(path);
-		return;
-	}
+// void RecentlyAccessedCacheV1::access(const std::string& path) {
+// 	// If the path is already in the cache, promote it
+// 	if (this->contains(path)) {
+// 		promote(path);
+// 		return;
+// 	}
 
-	// If the path is not in the cache, add it
-	add(path);
-}
+// 	// If the path is not in the cache, add it
+// 	add(path);
+// }
 
-void RecentlyAccessedCacheV1::promote(const std::string& path) {
-	// Get the node from the cache
-	std::shared_ptr<Node> node = cache.at(path);
+// void RecentlyAccessedCacheV1::promote(const std::string& path) {
+// 	// Get the node from the cache
+// 	std::shared_ptr<Node> node = cache.at(path);
 
-	// Remove the node from its current position and insert it at the front
-	order.delete_at(node);
-	order.insert_front(node);
-}
+// 	// Remove the node from its current position and insert it at the front
+// 	order.delete_at(node);
+// 	order.insert_front(node);
+// }
 
-std::vector<std::string> RecentlyAccessedCacheV1::get_all_paths() const {
-	return order.get_all_paths();
-}
+// std::vector<std::string> RecentlyAccessedCacheV1::get_all_paths() const {
+// 	return order.get_all_paths();
+// }
 
 // ------------------------------------------- STD LIBRARY RECENTLY ACCESSED CACHE -------------------------------------------
 void RecentlyAccessedCacheV2::add(const std::string& path) {

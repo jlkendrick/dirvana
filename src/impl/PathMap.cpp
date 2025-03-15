@@ -1,7 +1,10 @@
-#include "PathMap.h"
+#include "DirectoryCompleter.h"
+#include "Helpers.h"
 
 #include <string>
 #include <iostream>
+
+using PathMap = DirectoryCompleter::PathMap;
 
 void PathMap::add(const std::string& path, const std::string& dirname) {
 	// Get the deepest directory name in the path which is the key for the cache
@@ -55,14 +58,6 @@ std::vector<std::string> PathMap::get_all_paths(const std::string& dir) const {
 		return std::vector<std::string>();
 
 	return map.at(dir).get_all_paths();
-}
-
-std::pair<bool, std::string> PathMap::get_deepest_dir(const std::string& path) const {
-	size_t pos = path.find_last_of('/');
-	if (pos >= std::string::npos)
-		return std::make_pair(false, "");
-
-	return std::make_pair(true, path.substr(pos + 1));
 }
 
 int PathMap::get_size() const {
