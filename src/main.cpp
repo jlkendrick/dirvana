@@ -28,13 +28,13 @@ vector<string> query(const string& partial) {
 	// To query the DirectoryCompleter, we need to load it and get all matches for the partial path
 	// Note: This version is used for the tab completion, we don't update positions until the user actually uses the path
 	DirectoryCompleter completer(DCArgs{ .build= false });
-	return completer.get_all_matches(partial);
+	return completer.get_matches(partial);
 }
 
 vector<string> query(const string& partial, const DirectoryCompleter& completer) {
 	// To query the DirectoryCompleter, we need to query the completer and get all matches for the partial path
 	// Note: This version is used for the enter key press, where we have already constructed the completer
-	return completer.get_all_matches(partial);
+	return completer.get_matches(partial);
 }
 
 int main(int argc, char* argv[]) {

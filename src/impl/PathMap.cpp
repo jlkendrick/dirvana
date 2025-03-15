@@ -43,7 +43,7 @@ void PathMap::access(const std::string& path, const std::string& dirname) {
 // 	return std::make_shared<DoublyLinkedList>(map.at(dir).get_list());
 // }
 
-std::vector<std::string> PathMap::get_all_paths(const std::string& dir) const {
+std::vector<std::string> PathMap::get_matches(const std::string& dir, const MatchingType& type) const {
 	// If no directory is passed, return all paths in the map
 	if (dir.empty()) {
 		std::vector<std::string> all_paths;
@@ -53,11 +53,23 @@ std::vector<std::string> PathMap::get_all_paths(const std::string& dir) const {
 		return all_paths;
 	}
 
-	// If the query directory is not in the map, return an empty vector
-	if (map.find(dir) == map.end())
-		return std::vector<std::string>();
+	// Handle different types of matching
+	switch (type) {
+		case MatchingType::Exact:
+			// This is the default case, we just look for the directory name in the map
+			if (map.find(dir) != map.end())
+				return map.at(dir).get_all_paths();
+			break;
 
-	return map.at(dir).get_all_paths();
+		case MatchingType::Prefix:
+			// TODO: Implement prefix matching
+
+		case MatchingType::Suffix:
+			// TODO: Implement suffix matching
+
+		default:
+			return std::vector<std::string>();
+	}
 }
 
 int PathMap::get_size() const {
@@ -65,4 +77,12 @@ int PathMap::get_size() const {
 	for (auto& entry : map)
 		size += entry.second.get_size();
 	return size;
+}
+
+// Gets all the keys (directory names) in the map so we can use them for prefix/suffix matching
+std::vector<std::string> PathMap::get_all_keys() const {
+	std::vector<std::string> keys;
+	for (const auto& entry : map)
+		keys.push_back(entry.first);
+	return keys;
 }

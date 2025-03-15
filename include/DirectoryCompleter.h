@@ -10,9 +10,12 @@
 #include <vector>
 #include <unordered_set>
 
+using json = nlohmann::json;
+
 // We do this so DCArgs can access the members of DirectoryCompleter
 class DirectoryCompleter;
 struct DCArgs;
+enum class MatchingType { Exact, Prefix, Suffix };
 
 // DirectoryCompleter is the main class that sets up the caches and is the main API for the main program
 class DirectoryCompleter {
@@ -24,7 +27,7 @@ public:
 	~DirectoryCompleter() = default;
 
 	// Functions needed to get matches and update the cache ordering (proxies to PathMap so see PathMap for details)
-	std::vector<std::string> get_all_matches(const std::string& dir = "") const {return directories.get_all_paths(dir); }
+	std::vector<std::string> get_matches(const std::string& dir = "") const {return directories.get_matches(dir, s_to_matching_type(settings["matching"]["type"].get<std::string>()));}
 	void access(const std::string& path) { directories.access(path, get_deepest_dir(path).second); }
 	// const std::shared_ptr<DoublyLinkedList> get_match_iter(const std::string& dir) const;
 	
@@ -58,12 +61,14 @@ public:
 		void access(const std::string& path, const std::string& dirname = "");
 
 		// Returns the paths in the cache for the given directory name
-		std::vector<std::string> get_all_paths(const std::string& dir = "") const;
+		std::vector<std::string> get_matches(const std::string& dir = "", const MatchingType& type = MatchingType::Exact) const;
 
 		// Returns true if the map contains the given directory name
 		bool contains(const std::string& dir) const { return map.find(dir) != map.end(); }
 		// Returns the total number of paths in the map (sum of all caches)
 		int get_size() const;
+		// Returns all the paths in the map
+		std::vector<std::string> get_all_keys() const;
 
 		// Map of directory names to caches of recently accessed paths
 		// Here is where we can switch between the two implementations of V1 (self-implemented) and V2 (std::list)
@@ -74,11 +79,21 @@ public:
 	};
 
 private:
-	PathMap directories;
+	PathMap directories; // PathMap object to hold the directories and caches
 
-	std::string init_path = std::getenv("HOME");
-	std::string cache_path;
-	std::string get_cache_path() const; // Loads the cache path from the environment variable or uses the default path (used in the constructor)
+	json settings = {
+		{{"paths"}, 
+			{"init_path", std::getenv("HOME") + std::string("/")},
+			{"cache_path", std::getenv("HOME") + std::string("/.cache/dirvana/cache.json")},
+			{"config_path", std::getenv("HOME") + std::string("/.config/dirvana/config.json")}
+		},
+		{{"matching"},
+			{"max_results", 10},
+			{"type", "exact"}
+		}
+	}; // Default config file
+	MatchingType s_to_matching_type(const std::string& type) const; // Converts the string to the MatchingType enum
+	json load_config() const; // Loads the config file from the given path to override the default settings if needed
 
 	// Re-scans the root directory to add/remove directories
 	void refresh_directories(std::unordered_set<std::string>& old_dirs);

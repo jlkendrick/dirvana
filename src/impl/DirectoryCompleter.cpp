@@ -15,33 +15,37 @@ using ordered_json = nlohmann::ordered_json;
 namespace fs = std::filesystem;
 
 DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
-    // If arguments are not empty, override the default values
-    if (!args.init_path.empty())
-      init_path = std::move(args.init_path);
-    if (!args.cache_path.empty())
-      this->cache_path = std::move(args.cache_path);
-		else
-			this->cache_path = get_cache_path();
-    if (!args.exclude.empty())
-      exclusion_rules = std::move(args.exclude);
-    
-    if (args.build) {
-      for (const auto& [path, dir] : collect_directories())
-				directories.add(path, dir);
-		} else {
+	// If arguments are not empty, override the default values
+	if (!args.init_path.empty())
+		this->settings["paths"]["init_path"] = std::move(args.init_path);
+	if (!args.cache_path.empty())
+		this->settings["paths"]["cache_path"] = std::move(args.cache_path);
+		if (!args.exclude.empty())
+		exclusion_rules = std::move(args.exclude);
+		
+	// Ensure the cache directory exists
+	std::filesystem::create_directories(this->settings["paths"]["cache_path"].get<std::string>());
 
-			std::unordered_set<std::string> old_dirs;
-			load(old_dirs);
-			if (args.refresh)
-				// If we are refreshing, we need to compare the old vs new directories and update the cache accordingly
-				refresh_directories(old_dirs);
-		}
+	// Load the config values
+	this->settings = load_config();
+	
+	if (args.build) {
+		for (const auto& [path, dir] : collect_directories())
+			directories.add(path, dir);
+	} else {
+
+		std::unordered_set<std::string> old_dirs;
+		load(old_dirs);
+		if (args.refresh)
+			// If we are refreshing, we need to compare the old vs new directories and update the cache accordingly
+			refresh_directories(old_dirs);
+	}
 }
 
 std::vector<std::pair<std::string, std::string>> DirectoryCompleter::collect_directories() {
 	std::vector<std::pair<std::string, std::string>> dirs;
 	try {
-		fs::recursive_directory_iterator it(init_path, fs::directory_options::skip_permission_denied);
+		fs::recursive_directory_iterator it(settings["paths"]["init_path"].get<std::string>(), fs::directory_options::skip_permission_denied);
 		fs::recursive_directory_iterator end;
 		
 		while (it != end) {
@@ -102,17 +106,17 @@ void DirectoryCompleter::save() const {
 
 		j.push_back(entry);
 	}
-	std::ofstream file(cache_path);
+	std::ofstream file(settings["paths"]["cache_path"].get<std::string>());
 	if (file.is_open()) {
 		file << j.dump(4);
 		file.close();
 	} else {
-		std::cerr << "Unable to open file for writing: " << cache_path << std::endl;
+		std::cerr << "Unable to open file for writing: " << settings["paths"]["cache_path"].get<std::string>() << std::endl;
 	}
 }
 
 void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
-	std::ifstream file(cache_path);
+	std::ifstream file(settings["paths"]["cache_path"].get<std::string>());
 	if (file.is_open()) {
 		json j;
 		file >> j;
@@ -128,7 +132,7 @@ void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
 			}
 		}
 	} else
-		std::cerr << "Unable to open file for reading: " << cache_path << std::endl;
+		std::cerr << "Unable to open file for reading: " << settings["paths"]["cache_path"].get<std::string>() << std::endl;
 }
 
 bool DirectoryCompleter::should_exclude(const std::string& dirname, const std::string& path) const {
@@ -163,18 +167,26 @@ bool DirectoryCompleter::should_exclude(const std::string& dirname, const std::s
 	return false;
 }
 
-std::string DirectoryCompleter::get_cache_path() const {
-	const char* xdgCacheHome = std::getenv("XDG_CACHE_HOME");
-	std::string cacheDir;
-
-	if (xdgCacheHome) {
-		cacheDir = std::string(xdgCacheHome) + "/dirvana/";
+json DirectoryCompleter::load_config() const {
+	// Load the config file from the given path
+	std::ifstream file(settings["paths"]["config_path"].get<std::string>());
+	if (file.is_open()) {
+		json j;
+		file >> j;
+		file.close();
+		return j;
 	} else {
-		cacheDir = std::string(std::getenv("HOME")) + "/.cache/dirvana/";
+		std::cerr << "Unable to open config file: " << settings["paths"]["config_path"].get<std::string>() << std::endl;
+		return json();
 	}
+}
 
-	// Ensure the directory exists
-	std::filesystem::create_directories(cacheDir);
-
-	return cacheDir + "cache.json";
+MatchingType DirectoryCompleter::s_to_matching_type(const std::string& type) const {
+	if (type == "exact") return MatchingType::Exact;
+	else if (type == "prefix") return MatchingType::Prefix;
+	else if (type == "suffix") return MatchingType::Suffix;
+	else {
+		std::cerr << "Unknown matching type: " << type << std::endl;
+		return MatchingType::Exact;
+	}
 }
