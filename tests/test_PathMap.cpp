@@ -21,27 +21,27 @@ protected:
 
 TEST_F(PathMapTest, AddAndRetrievePaths) {
 	// Test retrieving paths for 'src' directory
-	auto src_paths = map.get_all_paths("src");
+	auto src_paths = map.get_matches("src");
 	ASSERT_EQ(src_paths.size(), 2);
 	EXPECT_TRUE(std::find(src_paths.begin(), src_paths.end(), "/Users/test/projects/src") != src_paths.end());
 	EXPECT_TRUE(std::find(src_paths.begin(), src_paths.end(), "/Users/test/other/src") != src_paths.end());
 
 	// Test retrieving paths for 'include' directory
-	auto include_paths = map.get_all_paths("include");
+	auto include_paths = map.get_matches("include");
 	ASSERT_EQ(include_paths.size(), 1);
 	EXPECT_EQ(include_paths[0], "/Users/test/documents/include");
 }
 
 TEST_F(PathMapTest, NonExistentDirectory) {
 	// Test retrieving paths for a directory that doesn't exist
-	auto paths = map.get_all_paths("nonexistent");
+	auto paths = map.get_matches("nonexistent");
 	EXPECT_TRUE(paths.empty());
 }
 
 TEST_F(PathMapTest, AddInvalidPath) {
 	// Test adding an invalid path (no directory separator)
 	map.add("invalid_path");
-	auto paths = map.get_all_paths("invalid_path");
+	auto paths = map.get_matches("invalid_path");
 	EXPECT_TRUE(paths.empty());
 }
 
@@ -65,7 +65,7 @@ TEST_F(PathMapTest, CacheOrdering) {
 	order_map.add("/first/path/dir");
 	order_map.add("/second/path/dir");
 
-	auto paths = order_map.get_all_paths("dir");
+	auto paths = order_map.get_matches("dir");
 	ASSERT_EQ(paths.size(), 2);
 	// Most recently added path should be last during initialization
 	EXPECT_EQ(paths[0], "/first/path/dir");

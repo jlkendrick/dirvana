@@ -2,6 +2,7 @@
 #define DIRECTORYCOMPLETER_H
 
 #include "RecentlyAccessedCache.h"
+#include "nlohmann/json.hpp"
 #include "Helpers.h"
 
 #include <cstdlib>
@@ -27,7 +28,7 @@ public:
 	~DirectoryCompleter() = default;
 
 	// Functions needed to get matches and update the cache ordering (proxies to PathMap so see PathMap for details)
-	std::vector<std::string> get_matches(const std::string& dir = "") const {return directories.get_matches(dir, s_to_matching_type(settings["matching"]["type"].get<std::string>()));}
+	std::vector<std::string> get_matches(const std::string& dir = "") const {return directories.get_matches(dir, s_to_matching_type(config["matching"]["type"].get<std::string>()));}
 	void access(const std::string& path) { directories.access(path, get_deepest_dir(path).second); }
 	// const std::shared_ptr<DoublyLinkedList> get_match_iter(const std::string& dir) const;
 	
@@ -43,6 +44,9 @@ public:
 	// Utility functions (proxies to PathMap)
 	int get_size() const { return directories.get_size(); }
 	bool has_matches(const std::string& dir) const { return directories.contains(dir); }
+
+	// Getters for the configuration data (used for testing)
+	const json& get_config() const { return config; }
 
 	// PathMap is the primary data structure that holds all the directories.
 	// It is a map of the deepest directory name to a cache of recently accessed paths
@@ -81,19 +85,21 @@ public:
 private:
 	PathMap directories; // PathMap object to hold the directories and caches
 
-	json settings = {
-		{{"paths"}, 
-			{"init_path", std::getenv("HOME") + std::string("/")},
-			{"cache_path", std::getenv("HOME") + std::string("/.cache/dirvana/cache.json")},
-			{"config_path", std::getenv("HOME") + std::string("/.config/dirvana/config.json")}
-		},
-		{{"matching"},
+	json config; // JSON object to hold the config file
+	std::string config_path = std::string(std::getenv("HOME")) + std::string("/Code/Projects/dirvana/config.json");
+	json default_config = {
+		{"paths", {
+			{"init", std::getenv("HOME") + std::string("/")},
+			{"cache", std::getenv("HOME") + std::string("/Code/Projects/dirvana/build/cache.json")}
+		}},
+		{"matching", {
 			{"max_results", 10},
 			{"type", "exact"}
-		}
+		}}
 	}; // Default config file
 	MatchingType s_to_matching_type(const std::string& type) const; // Converts the string to the MatchingType enum
 	json load_config() const; // Loads the config file from the given path to override the default settings if needed
+	bool validate_config(json& user_config) const; // Validates and modifies the config file if needed, returns true if modified, false otherwise
 
 	// Re-scans the root directory to add/remove directories
 	void refresh_directories(std::unordered_set<std::string>& old_dirs);
@@ -133,9 +139,8 @@ private:
 struct DCArgs {
 	bool build = true;
 	bool refresh = false;
-	std::string init_path = "";
+	std::string config_path = "";
 	std::vector<DirectoryCompleter::ExclusionRule> exclude = {};
-	std::string cache_path = "";
 };
 
 #endif // DIRECTORYCOMPLETER_H

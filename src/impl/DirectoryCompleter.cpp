@@ -15,25 +15,24 @@ using ordered_json = nlohmann::ordered_json;
 namespace fs = std::filesystem;
 
 DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
-	// If arguments are not empty, override the default values
-	if (!args.init_path.empty())
-		this->settings["paths"]["init_path"] = std::move(args.init_path);
-	if (!args.cache_path.empty())
-		this->settings["paths"]["cache_path"] = std::move(args.cache_path);
-		if (!args.exclude.empty())
-		exclusion_rules = std::move(args.exclude);
-		
-	// Ensure the cache directory exists
-	std::filesystem::create_directories(this->settings["paths"]["cache_path"].get<std::string>());
+	// If we were given a config path, use it (should only be used for testing, not available in the main program)
+	if (!args.config_path.empty())
+		this->config_path = args.config_path;
+	// Load the config file
+	std::cout << "Using config path: " << this->config_path << std::endl;
+	this->config = load_config();
 
-	// Load the config values
-	this->settings = load_config();
+	// Update the exclusion rules if any were passed
+	if (!args.exclude.empty())
+		this->exclusion_rules = args.exclude;
 	
+	// If we are building the cache, we add every directory in the root directory to the PathMap
 	if (args.build) {
 		for (const auto& [path, dir] : collect_directories())
 			directories.add(path, dir);
+		
+	// If we are not building the cache, we need to load the cache from the file and, if refreshing, update the cache
 	} else {
-
 		std::unordered_set<std::string> old_dirs;
 		load(old_dirs);
 		if (args.refresh)
@@ -45,7 +44,7 @@ DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
 std::vector<std::pair<std::string, std::string>> DirectoryCompleter::collect_directories() {
 	std::vector<std::pair<std::string, std::string>> dirs;
 	try {
-		fs::recursive_directory_iterator it(settings["paths"]["init_path"].get<std::string>(), fs::directory_options::skip_permission_denied);
+		fs::recursive_directory_iterator it(config["paths"]["init"].get<std::string>(), fs::directory_options::skip_permission_denied);
 		fs::recursive_directory_iterator end;
 		
 		while (it != end) {
@@ -106,17 +105,17 @@ void DirectoryCompleter::save() const {
 
 		j.push_back(entry);
 	}
-	std::ofstream file(settings["paths"]["cache_path"].get<std::string>());
+	std::ofstream file(config["paths"]["cache"].get<std::string>());
 	if (file.is_open()) {
 		file << j.dump(4);
 		file.close();
 	} else {
-		std::cerr << "Unable to open file for writing: " << settings["paths"]["cache_path"].get<std::string>() << std::endl;
+		std::cerr << "Unable to open file for writing: " << config["paths"]["cache"].get<std::string>() << std::endl;
 	}
 }
 
 void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
-	std::ifstream file(settings["paths"]["cache_path"].get<std::string>());
+	std::ifstream file(config["paths"]["cache"].get<std::string>());
 	if (file.is_open()) {
 		json j;
 		file >> j;
@@ -132,7 +131,7 @@ void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
 			}
 		}
 	} else
-		std::cerr << "Unable to open file for reading: " << settings["paths"]["cache_path"].get<std::string>() << std::endl;
+		std::cerr << "Unable to open file for reading: " << config["paths"]["cache"].get<std::string>() << std::endl;
 }
 
 bool DirectoryCompleter::should_exclude(const std::string& dirname, const std::string& path) const {
@@ -167,20 +166,6 @@ bool DirectoryCompleter::should_exclude(const std::string& dirname, const std::s
 	return false;
 }
 
-json DirectoryCompleter::load_config() const {
-	// Load the config file from the given path
-	std::ifstream file(settings["paths"]["config_path"].get<std::string>());
-	if (file.is_open()) {
-		json j;
-		file >> j;
-		file.close();
-		return j;
-	} else {
-		std::cerr << "Unable to open config file: " << settings["paths"]["config_path"].get<std::string>() << std::endl;
-		return json();
-	}
-}
-
 MatchingType DirectoryCompleter::s_to_matching_type(const std::string& type) const {
 	if (type == "exact") return MatchingType::Exact;
 	else if (type == "prefix") return MatchingType::Prefix;
@@ -189,4 +174,92 @@ MatchingType DirectoryCompleter::s_to_matching_type(const std::string& type) con
 		std::cerr << "Unknown matching type: " << type << std::endl;
 		return MatchingType::Exact;
 	}
+}
+
+json DirectoryCompleter::load_config() const {
+	// Check if the config file exists
+	if (!fs::exists(config_path)) {
+		std::cerr << "Config file does not exist: " << config_path << ". Creating a new one." << std::endl;
+		std::ofstream out_file(config_path);
+		out_file << default_config.dump(4);
+		out_file.close();
+		return default_config;
+	}
+
+	try {
+		std::ifstream in_file(config_path);
+		if (!in_file.is_open()) {
+			std::cerr << "Unable to open config file: " << config << std::endl;
+			return default_config;
+		}
+
+		json user_config;
+		in_file >> user_config;
+		in_file.close();
+
+		std::cout << user_config.dump(4) << std::endl;
+
+		// Validate the config file
+		if (validate_config(user_config)) {
+			std::cerr << "Config file invalid. Fixing it with default values." << std::endl;
+			std::ofstream out_file(config_path);
+			out_file << user_config.dump(4);
+			out_file.close();
+		}
+
+		std::cout << user_config.dump(4) << std::endl;
+
+		// Return the (maybe) modified user config that is valid
+		return user_config;
+
+	} catch (const std::exception& e) {
+		std::cerr << "Error reading config file: " << e.what() << ". Using default config." << std::endl;
+		std::ofstream out_file(config_path);
+		out_file << default_config.dump(4);
+		out_file.close();
+		return default_config;
+	}
+}
+
+bool DirectoryCompleter::validate_config(json& user_config) const {
+	bool modified = false;
+
+	// If "paths" key is missing, add it
+	if (!user_config.contains("paths")) {
+		user_config["paths"] = default_config["paths"];
+		modified = true;
+	} else {
+		// Now check the sub-keys to see if they are present and valid
+		if (!user_config["paths"].contains("init") || (!fs::exists(user_config["paths"]["init"].get<std::string>()))) {
+			user_config["paths"]["init"] = default_config["paths"]["init"];
+			modified = true;
+		}
+
+		if (!user_config["paths"].contains("cache") || (!fs::exists(user_config["paths"]["cache"].get<std::string>()))) {
+			user_config["paths"]["cache"] = default_config["paths"]["cache"];
+			modified = true;
+		}
+	}
+
+
+	// If "matching" key is missing, add it
+	if (!user_config.contains("matching")) {
+		user_config["matching"] = default_config["matching"];
+		modified = true;
+	} else {
+		// Now check the sub-keys to see if they are present and valid
+		if (!user_config["matching"].contains("max_results") || (user_config["matching"]["max_results"].get<int>() <= 0)) {
+			user_config["matching"]["max_results"] = default_config["matching"]["max_results"];
+			modified = true;
+		}
+
+		if (!user_config["matching"].contains("type") || (user_config["matching"]["type"].get<std::string>() != "exact" &&
+			user_config["matching"]["type"].get<std::string>() != "prefix" &&
+			user_config["matching"]["type"].get<std::string>() != "suffix")) {
+			user_config["matching"]["type"] = default_config["matching"]["type"];
+			modified = true;
+		}
+	}
+
+	return modified;
 }

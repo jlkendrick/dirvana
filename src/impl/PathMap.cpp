@@ -70,6 +70,9 @@ std::vector<std::string> PathMap::get_matches(const std::string& dir, const Matc
 		default:
 			return std::vector<std::string>();
 	}
+
+	// Avoid warning message
+	return std::vector<std::string>();
 }
 
 int PathMap::get_size() const {

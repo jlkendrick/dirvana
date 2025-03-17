@@ -1,0 +1,10 @@
+{
+	"matching": {
+    	"max_results": 10,
+    	"type": "exact"
+  	},
+  	"paths": {
+    	"cache": "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json",
+    	"init": "/Users/jameskendrick/Code/Projects/dirvana/mockfs"
+	}
+}

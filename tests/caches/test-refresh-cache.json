@@ -1,0 +1,65 @@
+[
+    {
+        "dir": "contains_check",
+        "paths": [
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/custom_rule_check/contains_check"
+        ]
+    },
+    {
+        "dir": "suffix_check",
+        "paths": [
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/custom_rule_check/suffix_check"
+        ]
+    },
+    {
+        "dir": "exact_check",
+        "paths": [
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/custom_rule_check/exact_check"
+        ]
+    },
+    {
+        "dir": "prefix_check",
+        "paths": [
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/custom_rule_check/prefix_check"
+        ]
+    },
+    {
+        "dir": "custom_rule_check",
+        "paths": [
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/custom_rule_check"
+        ]
+    },
+    {
+        "dir": ".1",
+        "paths": []
+    },
+    {
+        "dir": "4",
+        "paths": [
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/4",
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/3/4",
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/2/2/4"
+        ]
+    },
+    {
+        "dir": "3",
+        "paths": [
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/3"
+        ]
+    },
+    {
+        "dir": "2",
+        "paths": [
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/2",
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/2/2"
+        ]
+    },
+    {
+        "dir": "1",
+        "paths": [
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/1",
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/1/1",
+            "/Users/jameskendrick/Code/Projects/dirvana/mockfs/1/1/1"
+        ]
+    }
+]
