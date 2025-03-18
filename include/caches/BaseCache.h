@@ -13,131 +13,167 @@ enum class PromotionStrategy {
 	FREQUENCY_BASED
 };
 
-// Struct to hold the path for the RecentlyAccessedCache
-struct RACEntry {
-	std::string path;
-
-	RACEntry() : path("") {};
-	RACEntry(const std::string& n) : path(n) {}
-
-	bool empty() const { return path.empty(); }
+class ICache {
+public:
+	virtual ~ICache() = default;
+	virtual void add(const std::string& path) = 0;
+	virtual void remove(const std::string& path) = 0;
+	virtual void access(const std::string& path) = 0;
+	virtual std::vector<std::string> get_all_paths() const = 0;
+	virtual bool contains(const std::string& path) const = 0;
+	virtual int get_size() const = 0;
 };
 
-// Struct to hold both the path and its access count for frequency-based caching
-struct FBCEntry {
-	std::string path;
-	int access_count;
-
-	FBCEntry() : path(""), access_count(-1) {};
-	FBCEntry(const std::string& n) : path(n), access_count(1) {}
-
-	bool empty() const { return path.empty() && access_count == -1; }
-};
-
-// Generic base class for caches. Takes the type of the cache entry and the promotion strategy as template parameters
-// This allows us to use the same interface for both RecentlyAccessedCache and FrequencyBasedCache
-template <typename K, typename V>
-class BaseCache {
+// Base cache template implementation, key is always a path (string) so we only need to specify the type of entry and the promotion policy
+template <typename T, typename PromotionPolicy>
+class BaseCache : public ICache, public PromotionPolicy {
 public:
 	BaseCache() = default;
-	BaseCache(const PromotionOption& strat) : size(0), strategy(strat) {}
+	
+	void add(const std::string& path) override {
+		// If the path is already in the cache, do nothing
+		if (contains(path))
+			return;
+				
+		// Create the appropriate entry
+		T entry = this->create_entry(path);
+		
+		// Add the entry to the list
+		order.push_back(entry);
+		cache[path] = --order.end();
+		size++;
+	}
+	
+	void remove(const std::string& path) override {
+		// If the path is not in the cache, do nothing
+		if (!contains(path))
+			return;
+				
+		auto it = cache[path];
+		order.erase(it);
+		cache.erase(path);
+		size--;
+	}
+	
+	void access(const std::string& path) override {
+		// Promote the path in the cache
+		if (contains(path))
+			this->template promote<BaseCache<T, PromotionPolicy>>(path);
 
-	void add(const std::string& path);
-	void remove(const std::string& key);
-	void access(const std::string& entry);
-	void promote(const std::string& entry);
-
-	typename std::list<T>::const_iterator get_iter() const { return order.cbegin(); }
-	const std::list<T>& get_list() const { return order; }
-	std::vector<std::string> get_all_paths() const;
-
-	// Util functions used for testing
-	bool contains(const std::string& entry) const { return cache.find(entry) != cache.end(); }
-	int get_size() const { return size; }
-
-protected:
+		// If we try to promote a path that is not in the cache, add it
+		else
+			add(path);
+	}
+	
+	std::vector<std::string> get_all_paths() const override {
+		std::vector<std::string> paths;
+		for (const auto& entry : order) {
+			paths.push_back(this->get_path(entry));
+		}
+		return paths;
+	}
+	
+	bool contains(const std::string& path) const override {
+		return cache.find(path) != cache.end();
+	}
+	
+	int get_size() const override {
+		return size;
+	}
+    
 	std::unordered_map<std::string, typename std::list<T>::iterator> cache;
 	std::list<T> order;
-
-	// PromotionOption strategy = PromotionOption::RECENTLY_ACCESSED;
-
 	int size = 0;
 };
 
-template <typename K, typename V>
-void BaseCache<K, V>::add(const std::string& path) {
-	// If the path is already in the cache, do nothing
-	if (contains(path))
-		return;
+// Recently accessed promotion policy
+class RecentlyAccessedPolicy {
+public:
+	struct RACEntry {
+		std::string path;
 
-	// Create the new entry and add it to the cache and order
-	T new_entry(path);
-	order.push_back(new_entry);
-	cache[path] = --order.end();
+		RACEntry() : path("") {}
+		RACEntry(const std::string& p) : path(p) {}
+	};
 
-	size++;
-}
-
-template <typename K, typename V>
-void BaseCache<K, V>::remove(const std::string& key) {
-	// If the entry is not in the cache, do nothing
-	if (!contains(key))
-		return;
-
-	auto it = cache.at(key);
-
-	cache.erase(key);
-	order.erase(it);
-
-	size--;
-}
-
-template <typename K, typename V>
-void BaseCache<K, V>::access(const std::string& key) {
-	// If the key is already in the cache, promote it
-	if (contains(key)) {
-		promote(key);
-		return;
+	RACEntry create_entry(const std::string& path) const {
+		return RACEntry(path);
 	}
-
-	add(key);
-}
-
-template <typename K, typename V>
-void BaseCache<K, V>::promote(const std::string& entry) {
-	auto it = cache.at(entry);
-
-	if constexpr (std::is_same_v<V, RACEntry>) {
-		auto it = cache.at(path);
-		std::string node = *it;
-		order.erase(it);
-		order.push_front(node);
-		cache[path] = order.begin();
-
-	} else if constexpr (std::is_same_v<V, FBCEntry>) {
-		auto it = cache.at(path);
-		FBCEntry updated_entry = *it;
-		updated_entry.access_count++;
-		order.erase(it);
-		auto insert_pos = order.begin();
-		while (insert_pos != order.end() && insert_pos->access_count > updated_entry.access_count)
-				insert_pos++;
-		auto new_it = order.insert(insert_pos, updated_entry);
-		cache[path] = new_it;
+			
+	std::string get_path(const RACEntry& entry) const {
+		return entry.path;
 	}
-}
+			
+	template <typename CacheType>
+	void promote(const std::string& path) {
+		CacheType* self = static_cast<CacheType*>(this);
+		auto it = self->cache[path];
+		RACEntry entry = *it;
+			
+		// Move the entry to the front of the list
+		self->order.erase(it);
+		self->order.push_front(entry);
+		self->cache[path] = self->order.begin();
+	}
+};
+	
+// Frequency-based promotion policy
+class FrequencyBasedPolicy {
+public:
+	struct FBCEntry {
+		std::string path;
+		int access_count;
+		
+		FBCEntry() : path(""), access_count(-1) {}
+		FBCEntry(const std::string& p) : path(p), access_count(1) {}
+	};
 
-template <typename K, typename V>
-std::vector<std::string> BaseCache<K, V>::get_all_paths() const {
-	std::vector<K> paths;
-
-	// Map the order to a vector of strings
-	if constexpr (std::is_same<T, FBCEntry>::value)
-		std::transform(order.begin(), order.end(), std::back_inserter(paths), [](const FBCEntry& entry) { return entry.path; });
-	else
-		paths.assign(order.begin(), order.end());
-
-	return paths;
-}
+	FBCEntry create_entry(const std::string& path) const {
+		return FBCEntry(path);
+	}
+		
+	std::string get_path(const FBCEntry& entry) const {
+		return entry.path;
+	}
+		
+	template <typename CacheType>
+	void promote(const std::string& path) {
+		CacheType* self = static_cast<CacheType*>(this);
+		auto it = self->cache[path];
+		FBCEntry entry = *it;
+			
+		// Increment the access count
+		entry.access_count++;
+			
+		// Remove the entry from its current position
+		self->order.erase(it);
+			
+		// Find the position to insert based on access count (higher counts first)
+		auto insert_pos = self->order.begin();
+		while (insert_pos != self->order.end() && 
+					 insert_pos->access_count > entry.access_count) {
+			++insert_pos;
+		}
+			
+		// Insert the entry at the appropriate position
+		auto new_it = self->order.insert(insert_pos, entry);
+		self->cache[path] = new_it;
+	}
+};
+	
+// Define the concrete cache types
+using RecentlyAccessedCache = BaseCache<RecentlyAccessedPolicy::RACEntry, RecentlyAccessedPolicy>;
+using FrequencyBasedCache = BaseCache<FrequencyBasedPolicy::FBCEntry, FrequencyBasedPolicy>;
+	
+// Factory for creating the appropriate cache type
+class CacheFactory {
+public:
+	static std::unique_ptr<ICache> create_cache(PromotionStrategy strategy) {
+		if (strategy == PromotionStrategy::FREQUENCY_BASED) {
+			return std::make_unique<FrequencyBasedCache>();
+		}
+		return std::make_unique<RecentlyAccessedCache>();
+	}
+};
 
 #endif // BASECACHE_H

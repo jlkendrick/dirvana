@@ -1,6 +1,4 @@
 #include "DirectoryCompleter.h"
-#include "caches/BaseCache.h"
-#include "Helpers.h"
 
 #include <string>
 #include <iostream>
@@ -13,8 +11,10 @@ void PathMap::add(const std::string& path, const std::string& dirname) {
 	if (!res.first)
 		return;
 	
-	// Add the path to the cache or do nothing if the path is already in the cache, this will also create a new cache if needed
-	map[res.second].add(path);
+	// Add the path to the cache or do nothing if the path is already in the cache, create a new cache if needed
+	if (map.find(res.second) == map.end())
+		map[res.second] = CacheFactory::create_cache(strategy);
+	map[res.second]->add(path);
 }
 
 void PathMap::remove(const std::string& path, const std::string& dirname) {
@@ -24,7 +24,7 @@ void PathMap::remove(const std::string& path, const std::string& dirname) {
 		return;
 
 	// Remove the path from the cache
-	map[res.second].remove(path);
+	map[res.second]->remove(path);
 }
 
 void PathMap::access(const std::string& path, const std::string& dirname) {
@@ -33,8 +33,12 @@ void PathMap::access(const std::string& path, const std::string& dirname) {
 	if (!res.first)
 		return;
 
+	// If the path is not in the cache, add it
+	if (map.find(res.second) == map.end())
+		map[res.second] = CacheFactory::create_cache(strategy);
+
 	// Access the path in the cache
-	map[res.second].access(path);
+	map[res.second]->access(path);
 }
 
 // const std::shared_ptr<DoublyLinkedList> PathMap::get_list_for(const std::string& dir) const {
@@ -44,52 +48,69 @@ void PathMap::access(const std::string& path, const std::string& dirname) {
 // 	return std::make_shared<DoublyLinkedList>(map.at(dir).get_list());
 // }
 
-std::vector<std::string> PathMap::get_matches(const std::string& dir, const MatchingType& type, int max_results) const {
+std::vector<std::string> PathMap::get_matches(const std::string& query, const MatchingType& type, int max_results) const {
 	// If no directory is passed, return all paths in the map
-	if (dir.empty()) {
+	if (query.empty()) {
 		std::vector<std::string> all_paths;
 		for (const auto& entry : map)
-			for (const auto& path : entry.second.get_all_paths())
+			for (const auto& path : entry.second->get_all_paths())
 				all_paths.push_back(path);
 		return all_paths;
 	}
 
-	// Handle different types of matching
-	std::vector<std::string> matches;
-	std::vector<const BaseCache<std::string, RecentlyAccessedPromotion>*> caches;
-	std::vector<std::list<std::string>::const_iterator> cache_iters;
+	std::vector<std::string> matches; // Vector to hold the matches
 
 	// Lambda to handle the different types of matching
 	auto handle_matching = [&](MatchingType match_type) {
-		// Go through all k, v pairs in the map and check if the key starts with the query
-		for (const auto& entry : map) {
-			if ((match_type == MatchingType::Prefix && entry.first.find(dir) == 0) ||
-					(match_type == MatchingType::Suffix && entry.first.find(dir) == (entry.first.size() - dir.size()))) {
-				caches.push_back(&entry.second); // Get the cache for the directory
-				cache_iters.push_back(entry.second.get_iter()); // Get the iterator for the cache
+
+		// Go through all entries the map and check if the key starts with the query to find matching directories
+		std::vector<std::string> matching_dirs;
+		for (const auto& [key, _] : map) {
+			bool is_match = false;
+
+			switch (match_type) {
+				case MatchingType::Prefix:
+					is_match = (key.size() >= query.size() && key.find(query) == 0);
+					break;
+
+				case MatchingType::Suffix:
+					is_match = (key.size() >= query.size() && key.rfind(query) == key.size() - query.size());
+					break;
+
+				default:
+					break;
 			}
+
+			if (is_match)
+				matching_dirs.push_back(key);
 		}
 
-		// Go column by column through the cache iterators to make sure we are grabbing the most recent paths
-		while (matches.size() < max_results) {
-			bool found = false;
-			for (int i = 0; i < caches.size(); i++) {
-				if (cache_iters[i] != caches[i]->get_list().cend()) {
-					matches.push_back(*cache_iters[i]);
-					cache_iters[i]++;
-					found = true;
+		// For each matching directory, get the paths from the cache
+		std::vector<std::vector<std::string>> all_matches;
+		for (const auto& dir : matching_dirs) 
+			all_matches.push_back(map.at(dir)->get_all_paths());
+
+		// Go column-by-column to get the highest priority matches
+		size_t max_depth = 0;
+		for (const auto& vec : all_matches)
+			max_depth = std::max(max_depth, vec.size());
+		
+		for (size_t i = 0; i < max_depth && matches.size() < max_results; i++) {
+			for (const auto& vec : all_matches) {
+				if (i < vec.size()) {
+					matches.push_back(vec[i]);
+					if (matches.size() >= max_results)
+						break;
 				}
 			}
-			if (!found)
-				break;
 		}
 	};
 
 	// Handle the different types of matching
 	if (type == MatchingType::Exact) {
 		// If the directory is in the map, get the paths from the cache
-		if (map.find(dir) != map.end())
-			matches = map.at(dir).get_all_paths();
+		if (map.find(query) != map.end())
+			matches = map.at(query)->get_all_paths();
 	} else if (type == MatchingType::Prefix || type == MatchingType::Suffix) {
 		handle_matching(type);
 	}
@@ -100,7 +121,7 @@ std::vector<std::string> PathMap::get_matches(const std::string& dir, const Matc
 int PathMap::get_size() const {
 	int size = 0;
 	for (auto& entry : map)
-		size += entry.second.get_size();
+		size += entry.second->get_size();
 	return size;
 }
 

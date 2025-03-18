@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include "caches/BaseCache.h"
-#include "utils/FBCEntry.h"
 
 #include <string>
 #include <vector>
@@ -9,12 +8,12 @@
 using namespace std;
 
 TEST(FrequencyBasedCache, Initialization) {
-	BaseCache<FBCEntry, FrequencyBasedPromotion> cache;
+	FrequencyBasedCache cache;
 	EXPECT_EQ(cache.get_size(), 0);
 }
 
 TEST(FrequencyBasedCache, AddingPaths) {
-	BaseCache<FBCEntry, FrequencyBasedPromotion> cache;
+	FrequencyBasedCache cache;
 
 	// Add a single path
 	cache.add("/path/to/dir1");
@@ -37,7 +36,7 @@ TEST(FrequencyBasedCache, AddingPaths) {
 }
 
 TEST(FrequencyBasedCache, FrequencyOrdering) {
-	BaseCache<FBCEntry, FrequencyBasedPromotion> cache;
+	FrequencyBasedCache cache;
 
 	// Add paths and access them different numbers of times
 	cache.add("/path/to/dir3"); // count: 1
@@ -58,7 +57,7 @@ TEST(FrequencyBasedCache, FrequencyOrdering) {
 }
 
 TEST(FrequencyBasedCache, DuplicateHandling) {
-	BaseCache<FBCEntry, FrequencyBasedPromotion> cache;
+	FrequencyBasedCache cache;
 
 	// Add paths and verify size
 	cache.add("/path/to/dir2");

@@ -7,8 +7,6 @@
 
 using namespace std;
 
-using ExclusionType = DirectoryCompleter::ExclusionType;
-using ExclusionRule = DirectoryCompleter::ExclusionRule;
 
 TEST(DirectoryCompleter, Initialization) {
 	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json";

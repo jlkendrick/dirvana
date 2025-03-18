@@ -1,8 +1,5 @@
 #include "DirectoryCompleter.h"
 
-#include "Helpers.h"
-#include "nlohmann/json.hpp"
-
 #include <memory>
 #include <cstdlib>
 #include <fstream>
@@ -20,6 +17,9 @@ DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
 		this->config_path = args.config_path;
 	// Load the config file
 	this->config = load_config();
+
+	// Print the config
+	std::cout << this->config.dump(4) << std::endl;
 
 	// Update the exclusion rules if any were passed
 	if (!args.exclude.empty())
@@ -99,7 +99,7 @@ void DirectoryCompleter::save() const {
 		
 
 		ordered_json paths = ordered_json::array();
-		for (const auto& path : cache.get_all_paths())
+		for (const auto& path : cache->get_all_paths())
 			paths.push_back(path);
 		entry["paths"] = paths;
 
@@ -176,12 +176,12 @@ MatchingType DirectoryCompleter::s_to_matching_type(const std::string& type) con
 	}
 }
 
-PromotionOption DirectoryCompleter::s_to_promotion_strategy(const std::string& type) const {
-	if (type == "recently_accessed") return PromotionOption::RECENTLY_ACCESSED;
-	else if (type == "frequency_based") return PromotionOption::FREQUENCY_BASED;
+PromotionStrategy DirectoryCompleter::s_to_promotion_strategy(const std::string& type) const {
+	if (type == "recently_accessed") return PromotionStrategy::RECENTLY_ACCESSED;
+	else if (type == "frequency_based") return PromotionStrategy::FREQUENCY_BASED;
 	else {
 		std::cerr << "Unknown promotion strategy: " << type << std::endl;
-		return PromotionOption::RECENTLY_ACCESSED;
+		return PromotionStrategy::RECENTLY_ACCESSED;
 	}
 }
 

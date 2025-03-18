@@ -74,13 +74,13 @@ using namespace std;
 // }
 
 // ------------------------------------------- STD LIBRARY RECENTLY ACCESSED CACHE -------------------------------------------
-TEST(RecentlyAccessedCacheV2, Initialization) {
-	BaseCache<string, RecentlyAccessedPromotion> cache;
+TEST(RecentlyAccessedCache, Initialization) {
+	RecentlyAccessedCache cache;
 	EXPECT_EQ(cache.get_size(), 0);
 }
 
-TEST(RecentlyAccessedCacheV2, AddingPaths) {
-	BaseCache<string, RecentlyAccessedPromotion> cache;
+TEST(RecentlyAccessedCache, AddingPaths) {
+	RecentlyAccessedCache cache;
 
 	// Add a single path
 	cache.add("/path/to/dir1");
@@ -102,8 +102,8 @@ TEST(RecentlyAccessedCacheV2, AddingPaths) {
 	EXPECT_EQ(paths[2], "/path/to/dir3");
 }
 
-TEST(RecentlyAccessedCacheV2, PromotingPaths) {
-	BaseCache<string, RecentlyAccessedPromotion> cache;
+TEST(RecentlyAccessedCache, PromotingPaths) {
+	RecentlyAccessedCache cache;
 
 	// Add paths in order
 	cache.add("/path/to/dir1");
@@ -111,22 +111,22 @@ TEST(RecentlyAccessedCacheV2, PromotingPaths) {
 	cache.add("/path/to/dir3");
 
 	// Promote the first path
-	cache.promote("/path/to/dir1");
+	cache.access("/path/to/dir1");
 	vector<string> paths = cache.get_all_paths();
 	EXPECT_EQ(paths[0], "/path/to/dir1");
 	EXPECT_EQ(paths[1], "/path/to/dir2");
 	EXPECT_EQ(paths[2], "/path/to/dir3");
 
 	// Promote a middle path
-	cache.promote("/path/to/dir2");
+	cache.access("/path/to/dir2");
 	paths = cache.get_all_paths();
 	EXPECT_EQ(paths[0], "/path/to/dir2");
 	EXPECT_EQ(paths[1], "/path/to/dir1");
 	EXPECT_EQ(paths[2], "/path/to/dir3");
 }
 
-TEST(RecentlyAccessedCacheV2, DuplicateHandling) {
-	BaseCache<string, RecentlyAccessedPromotion> cache;
+TEST(RecentlyAccessedCache, DuplicateHandling) {
+	RecentlyAccessedCache cache;
 
 	// Add the same path multiple times
 	cache.add("/path/to/dir2");

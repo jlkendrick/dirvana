@@ -3,7 +3,8 @@
 
 #include "caches/BaseCache.h"
 #include "nlohmann/json.hpp"
-#include "Helpers.h"
+#include "utils/Helpers.h"
+#include "utils/Types.h"
 
 #include <memory>
 #include <string>
@@ -51,7 +52,6 @@ public:
 	// PathMap is the primary data structure that holds all the directories.
 	// It is a map of the deepest directory name to a cache of recently accessed paths
 	// which have that directory name.
-	template <typename K, typename V>
 	struct PathMap {
 
 		PathMap(PromotionStrategy strat = PromotionStrategy::RECENTLY_ACCESSED) : strategy(strat) {};
@@ -76,7 +76,7 @@ public:
 		std::vector<std::string> get_all_keys() const;
 
 		// Map of directory names to caches of recently accessed paths
-		std::unordered_map<std::string, BaseCache<K, V>> map;
+		std::unordered_map<std::string, std::unique_ptr<ICache>> map;
 		PromotionStrategy strategy = PromotionStrategy::RECENTLY_ACCESSED; // Promotion strategy for the caches, default is recently accessed
 	};
 
