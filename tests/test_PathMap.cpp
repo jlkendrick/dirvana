@@ -47,7 +47,7 @@ TEST_F(PathMapTest, AddInvalidPath) {
 
 TEST_F(PathMapTest, SizeTracking) {
 	PathMap new_map;
-	EXPECT_EQ(new_map.size, 0);
+	EXPECT_EQ(new_map.get_size(), 0);
 
 	new_map.add("/path/to/dir1");
 	EXPECT_EQ(new_map.get_size(), 1);

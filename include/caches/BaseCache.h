@@ -39,7 +39,7 @@ public:
 	void access(const std::string& entry);
 
 	void promote(const std::string& entry) {
-		static_cast<PromotionStrategy*>(this)->promote_impl(entry);
+		static_cast<PromotionStrategy*>(this)->promote_impl(*this, entry);
 	};
 
 	typename std::list<T>::const_iterator get_iter() const { return order.cbegin(); }
@@ -51,27 +51,27 @@ public:
 	int get_size() const { return size; }
 	
 	struct RecentlyAccessedPromotion {
-		void promote_impl(const std::string& path) {
-			auto it = cache.at(path);
+		void promote_impl(BaseCache<T, PromotionStrategy>& baseCache, const std::string& path) {
+			auto it = baseCache.cache.at(path);
 			std::string node = *it;
-			order.erase(it);
-			order.push_front(node);
-			cache[path] = order.begin();
+			baseCache.order.erase(it);
+			baseCache.order.push_front(node);
+			baseCache.cache[path] = baseCache.order.begin();
 		}
 	};
 	
 	struct FrequencyBasedPromotion {
-		void promote_impl(const std::string& path) {
-			auto it = cache.at(path);
+		void promote_impl(BaseCache<T, PromotionStrategy>& baseCache, const std::string& path) {
+			auto it = baseCache.cache.at(path);
 			FBCEntry updated_entry = *it;
 			updated_entry.access_count++;
 			
-			order.erase(it);
-			auto insert_pos = order.begin();
-			while (insert_pos != order.end() && insert_pos->access_count > updated_entry.access_count)
+			baseCache.order.erase(it);
+			auto insert_pos = baseCache.order.begin();
+			while (insert_pos != baseCache.order.end() && insert_pos->access_count > updated_entry.access_count)
 					insert_pos++;
-			auto new_it = order.insert(insert_pos, updated_entry);
-			cache[path] = new_it;
+			auto new_it = baseCache.order.insert(insert_pos, updated_entry);
+			baseCache.cache[path] = new_it;
 		}
 	};
 
@@ -80,7 +80,6 @@ protected:
 	std::list<T> order;
 
 	int size = 0;
-
 };
 
 template <typename T, typename PromotionStrategy>
@@ -128,7 +127,7 @@ std::vector<std::string> BaseCache<T, PromotionStrategy>::get_all_paths() const 
 	std::vector<T> paths;
 
 	// Map the order to a vector of strings
-	if constexpr (std::is_same<T, FBCEntry>)
+	if constexpr (std::is_same<T, FBCEntry>::value)
 		std::transform(order.begin(), order.end(), std::back_inserter(paths), [](const FBCEntry& entry) { return entry.path; });
 	else
 		paths.assign(order.begin(), order.end());

@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <unordered_set>
 
+
 using json = nlohmann::json;
 
 // We do this so DCArgs can access the members of DirectoryCompleter
@@ -81,10 +82,10 @@ public:
 
 		using RecentlyAccessedType = BaseCache<std::string, RecentlyAccessedPromotion>;
 		using FrequencyBasedType = BaseCache<FBCEntry, FrequencyBasedPromotion>;
-		using CacheType = std::variant<RecentlyAccessedType, FrequencyBasedType>;
+		// using CacheType = std::variant<RecentlyAccessedType, FrequencyBasedType>;
 
 		// Map of directory names to caches of recently accessed paths
-		std::unordered_map<std::string, CacheType> map;
+		std::unordered_map<std::string, RecentlyAccessedType> map;
 		PromotionOption strategy = PromotionOption::RECENTLY_ACCESSED; // Promotion strategy for the caches, default is recently accessed
 	};
 

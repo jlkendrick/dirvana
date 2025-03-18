@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "caches/FrequencyBasedCache.h"
+#include "caches/BaseCache.h"
 #include "utils/FBCEntry.h"
 
 #include <string>
@@ -9,12 +9,12 @@
 using namespace std;
 
 TEST(FrequencyBasedCache, Initialization) {
-	FrequencyBasedCache cache;
+	BaseCache<FBCEntry, FrequencyBasedPromotion> cache;
 	EXPECT_EQ(cache.get_size(), 0);
 }
 
 TEST(FrequencyBasedCache, AddingPaths) {
-	FrequencyBasedCache cache;
+	BaseCache<FBCEntry, FrequencyBasedPromotion> cache;
 
 	// Add a single path
 	cache.add("/path/to/dir1");
@@ -29,7 +29,7 @@ TEST(FrequencyBasedCache, AddingPaths) {
 	EXPECT_TRUE(cache.contains("/path/to/dir3"));
 
 	// Verify initial order (during initialization, we insert at the back)
-	vector<string> paths = cache.get_all_entries();
+	vector<string> paths = cache.get_all_paths();
 	EXPECT_EQ(paths.size(), 3);
 	EXPECT_EQ(paths[0], "/path/to/dir1");
 	EXPECT_EQ(paths[1], "/path/to/dir2");
@@ -37,7 +37,7 @@ TEST(FrequencyBasedCache, AddingPaths) {
 }
 
 TEST(FrequencyBasedCache, FrequencyOrdering) {
-	FrequencyBasedCache cache;
+	BaseCache<FBCEntry, FrequencyBasedPromotion> cache;
 
 	// Add paths and access them different numbers of times
 	cache.add("/path/to/dir3"); // count: 1
@@ -50,7 +50,7 @@ TEST(FrequencyBasedCache, FrequencyOrdering) {
 	cache.access("/path/to/dir2"); // count: 2
 
 	// Verify frequency-based ordering
-	vector<string> paths = cache.get_all_entries();
+	vector<string> paths = cache.get_all_paths();
 	EXPECT_EQ(paths.size(), 3);
 	EXPECT_EQ(paths[0], "/path/to/dir1"); // Most frequent (3)
 	EXPECT_EQ(paths[1], "/path/to/dir2"); // Second most frequent (2)
@@ -58,7 +58,7 @@ TEST(FrequencyBasedCache, FrequencyOrdering) {
 }
 
 TEST(FrequencyBasedCache, DuplicateHandling) {
-	FrequencyBasedCache cache;
+	BaseCache<FBCEntry, FrequencyBasedPromotion> cache;
 
 	// Add paths and verify size
 	cache.add("/path/to/dir2");
@@ -66,7 +66,7 @@ TEST(FrequencyBasedCache, DuplicateHandling) {
 	cache.add("/path/to/dir1"); // Should do nothing
 
 	EXPECT_EQ(cache.get_size(), 2);
-	vector<string> paths = cache.get_all_entries();
+	vector<string> paths = cache.get_all_paths();
 	EXPECT_EQ(paths[0], "/path/to/dir2"); // Original order
 	EXPECT_EQ(paths[1], "/path/to/dir1"); // Original order
 }

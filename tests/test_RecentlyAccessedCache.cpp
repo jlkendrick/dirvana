@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "caches/RecentlyAccessedCache.h"
+#include "caches/BaseCache.h"
 
 #include <string>
 #include <vector>
@@ -29,7 +29,7 @@ using namespace std;
 // 	EXPECT_TRUE(cache.contains("/path/to/dir3"));
 
 // 	// Verify order (most recent at the back)
-// 	vector<string> paths = cache.get_all_entries();
+// 	vector<string> paths = cache.get_all_paths();
 // 	EXPECT_EQ(paths.size(), 3);
 // 	EXPECT_EQ(paths[0], "/path/to/dir1");
 // 	EXPECT_EQ(paths[1], "/path/to/dir2");
@@ -46,14 +46,14 @@ using namespace std;
 
 // 	// Promote the first path
 // 	cache.promote("/path/to/dir1");
-// 	vector<string> paths = cache.get_all_entries();
+// 	vector<string> paths = cache.get_all_paths();
 // 	EXPECT_EQ(paths[0], "/path/to/dir1");
 // 	EXPECT_EQ(paths[1], "/path/to/dir2");
 // 	EXPECT_EQ(paths[2], "/path/to/dir3");
 
 // 	// Promote a middle path
 // 	cache.promote("/path/to/dir2");
-// 	paths = cache.get_all_entries();
+// 	paths = cache.get_all_paths();
 // 	EXPECT_EQ(paths[0], "/path/to/dir2");
 // 	EXPECT_EQ(paths[1], "/path/to/dir1");
 // 	EXPECT_EQ(paths[2], "/path/to/dir3");
@@ -68,19 +68,19 @@ using namespace std;
 // 	cache.add("/path/to/dir1"); // Should do nothing
 
 // 	EXPECT_EQ(cache.get_size(), 2);
-// 	vector<string> paths = cache.get_all_entries();
+// 	vector<string> paths = cache.get_all_paths();
 // 	EXPECT_EQ(paths[0], "/path/to/dir2");
 // 	EXPECT_EQ(paths[1], "/path/to/dir1");
 // }
 
 // ------------------------------------------- STD LIBRARY RECENTLY ACCESSED CACHE -------------------------------------------
 TEST(RecentlyAccessedCacheV2, Initialization) {
-	RecentlyAccessedCacheV2 cache;
+	BaseCache<string, RecentlyAccessedPromotion> cache;
 	EXPECT_EQ(cache.get_size(), 0);
 }
 
 TEST(RecentlyAccessedCacheV2, AddingPaths) {
-	RecentlyAccessedCacheV2 cache;
+	BaseCache<string, RecentlyAccessedPromotion> cache;
 
 	// Add a single path
 	cache.add("/path/to/dir1");
@@ -95,7 +95,7 @@ TEST(RecentlyAccessedCacheV2, AddingPaths) {
 	EXPECT_TRUE(cache.contains("/path/to/dir3"));
 
 	// Verify order (most recent at the back)
-	vector<string> paths = cache.get_all_entries();
+	vector<string> paths = cache.get_all_paths();
 	EXPECT_EQ(paths.size(), 3);
 	EXPECT_EQ(paths[0], "/path/to/dir1");
 	EXPECT_EQ(paths[1], "/path/to/dir2");
@@ -103,7 +103,7 @@ TEST(RecentlyAccessedCacheV2, AddingPaths) {
 }
 
 TEST(RecentlyAccessedCacheV2, PromotingPaths) {
-	RecentlyAccessedCacheV2 cache;
+	BaseCache<string, RecentlyAccessedPromotion> cache;
 
 	// Add paths in order
 	cache.add("/path/to/dir1");
@@ -112,21 +112,21 @@ TEST(RecentlyAccessedCacheV2, PromotingPaths) {
 
 	// Promote the first path
 	cache.promote("/path/to/dir1");
-	vector<string> paths = cache.get_all_entries();
+	vector<string> paths = cache.get_all_paths();
 	EXPECT_EQ(paths[0], "/path/to/dir1");
 	EXPECT_EQ(paths[1], "/path/to/dir2");
 	EXPECT_EQ(paths[2], "/path/to/dir3");
 
 	// Promote a middle path
 	cache.promote("/path/to/dir2");
-	paths = cache.get_all_entries();
+	paths = cache.get_all_paths();
 	EXPECT_EQ(paths[0], "/path/to/dir2");
 	EXPECT_EQ(paths[1], "/path/to/dir1");
 	EXPECT_EQ(paths[2], "/path/to/dir3");
 }
 
 TEST(RecentlyAccessedCacheV2, DuplicateHandling) {
-	RecentlyAccessedCacheV2 cache;
+	BaseCache<string, RecentlyAccessedPromotion> cache;
 
 	// Add the same path multiple times
 	cache.add("/path/to/dir2");
@@ -134,7 +134,7 @@ TEST(RecentlyAccessedCacheV2, DuplicateHandling) {
 	cache.add("/path/to/dir1"); // Should do nothing
 
 	EXPECT_EQ(cache.get_size(), 2);
-	vector<string> paths = cache.get_all_entries();
+	vector<string> paths = cache.get_all_paths();
 	EXPECT_EQ(paths[0], "/path/to/dir2");
 	EXPECT_EQ(paths[1], "/path/to/dir1");
 }
