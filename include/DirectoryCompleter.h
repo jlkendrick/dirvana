@@ -1,14 +1,15 @@
 #ifndef DIRECTORYCOMPLETER_H
 #define DIRECTORYCOMPLETER_H
 
-#include "RecentlyAccessedCache.h"
+#include "caches/BaseCache.h"
 #include "nlohmann/json.hpp"
 #include "Helpers.h"
 
-#include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
+#include <variant>
+#include <cstdlib>
 #include <unordered_set>
 
 using json = nlohmann::json;
@@ -18,7 +19,7 @@ class DirectoryCompleter;
 struct DCArgs;
 enum class MatchingType { Exact, Prefix, Suffix };
 
-// DirectoryCompleter is the main class that sets up the caches and is the main API for the main program
+// DirectoryCompleter is the main class that sets up the caches and is the API for the main program
 class DirectoryCompleter {
 public:
 
@@ -35,7 +36,6 @@ public:
 			config["matching"]["max_results"].get<int>());
 	}
 	void access(const std::string& path) { directories.access(path, get_deepest_dir(path).second); }
-	// const std::shared_ptr<DoublyLinkedList> get_match_iter(const std::string& dir) const;
 	
 	// Members needed to manage exclusion rules for directory names
 	enum class ExclusionType { Exact, Prefix, Suffix, Contains };
@@ -58,7 +58,7 @@ public:
 	// which have that directory name.
 	struct PathMap {
 
-		PathMap() = default;
+		PathMap(PromotionOption strat = PromotionOption::RECENTLY_ACCESSED) : strategy(strat) {};
 
 		// Adds a new path to the cache containing other paths with the same directory name
 		// Ex. Adding "/Users/jameskendrick/Code/Projects/dirvana/cpp/src" will add it to the cache for "src"
@@ -79,12 +79,13 @@ public:
 		// Returns all the paths in the map
 		std::vector<std::string> get_all_keys() const;
 
-		// Map of directory names to caches of recently accessed paths
-		// Here is where we can switch between the two implementations of V1 (self-implemented) and V2 (std::list)
-		std::unordered_map<std::string, RecentlyAccessedCacheV2> map;
+		using RecentlyAccessedType = BaseCache<std::string, RecentlyAccessedPromotion>;
+		using FrequencyBasedType = BaseCache<FBCEntry, FrequencyBasedPromotion>;
+		using CacheType = std::variant<RecentlyAccessedType, FrequencyBasedType>;
 
-		// Total number of paths in the map
-		int size = 0;
+		// Map of directory names to caches of recently accessed paths
+		std::unordered_map<std::string, CacheType> map;
+		PromotionOption strategy = PromotionOption::RECENTLY_ACCESSED; // Promotion strategy for the caches, default is recently accessed
 	};
 
 private:
@@ -99,10 +100,12 @@ private:
 		}},
 		{"matching", {
 			{"max_results", 10},
-			{"type", "exact"}
+			{"type", "exact"},
+			{"promotion_strategy", "recently_accessed"}
 		}}
 	}; // Default config file
 	MatchingType s_to_matching_type(const std::string& type) const; // Converts the string to the MatchingType enum
+	PromotionOption s_to_promotion_strategy(const std::string& type) const; // Converts the string to the PromotionStrategy enum
 	json load_config() const; // Loads the config file from the given path to override the default settings if needed
 	bool validate_config(json& user_config) const; // Validates and modifies the config file if needed, returns true if modified, false otherwise
 

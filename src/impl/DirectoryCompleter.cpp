@@ -26,6 +26,7 @@ DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
 		this->exclusion_rules = args.exclude;
 	
 	// If we are building the cache, we add every directory in the root directory to the PathMap
+	this->directories = PathMap(s_to_promotion_strategy(config["matching"]["promotion_strategy"].get<std::string>()));
 	if (args.build) {
 		for (const auto& [path, dir] : collect_directories())
 			directories.add(path, dir);
@@ -98,7 +99,7 @@ void DirectoryCompleter::save() const {
 		
 
 		ordered_json paths = ordered_json::array();
-		for (const auto& path : cache.get_all_entries())
+		for (const auto& path : cache.get_all_paths())
 			paths.push_back(path);
 		entry["paths"] = paths;
 
@@ -172,6 +173,15 @@ MatchingType DirectoryCompleter::s_to_matching_type(const std::string& type) con
 	else {
 		std::cerr << "Unknown matching type: " << type << std::endl;
 		return MatchingType::Exact;
+	}
+}
+
+PromotionOption DirectoryCompleter::s_to_promotion_strategy(const std::string& type) const {
+	if (type == "recently_accessed") return PromotionOption::RECENTLY_ACCESSED;
+	else if (type == "frequency_based") return PromotionOption::FREQUENCY_BASED;
+	else {
+		std::cerr << "Unknown promotion strategy: " << type << std::endl;
+		return PromotionOption::RECENTLY_ACCESSED;
 	}
 }
 
@@ -252,6 +262,12 @@ bool DirectoryCompleter::validate_config(json& user_config) const {
 			user_config["matching"]["type"].get<std::string>() != "prefix" &&
 			user_config["matching"]["type"].get<std::string>() != "suffix")) {
 			user_config["matching"]["type"] = default_config["matching"]["type"];
+			modified = true;
+		}
+
+		if (!user_config["matching"].contains("promotion_strategy") || (user_config["matching"]["promotion_strategy"].get<std::string>() != "recently_accessed" &&
+			user_config["matching"]["promotion_strategy"].get<std::string>() != "frequency_based")) {
+			user_config["matching"]["promotion_strategy"] = default_config["matching"]["promotion_strategy"];
 			modified = true;
 		}
 	}

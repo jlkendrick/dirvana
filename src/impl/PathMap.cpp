@@ -1,4 +1,5 @@
 #include "DirectoryCompleter.h"
+#include "caches/BaseCache.h"
 #include "Helpers.h"
 
 #include <string>
@@ -11,7 +12,7 @@ void PathMap::add(const std::string& path, const std::string& dirname) {
 	auto res = dirname.empty() ? get_deepest_dir(path) : std::make_pair(true, dirname);
 	if (!res.first)
 		return;
-
+	
 	// Add the path to the cache or do nothing if the path is already in the cache, this will also create a new cache if needed
 	map[res.second].add(path);
 }
@@ -48,14 +49,14 @@ std::vector<std::string> PathMap::get_matches(const std::string& dir, const Matc
 	if (dir.empty()) {
 		std::vector<std::string> all_paths;
 		for (const auto& entry : map)
-			for (const auto& path : entry.second.get_all_entries())
+			for (const auto& path : entry.second.get_all_paths())
 				all_paths.push_back(path);
 		return all_paths;
 	}
 
 	// Handle different types of matching
 	std::vector<std::string> matches;
-	std::vector<const RecentlyAccessedCacheV2*> caches;
+	std::vector<const BaseCache<std::string, RecentlyAccessedPromotion>*> caches;
 	std::vector<std::list<std::string>::const_iterator> cache_iters;
 
 	// Lambda to handle the different types of matching
@@ -88,7 +89,7 @@ std::vector<std::string> PathMap::get_matches(const std::string& dir, const Matc
 	if (type == MatchingType::Exact) {
 		// If the directory is in the map, get the paths from the cache
 		if (map.find(dir) != map.end())
-			matches = map.at(dir).get_all_entries();
+			matches = map.at(dir).get_all_paths();
 	} else if (type == MatchingType::Prefix || type == MatchingType::Suffix) {
 		handle_matching(type);
 	}

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "caches/FrequencyBasedCache.h"
-#include "utils/CacheEntry.h"
+#include "utils/FBCEntry.h"
 
 #include <string>
 #include <vector>

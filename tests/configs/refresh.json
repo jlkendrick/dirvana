@@ -1,7 +1,8 @@
 {
 	"matching": {
     	"max_results": 10,
-    	"type": "exact"
+    	"type": "exact",
+      "promotion_strategy": "recently_accessed"
   	},
   	"paths": {
     	"cache": "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-refresh-cache.json",
