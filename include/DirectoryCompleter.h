@@ -15,10 +15,6 @@
 
 using json = nlohmann::json;
 
-// We do this so DCArgs can access the members of DirectoryCompleter
-class DirectoryCompleter;
-struct DCArgs;
-enum class MatchingType { Exact, Prefix, Suffix };
 
 // DirectoryCompleter is the main class that sets up the caches and is the API for the main program
 class DirectoryCompleter {
@@ -39,8 +35,6 @@ public:
 	void access(const std::string& path) { directories.access(path, get_deepest_dir(path).second); }
 	
 	// Members needed to manage exclusion rules for directory names
-	enum class ExclusionType { Exact, Prefix, Suffix, Contains };
-	struct ExclusionRule { ExclusionType type; std::string pattern; };
 	void add_exclusion_rule(const ExclusionRule& rule) { exclusion_rules.push_back(rule); }
 	
 	// Functions to save and load the completer from a JSON file
@@ -57,9 +51,10 @@ public:
 	// PathMap is the primary data structure that holds all the directories.
 	// It is a map of the deepest directory name to a cache of recently accessed paths
 	// which have that directory name.
+	template <typename K, typename V>
 	struct PathMap {
 
-		PathMap(PromotionOption strat = PromotionOption::RECENTLY_ACCESSED) : strategy(strat) {};
+		PathMap(PromotionStrategy strat = PromotionStrategy::RECENTLY_ACCESSED) : strategy(strat) {};
 
 		// Adds a new path to the cache containing other paths with the same directory name
 		// Ex. Adding "/Users/jameskendrick/Code/Projects/dirvana/cpp/src" will add it to the cache for "src"
@@ -80,13 +75,9 @@ public:
 		// Returns all the paths in the map
 		std::vector<std::string> get_all_keys() const;
 
-		using RecentlyAccessedType = BaseCache<std::string, RecentlyAccessedPromotion>;
-		using FrequencyBasedType = BaseCache<FBCEntry, FrequencyBasedPromotion>;
-		// using CacheType = std::variant<RecentlyAccessedType, FrequencyBasedType>;
-
 		// Map of directory names to caches of recently accessed paths
-		std::unordered_map<std::string, RecentlyAccessedType> map;
-		PromotionOption strategy = PromotionOption::RECENTLY_ACCESSED; // Promotion strategy for the caches, default is recently accessed
+		std::unordered_map<std::string, BaseCache<K, V>> map;
+		PromotionStrategy strategy = PromotionStrategy::RECENTLY_ACCESSED; // Promotion strategy for the caches, default is recently accessed
 	};
 
 private:
@@ -106,7 +97,7 @@ private:
 		}}
 	}; // Default config file
 	MatchingType s_to_matching_type(const std::string& type) const; // Converts the string to the MatchingType enum
-	PromotionOption s_to_promotion_strategy(const std::string& type) const; // Converts the string to the PromotionStrategy enum
+	PromotionStrategy s_to_promotion_strategy(const std::string& type) const; // Converts the string to the PromotionStrategy enum
 	json load_config() const; // Loads the config file from the given path to override the default settings if needed
 	bool validate_config(json& user_config) const; // Validates and modifies the config file if needed, returns true if modified, false otherwise
 
@@ -142,14 +133,6 @@ private:
 		// Contains rules
 		{ ExclusionType::Contains, "release" }
 	};
-};
-
-// DCArgs is a struct that holds the arguments for the DirectoryCompleter
-struct DCArgs {
-	bool build = true;
-	bool refresh = false;
-	std::string config_path = "";
-	std::vector<DirectoryCompleter::ExclusionRule> exclude = {};
 };
 
 #endif // DIRECTORYCOMPLETER_H
