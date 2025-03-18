@@ -2,7 +2,9 @@
 #define FREQUENCYBASEDCACHE_H
 
 #include "BaseCache.h"
+#include "utils/CacheEntry.h"
 
+#include <iostream>
 #include <list>
 #include <memory>
 #include <string>
@@ -12,53 +14,38 @@
 // It uses a map from paths to CacheEntries for quick access to the path's position in the cache,
 // and maintains a counter for each path to track access frequency.
 // The prioritization is done by reordering paths in a DoublyLinkedList based on access count.
-class FrequencyBasedCache : public BaseCache<std::string> {
+class FrequencyBasedCache : public BaseCache<CacheEntry> {
 public:
+	void add(const std::string& entry) {
+		BaseCache<CacheEntry>::add(entry, CacheEntry(entry));
+	}
 
 	// Updates the position of the path based on its access frequency
-	// Called after incrementing the access counter
 	void promote(const std::string& path) {
 		// Get the iterator from the cache
-		auto it = cache.at(path);
-		int current_count = it->access_count;
-	
-		// Remove the path from its current position and insert it in the correct position
-		order.erase(it);
+		auto it = cache[path];
 		
-		// Find the correct position based on frequency count
-		auto current = order.begin();
-		auto tail = order.end();
-		while (current != tail) {
-			// If we find a path with lower or equal frequency, insert before it
-			if (current->access_count <= current_count) {
-				order.insert(current, *it);
-				return;
-			}
-			current++;
-		}
+		// Increment the access count, remove the entry from its current position, and insert it at the new position
+		CacheEntry updated_entry = *it;
+		updated_entry.access_count++;
+		
+		order.erase(it);
+
+		auto insert_pos = order.begin();
+		while (insert_pos != order.end() && insert_pos->access_count > updated_entry.access_count)
+			insert_pos++;
+		auto new_it = order.insert(insert_pos, updated_entry);
+
+		// Update the cache with the new iterator
+		cache[path] = new_it;
 	};
 
 	std::vector<std::string> get_all_entries() const {
 		std::vector<std::string> paths;
 		for (const auto& entry : order)
-			paths.push_back(*entry.path);
+			paths.push_back(entry.path);
 		return paths;
 	}
-
-private:
-	// Struct to hold both the path and its access count
-	struct CacheEntry {
-		std::shared_ptr<std::string> path;
-		int access_count;
-
-		CacheEntry(std::shared_ptr<std::string> n) : path(n), access_count(1) {}
-	};
-
-	std::unordered_map<std::string, std::list<CacheEntry>::iterator> cache;
-	std::list<CacheEntry> order;
-
-	// Total number of paths in the cache
-	int size = 0;
 };
 
 #endif // FREQUENCYBASEDCACHE_H

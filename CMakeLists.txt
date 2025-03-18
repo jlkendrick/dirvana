@@ -18,7 +18,9 @@ include_directories(
 set(LIB_SOURCES
     src/impl/DirectoryCompleter.cpp
     src/impl/PathMap.cpp
-    src/impl/caches/RecentlyAccessedCache.cpp
+
+    # Caches implemented in .h files
+
     src/impl/utils/Helpers.cpp
 )
 
@@ -39,6 +41,7 @@ set(TEST_SOURCES
     tests/test_PathMap.cpp
 
     tests/test_RecentlyAccessedCache.cpp
+    tests/test_FrequencyBasedCache.cpp
 )
 
 # Create the test executable
