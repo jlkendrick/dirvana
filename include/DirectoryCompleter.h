@@ -28,7 +28,12 @@ public:
 	~DirectoryCompleter() = default;
 
 	// Functions needed to get matches and update the cache ordering (proxies to PathMap so see PathMap for details)
-	std::vector<std::string> get_matches(const std::string& dir = "") const {return directories.get_matches(dir, s_to_matching_type(config["matching"]["type"].get<std::string>()));}
+	std::vector<std::string> get_matches(const std::string& dir = "") const {
+		return directories.get_matches(
+			dir, 
+			s_to_matching_type(config["matching"]["type"].get<std::string>()), 
+			config["matching"]["max_results"].get<int>());
+	}
 	void access(const std::string& path) { directories.access(path, get_deepest_dir(path).second); }
 	// const std::shared_ptr<DoublyLinkedList> get_match_iter(const std::string& dir) const;
 	
@@ -65,7 +70,7 @@ public:
 		void access(const std::string& path, const std::string& dirname = "");
 
 		// Returns the paths in the cache for the given directory name
-		std::vector<std::string> get_matches(const std::string& dir = "", const MatchingType& type = MatchingType::Exact) const;
+		std::vector<std::string> get_matches(const std::string& dir = "", const MatchingType& type = MatchingType::Exact, int max_results = 10) const;
 
 		// Returns true if the map contains the given directory name
 		bool contains(const std::string& dir) const { return map.find(dir) != map.end(); }

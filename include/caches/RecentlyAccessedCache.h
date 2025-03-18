@@ -1,8 +1,7 @@
 #ifndef RECENTLYACCESSEDCACHE_H
 #define RECENTLYACCESSEDCACHE_H
 
-// #include "Node.h"
-// #include "DoublyLinkedList.h"
+#include "BaseCache.h"
 
 #include <list>
 #include <memory>
@@ -52,25 +51,18 @@
 
 // ------------------------------------------- STD LIBRARY RECENTLY ACCESSED CACHE -------------------------------------------
 // Same as RecentlyAccessedCacheV1 but uses std::list instead of a custom doubly linked list, see V1 for comments
-class RecentlyAccessedCacheV2 {
+class RecentlyAccessedCacheV2 : public BaseCache<std::string> {
 public:
+	void promote(const std::string& path) {
+		// Get the iterator from the cache
+		auto it = cache.at(path);
 	
-	void add(const std::string& path);
-	void remove(const std::string& path);
-	void access(const std::string& path);
-	void promote(const std::string& path);
-
-	const std::list<std::string>& get_list() const { return order; }
-	std::vector<std::string> get_all_paths() const;
-
-	bool contains(const std::string& path) const { return cache.find(path) != cache.end(); }
-	int get_size() const { return size; }
-
-private:
-	std::unordered_map<std::string, std::list<std::string>::iterator> cache;
-	std::list<std::string> order;
-
-	int size = 0;
+		// Remove the node from its current position and insert it at the front
+		std::string node = *it;
+		order.erase(it);
+		order.push_front(node);
+		cache[path] = order.begin();
+	};
 };
 
 #endif // RECENTLYACCESSEDCACHE_H

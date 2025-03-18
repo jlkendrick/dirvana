@@ -19,7 +19,6 @@ DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
 	if (!args.config_path.empty())
 		this->config_path = args.config_path;
 	// Load the config file
-	std::cout << "Using config path: " << this->config_path << std::endl;
 	this->config = load_config();
 
 	// Update the exclusion rules if any were passed
@@ -99,7 +98,7 @@ void DirectoryCompleter::save() const {
 		
 
 		ordered_json paths = ordered_json::array();
-		for (const auto& path : cache.get_all_paths())
+		for (const auto& path : cache.get_all_entries())
 			paths.push_back(path);
 		entry["paths"] = paths;
 
@@ -197,8 +196,6 @@ json DirectoryCompleter::load_config() const {
 		in_file >> user_config;
 		in_file.close();
 
-		std::cout << user_config.dump(4) << std::endl;
-
 		// Validate the config file
 		if (validate_config(user_config)) {
 			std::cerr << "Config file invalid. Fixing it with default values." << std::endl;
@@ -206,8 +203,6 @@ json DirectoryCompleter::load_config() const {
 			out_file << user_config.dump(4);
 			out_file.close();
 		}
-
-		std::cout << user_config.dump(4) << std::endl;
 
 		// Return the (maybe) modified user config that is valid
 		return user_config;
