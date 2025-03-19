@@ -251,7 +251,8 @@ bool DirectoryCompleter::validate_config(json& user_config) const {
 
 		if (!user_config["matching"].contains("type") || (user_config["matching"]["type"].get<std::string>() != "exact" &&
 			user_config["matching"]["type"].get<std::string>() != "prefix" &&
-			user_config["matching"]["type"].get<std::string>() != "suffix")) {
+			user_config["matching"]["type"].get<std::string>() != "suffix" &&
+			user_config["matching"]["type"].get<std::string>() != "contains")) {
 			user_config["matching"]["type"] = default_config["matching"]["type"];
 			modified = true;
 		}

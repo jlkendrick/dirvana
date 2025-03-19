@@ -77,6 +77,10 @@ std::vector<std::string> PathMap::get_matches(const std::string& query, const Ma
 					is_match = (key.size() >= query.size() && key.rfind(query) == key.size() - query.size());
 					break;
 
+				case MatchingType::Contains:
+					is_match = (key.find(query) != std::string::npos);
+					break;
+
 				default:
 					break;
 			}
@@ -111,7 +115,7 @@ std::vector<std::string> PathMap::get_matches(const std::string& query, const Ma
 		// If the directory is in the map, get the paths from the cache
 		if (map.find(query) != map.end())
 			matches = map.at(query)->get_all_paths();
-	} else if (type == MatchingType::Prefix || type == MatchingType::Suffix) {
+	} else if (type == MatchingType::Prefix || type == MatchingType::Suffix || type == MatchingType::Contains) {
 		handle_matching(type);
 	}
 

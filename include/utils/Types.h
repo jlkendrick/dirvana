@@ -17,7 +17,7 @@ struct DCArgs {
 };
 
 // Stores the available matching types for the cache
-enum class MatchingType { Exact, Prefix, Suffix };
+enum class MatchingType { Exact, Prefix, Suffix, Contains };
 
 // Stores the available promotion strategies for the cache
 enum class PromotionStrategy {

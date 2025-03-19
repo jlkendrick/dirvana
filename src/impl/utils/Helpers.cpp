@@ -19,6 +19,7 @@ MatchingType TypeConversions::s_to_matching_type(const std::string& type) {
 	if (type == "exact") return MatchingType::Exact;
 	else if (type == "prefix") return MatchingType::Prefix;
 	else if (type == "suffix") return MatchingType::Suffix;
+	else if (type == "contains") return MatchingType::Contains;
 	else {
 		std::cerr << "Unknown matching type: " << type << std::endl;
 		return MatchingType::Exact;

@@ -140,18 +140,61 @@ TEST(DirectoryCompleter, PrefixCompletion) {
 
 	completions = completer.get_matches("no");
 	unordered_check(root, completions, {"/notword1", "/notword2", "/notword3", "/intermediate/notword1"});
+
+	completions = completer.get_matches("intermediate");
+	ordered_check(root, completions, {});
 }
 
+TEST(DirectoryCompleter, SuffixCompletion) {
+	TempConfigFile temp_config{ConfigArgs{ .max_results = 5, .match_type = "suffix" }};
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path });
+	string root = completer.get_config()["paths"]["init"].get<string>();
 
+	completer.access(root + "/jubilation");
+	completer.access(root + "/intermediate/jubilation");
+	completer.access(root + "/celebration");
+	completer.access(root + "/imagination");
+	completer.access(root + "/salutation");
+	completer.access(root + "/amalgamation");
+
+	auto completions = completer.get_matches("tion");
+	unordered_check(root, completions, {"/jubilation", "/celebration", "/imagination", "/salutation", "/amalgamation"});
+
+	completions = completer.get_matches("lation");
+	unordered_check(root, completions, {"/jubilation", "/intermediate/jubilation"});
+
+	completions = completer.get_matches("moisture");
+	ordered_check(root, completions, {});
+}
+
+TEST(DirectoryCompleter, ContainsCompletion) {
+	TempConfigFile temp_config{ConfigArgs{ .max_results = 100, .match_type = "contains" }};
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path });
+	string root = completer.get_config()["paths"]["init"].get<string>();
+
+	completer.access(root + "/eating");
+	completer.access(root + "/intermediate/eating");
+	completer.access(root + "/plea");
+	completer.access(root + "/intermediate/plea");
+	completer.access(root + "/dealer");
+	completer.access(root + "/intermediate/dealer");
+	completer.access(root + "/toenail");
+	completer.access(root + "/intermediate/toenail");
+
+	auto completions = completer.get_matches("ea");
+	unordered_check(root, completions, {"/eating", "/intermediate/eating", "/plea", "/intermediate/plea", "/dealer", "/intermediate/dealer"});
+
+	completions = completer.get_matches("oenai");
+	unordered_check(root, completions, {"/toenail", "/intermediate/toenail"});
+
+	completions = completer.get_matches("xxxxxx");
+	ordered_check(root, completions, {});
+}
 	
 
 TEST(DirectoryCompleter, Access) {
-	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json";
-	vector<ExclusionRule> exclude = {
-		{ ExclusionType::Prefix, "."},
-    { ExclusionType::Exact, "custom_rule_check" },
-  };
-	DirectoryCompleter completer(DCArgs{ .config_path = test_config });
+	TempConfigFile temp_config{ConfigArgs()};
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path });
 	string root = completer.get_config()["paths"]["init"].get<string>();
 
 	completer.access(root + "/0");
@@ -175,7 +218,7 @@ TEST(DirectoryCompleter, Exclusion) {
 	DirectoryCompleter completer(DCArgs{ .config_path = temp_config1.path });
 	EXPECT_EQ(completer.get_size(), 4);
 
-	exclude.push_back({ ExclusionType::Exact, "ordered_check" });
+	exclude.push_back({ ExclusionType::Exact, "exact_check" });
 	TempConfigFile temp_config2{ConfigArgs{ .init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/custom_rule_check", .exclusions = exclude }};
 	DirectoryCompleter completer2(DCArgs{ .config_path = temp_config2.path });
 	EXPECT_EQ(completer2.get_size(), 3);
@@ -192,14 +235,12 @@ TEST(DirectoryCompleter, Exclusion) {
 }
 
 TEST(DirectoryCompleter, Refresh) {
-	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json";
-
 	// First create a completer that excludes a directory
 	vector<ExclusionRule> exclude1 = {
 		{ ExclusionType::Exact, "custom_rule_check" }
 	};
-	string cache_path = "test-refresh-cache.json";
-	DirectoryCompleter original(DCArgs{ .config_path = test_config });
+	TempConfigFile temp_config{ConfigArgs{ .cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-refresh-cache.json", .exclusions = exclude1 }}; 
+	DirectoryCompleter original(DCArgs{ .config_path = temp_config.path });
 	string root = original.get_config()["paths"]["init"].get<string>();
 
 	// Verify initial state with strict exclusion
@@ -213,7 +254,8 @@ TEST(DirectoryCompleter, Refresh) {
 		{ ExclusionType::Prefix, "." },
 		{ ExclusionType::Exact, root + "/1/1/1/4" }
 	};
-	DirectoryCompleter refreshed(DCArgs{ .build = false, .refresh = true, .config_path = test_config });
+	TempConfigFile temp_config2{ConfigArgs{ .cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-refresh-cache.json", .exclusions = exclude2 }};
+	DirectoryCompleter refreshed(DCArgs{ .build = false, .refresh = true, .config_path = temp_config2.path });
 
 	// Verify that previously excluded directories are now included
 	EXPECT_EQ(refreshed.get_size(), 14);
@@ -233,20 +275,16 @@ TEST(DirectoryCompleter, Refresh) {
 	vector<ExclusionRule> exclude3 = {
 		{ ExclusionType::Exact, root + "/4" }
 	};
-	DirectoryCompleter refreshed2(DCArgs{ .build = false, .refresh = true, .config_path = test_config });
+	TempConfigFile temp_config3{ConfigArgs{ .cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-refresh-cache.json", .exclusions = exclude3 }};
+	DirectoryCompleter refreshed2(DCArgs{ .build = false, .refresh = true, .config_path = temp_config3.path });
 	auto refreshed2_matches = refreshed2.get_matches("4");
 	ordered_check(root, refreshed2_matches, {"/3/4", "/2/2/4", "/1/1/1/4"});
 }
 
 TEST(DirectoryCompleter, SaveAndLoad) {
 	// Create a DirectoryCompleter with known data
-	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json";
-
-	vector<ExclusionRule> exclude = {
-		{ ExclusionType::Prefix, "."},
-    { ExclusionType::Exact, "custom_rule_check" },
-  };
-	DirectoryCompleter original(DCArgs{ .config_path = test_config });
+	TempConfigFile test_config{ConfigArgs()};
+	DirectoryCompleter original(DCArgs{ .config_path = test_config.path });
 	string root = original.get_config()["paths"]["init"].get<string>();
 
 	// Access some paths
@@ -258,7 +296,7 @@ TEST(DirectoryCompleter, SaveAndLoad) {
 	original.save();
 
 	// Create a new completer instance and load the saved state
-	DirectoryCompleter loaded(DCArgs{ false, false, test_config });
+	DirectoryCompleter loaded(DCArgs{ false, false, test_config.path });
 
 	// Verify the loaded completer has the same matches
 	auto loaded_matches_1 = loaded.get_matches("1");
