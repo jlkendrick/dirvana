@@ -3,8 +3,8 @@
 
 #include "caches/BaseCache.h"
 #include "nlohmann/json.hpp"
-#include "utils/Helpers.h"
-#include "utils/Types.h"
+#include "Helpers.h"
+#include "Types.h"
 
 #include <memory>
 #include <string>
@@ -12,7 +12,6 @@
 #include <variant>
 #include <cstdlib>
 #include <unordered_set>
-
 
 using json = nlohmann::json;
 
@@ -30,7 +29,7 @@ public:
 	std::vector<std::string> get_matches(const std::string& dir = "") const {
 		return directories.get_matches(
 			dir, 
-			s_to_matching_type(config["matching"]["type"].get<std::string>()), 
+			TypeConversions::s_to_matching_type(config["matching"]["type"].get<std::string>()), 
 			config["matching"]["max_results"].get<int>());
 	}
 	void access(const std::string& path) { directories.access(path, get_deepest_dir(path).second); }
@@ -88,7 +87,14 @@ private:
 	json default_config = {
 		{"paths", {
 			{"init", std::getenv("HOME") + std::string("/")},
-			{"cache", std::getenv("HOME") + std::string("/Code/Projects/dirvana/build/cache.json")}
+			{"cache", std::getenv("HOME") + std::string("/Code/Projects/dirvana/build/cache.json")},
+			{"exclusions", {
+				{"prefix", "."},
+				{"exact", {"node_modules", "bower_components", "dist", "out", "target", "tmp", "temp", "cache", "venv", "env", "obj", "pkg", "bin"}},
+				{"suffix", {"sdk", "Library"}},
+				{"contains", {"release"}}
+				}
+			}
 		}},
 		{"matching", {
 			{"max_results", 10},
@@ -96,9 +102,8 @@ private:
 			{"promotion_strategy", "recently_accessed"}
 		}}
 	}; // Default config file
-	MatchingType s_to_matching_type(const std::string& type) const; // Converts the string to the MatchingType enum
-	PromotionStrategy s_to_promotion_strategy(const std::string& type) const; // Converts the string to the PromotionStrategy enum
 	json load_config() const; // Loads the config file from the given path to override the default settings if needed
+	std::vector<ExclusionRule> generate_exclusion_rules(const json& exclusions) const; // Generates the exclusion rules from the config file
 	bool validate_config(json& user_config) const; // Validates and modifies the config file if needed, returns true if modified, false otherwise
 
 	// Re-scans the root directory to add/remove directories
@@ -110,29 +115,7 @@ private:
 	// Returns true if the given directory should be excluded from the PathMap
 	bool should_exclude(const std::string& dir, const std::string& path = "") const;
 	// Stores exclusion rules for directories
-	std::vector<ExclusionRule> exclusion_rules = {
-		// Exclude dot directories
-		{ ExclusionType::Prefix, "." },
-		// Exclude common auto-generated directories
-		{ ExclusionType::Exact, "node_modules" },
-		{ ExclusionType::Exact, "bower_components" },
-		{ ExclusionType::Exact, "dist" },
-		{ ExclusionType::Exact, "out" },
-		{ ExclusionType::Exact, "target" },
-		{ ExclusionType::Exact, "tmp" },
-		{ ExclusionType::Exact, "temp" },
-		{ ExclusionType::Exact, "cache" },
-		{ ExclusionType::Exact, "venv" },
-		{ ExclusionType::Exact, "env" },
-		{ ExclusionType::Exact, "obj" },
-		{ ExclusionType::Exact, "pkg" },
-		{ ExclusionType::Exact, "bin" },
-		// Suffix rules
-		{ ExclusionType::Suffix, "sdk" },
-		{ ExclusionType::Suffix, "Library" },
-		// Contains rules
-		{ ExclusionType::Contains, "release" }
-	};
+	std::vector<ExclusionRule> exclusion_rules;
 };
 
 #endif // DIRECTORYCOMPLETER_H

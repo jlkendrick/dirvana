@@ -15,18 +15,13 @@ DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
 	// If we were given a config path, use it (should only be used for testing, not available in the main program)
 	if (!args.config_path.empty())
 		this->config_path = args.config_path;
-	// Load the config file
+	// Load the config file and validate the contents
 	this->config = load_config();
-
-	// Print the config
-	std::cout << this->config.dump(4) << std::endl;
-
-	// Update the exclusion rules if any were passed
-	if (!args.exclude.empty())
-		this->exclusion_rules = args.exclude;
+	// If we were given exclusion rules, use them
+	this->exclusion_rules = generate_exclusion_rules(config["matching"]["exclusions"]);
 	
 	// If we are building the cache, we add every directory in the root directory to the PathMap
-	this->directories = PathMap(s_to_promotion_strategy(config["matching"]["promotion_strategy"].get<std::string>()));
+	this->directories = PathMap(TypeConversions::s_to_promotion_strategy(config["matching"]["promotion_strategy"].get<std::string>()));
 	if (args.build) {
 		for (const auto& [path, dir] : collect_directories())
 			directories.add(path, dir);
@@ -166,23 +161,19 @@ bool DirectoryCompleter::should_exclude(const std::string& dirname, const std::s
 	return false;
 }
 
-MatchingType DirectoryCompleter::s_to_matching_type(const std::string& type) const {
-	if (type == "exact") return MatchingType::Exact;
-	else if (type == "prefix") return MatchingType::Prefix;
-	else if (type == "suffix") return MatchingType::Suffix;
-	else {
-		std::cerr << "Unknown matching type: " << type << std::endl;
-		return MatchingType::Exact;
+std::vector<ExclusionRule> DirectoryCompleter::generate_exclusion_rules(const json& exclusions) const {
+	std::vector<ExclusionRule> rules;
+	for (const auto& [excl_type, excl_patterns] : exclusions.items()) {
+		if (excl_patterns.is_array()) {
+			for (const auto& value : excl_patterns) {
+				rules.push_back(TypeConversions::s_to_exclusion_rule(excl_type, value.get<std::string>()));
+			}
+		} else {
+			std::cerr << "Invalid exclusion value: " << excl_patterns.dump() << std::endl;
+		}
 	}
-}
 
-PromotionStrategy DirectoryCompleter::s_to_promotion_strategy(const std::string& type) const {
-	if (type == "recently_accessed") return PromotionStrategy::RECENTLY_ACCESSED;
-	else if (type == "frequency_based") return PromotionStrategy::FREQUENCY_BASED;
-	else {
-		std::cerr << "Unknown promotion strategy: " << type << std::endl;
-		return PromotionStrategy::RECENTLY_ACCESSED;
-	}
+	return rules;
 }
 
 json DirectoryCompleter::load_config() const {
@@ -269,6 +260,24 @@ bool DirectoryCompleter::validate_config(json& user_config) const {
 			user_config["matching"]["promotion_strategy"].get<std::string>() != "frequency_based")) {
 			user_config["matching"]["promotion_strategy"] = default_config["matching"]["promotion_strategy"];
 			modified = true;
+		}
+
+		if (!user_config["matching"].contains("exclusions")) {
+			user_config["matching"]["exclusions"] = default_config["matching"]["exclusions"];
+			modified = true;
+		} else {
+			// If any of the exclusion types are not valid, use the default for that type
+			for (auto& type : user_config["matching"]["exclusions"].items()) {
+				if (type.key() != "prefix" && type.key() != "exact" && type.key() != "suffix" && type.key() != "contains") {
+					user_config["matching"]["exclusions"][type.key()] = default_config["matching"]["exclusions"][type.key()];
+					modified = true;
+				}
+				// If any of the values are not of type array, use the default for that type
+				if (!type.value().is_array() && !type.value().is_null()) {
+					user_config["matching"]["exclusions"][type.key()] = default_config["matching"]["exclusions"][type.key()];
+					modified = true;
+				}
+			}
 		}
 	}
 

@@ -1,17 +1,13 @@
 #ifndef BASECACHE_H
 #define BASECACHE_H
 
+#include "Types.h"
+
 #include <list>
 #include <string>
 #include <iostream>
 #include <algorithm>
 #include <unordered_map>
-
-// Stores the available promotion strategies for the cache
-enum class PromotionStrategy {
-	RECENTLY_ACCESSED,
-	FREQUENCY_BASED
-};
 
 class ICache {
 public:

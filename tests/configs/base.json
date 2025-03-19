@@ -2,7 +2,13 @@
 	"matching": {
     	"max_results": 10,
     	"type": "exact",
-      "promotion_strategy": "recently_accessed"
+      "promotion_strategy": "recently_accessed",
+			"exclusions": {
+				"prefix": ["."],
+				"exact": ["node_modules", "bower_components", "dist", "out", "target", "tmp", "temp", "cache", "venv", "env", "obj", "pkg", "bin"],
+				"suffix": ["sdk", "Library"],
+				"contains": ["release"]
+			}
   	},
   	"paths": {
     	"cache": "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json",
