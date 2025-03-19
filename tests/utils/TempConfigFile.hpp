@@ -15,8 +15,6 @@ using json = nlohmann::json;
 
 struct TempConfigFile {
 	struct Args {
-		Args() = default;
-
 		std::string cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json";
 		std::string init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs";
 		int max_results = 10;

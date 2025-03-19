@@ -19,9 +19,6 @@ DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
 	this->config = load_config();
 	// If we were given exclusion rules, use them
 	this->exclusion_rules = generate_exclusion_rules(config["matching"]["exclusions"]);
-
-	// Print the config JSON
-	std::cout << config.dump(4) << std::endl;
 	
 	// If we are building the cache, we add every directory in the root directory to the PathMap
 	this->directories = PathMap(TypeConversions::s_to_promotion_strategy(config["matching"]["promotion_strategy"].get<std::string>()));

@@ -17,6 +17,69 @@ void check(const string& root, const vector<string>& completions, const vector<s
 	}
 }
 
+TEST(DirectoryCompleter, ConfigParsing) {
+	// Test the default test config
+	TempConfigFile temp_config1{ConfigArgs()};
+	DirectoryCompleter completer1(DCArgs{ .config_path = temp_config1.path });
+
+	json config1 = completer1.get_config();
+	EXPECT_EQ(config1["paths"]["init"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs");
+	EXPECT_EQ(config1["paths"]["cache"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json");
+	EXPECT_EQ(config1["matching"]["max_results"].get<int>(), 10);
+	EXPECT_EQ(config1["matching"]["type"].get<string>(), "exact");
+	EXPECT_EQ(config1["matching"]["promotion_strategy"].get<string>(), "recently_accessed");
+	EXPECT_EQ(config1["matching"]["exclusions"]["prefix"].get<vector<string>>(), vector<string>{"."});
+	EXPECT_EQ(config1["matching"]["exclusions"]["exact"].get<vector<string>>(), vector<string>{"custom_rule_check"});
+
+	// Test a custom config
+	TempConfigFile temp_config2{ConfigArgs{
+		.cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json",
+		.init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs",
+		.max_results = 5,
+		.match_type = "prefix",
+		.promotion_strategy = "frequency_based",
+		.exclusions = {
+			{ ExclusionType::Exact, "a" },
+			{ ExclusionType::Exact, "b" },
+			{ ExclusionType::Prefix, "c" },
+			{ ExclusionType::Prefix, "d" },
+			{ ExclusionType::Suffix, "e" },
+			{ ExclusionType::Suffix, "f" },
+			{ ExclusionType::Contains, "g" },
+			{ ExclusionType::Contains, "h" }
+	}}};
+	DirectoryCompleter completer2(DCArgs{ .config_path = temp_config2.path });
+
+	json config2 = completer2.get_config();
+	EXPECT_EQ(config2["paths"]["init"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs");
+	EXPECT_EQ(config2["paths"]["cache"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json");
+	EXPECT_EQ(config2["matching"]["max_results"].get<int>(), 5);
+	EXPECT_EQ(config2["matching"]["type"].get<string>(), "prefix");
+	EXPECT_EQ(config2["matching"]["promotion_strategy"].get<string>(), "frequency_based");
+	EXPECT_EQ(config2["matching"]["exclusions"]["exact"].get<vector<string>>(), (vector<string>{"a", "b"}));
+	EXPECT_EQ(config2["matching"]["exclusions"]["prefix"].get<vector<string>>(), (vector<string>{"c", "d"}));
+	EXPECT_EQ(config2["matching"]["exclusions"]["suffix"].get<vector<string>>(), (vector<string>{"e", "f"}));
+	EXPECT_EQ(config2["matching"]["exclusions"]["contains"].get<vector<string>>(), (vector<string>{"g", "h"}));
+
+	// Test a faulty config
+	TempConfigFile temp_config3{ConfigArgs{
+		.cache_path = "/somthing/that/does/not/exist",
+		.init_path = "/somthing/that/does/not/exist",
+		.max_results = -1,
+		.match_type = "not_a_valid_type",
+		.promotion_strategy = "not_a_valid_strategy"
+	}};
+	DirectoryCompleter completer3(DCArgs{ .build = false, .config_path = temp_config3.path });
+
+	json config3 = completer3.get_config();
+	EXPECT_EQ(config3["paths"]["init"].get<string>(), "/Users/jameskendrick/");
+	EXPECT_EQ(config3["paths"]["cache"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/build/cache.json");
+	EXPECT_EQ(config3["matching"]["max_results"].get<int>(), 10);
+	EXPECT_EQ(config3["matching"]["type"].get<string>(), "exact");
+	EXPECT_EQ(config3["matching"]["promotion_strategy"].get<string>(), "recently_accessed");
+	EXPECT_EQ(config3["matching"]["exclusions"]["prefix"].get<vector<string>>(), vector<string>{"."});
+	EXPECT_EQ(config3["matching"]["exclusions"]["exact"].get<vector<string>>(), vector<string>{"custom_rule_check"});
+}
 
 TEST(DirectoryCompleter, Initialization) {
 	TempConfigFile temp_config{ConfigArgs()};
@@ -25,149 +88,152 @@ TEST(DirectoryCompleter, Initialization) {
 	EXPECT_EQ(completer.get_size(), 10);
 }
 
-// TEST(DirectoryCompleter, ExactCompletion) {
-// 	DirectoryCompleter completer(DCArgs{ .config_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json" });
-// 	string root = completer.get_config()["paths"]["init"].get<string>();
 
-// 	auto completions = completer.get_matches("0");
-// 	check(root, completions, {});
+TEST(DirectoryCompleter, ExactCompletion) {
+	DirectoryCompleter completer(DCArgs{ .config_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json" });
+	string root = completer.get_config()["paths"]["init"].get<string>();
 
-// 	completions = completer.get_matches("1");
-// 	check(root, completions, {"/1", "/1/1", "/1/1/1"});
+	auto completions = completer.get_matches("0");
+	check(root, completions, {});
 
-// 	completions = completer.get_matches("2");
-// 	check(root, completions, {"/2", "/2/2"});
+	completions = completer.get_matches("1");
+	check(root, completions, {"/1", "/1/1", "/1/1/1"});
 
-// 	completions = completer.get_matches("3");
-// 	check(root, completions, {"/3"});
+	completions = completer.get_matches("2");
+	check(root, completions, {"/2", "/2/2"});
 
-// 	completions = completer.get_matches("4");
-// 	check(root, completions, {"/1/1/1/4", "/4", "/3/4", "/2/2/4"});
+	completions = completer.get_matches("3");
+	check(root, completions, {"/3"});
 
-// }
+	completions = completer.get_matches("4");
+	check(root, completions, {"/1/1/1/4", "/4", "/3/4", "/2/2/4"});
+}
 
-// TEST(DirectoryCompleter, Access) {
-// 	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json";
-// 	vector<ExclusionRule> exclude = {
-// 		{ ExclusionType::Prefix, "."},
-//     { ExclusionType::Exact, "custom_rule_check" },
-//   };
-// 	DirectoryCompleter completer(DCArgs{ .config_path = test_config });
-// 	string root = completer.get_config()["paths"]["init"].get<string>();
+TEST(DirectoryCompleter, Access) {
+	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json";
+	vector<ExclusionRule> exclude = {
+		{ ExclusionType::Prefix, "."},
+    { ExclusionType::Exact, "custom_rule_check" },
+  };
+	DirectoryCompleter completer(DCArgs{ .config_path = test_config });
+	string root = completer.get_config()["paths"]["init"].get<string>();
 
-// 	completer.access(root + "/0");
-// 	check(root, completer.get_matches("0"), {"/0"});
+	completer.access(root + "/0");
+	check(root, completer.get_matches("0"), {"/0"});
 
-// 	completer.access(root + "/1/1");
-// 	check(root, completer.get_matches("1"), {"/1/1", "/1", "/1/1/1"});
+	completer.access(root + "/1/1");
+	check(root, completer.get_matches("1"), {"/1/1", "/1", "/1/1/1"});
 
-// 	completer.access(root + "/1/1/1");
-// 	check(root, completer.get_matches("1"), {"/1/1/1", "/1/1", "/1"});
+	completer.access(root + "/1/1/1");
+	check(root, completer.get_matches("1"), {"/1/1/1", "/1/1", "/1"});
 
-// 	completer.access(root + "/1/1/1");
-// 	check(root, completer.get_matches("1"), {"/1/1/1", "/1/1", "/1"});
-// }
+	completer.access(root + "/1/1/1");
+	check(root, completer.get_matches("1"), {"/1/1/1", "/1/1", "/1"});
+}
 
-// TEST(DirectoryCompleter, Exclusion) {
-// 	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/exclusion.json";
-// 	vector<ExclusionRule> exclude = {
-// 		{ ExclusionType::Prefix, "." },
-// 	};
-// 	DirectoryCompleter completer(DCArgs{ .config_path = test_config });
-// 	EXPECT_EQ(completer.get_size(), 4);
+TEST(DirectoryCompleter, Exclusion) {
+	vector<ExclusionRule> exclude = {
+		{ ExclusionType::Prefix, "."},
+	};
+	TempConfigFile temp_config1{ConfigArgs{ .init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/custom_rule_check", .exclusions = exclude }};
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config1.path });
+	EXPECT_EQ(completer.get_size(), 4);
 
-// 	exclude.push_back({ ExclusionType::Exact, "exact_check" });
-// 	DirectoryCompleter completer2(DCArgs{ .config_path = test_config });
-// 	EXPECT_EQ(completer2.get_size(), 3);
+	exclude.push_back({ ExclusionType::Exact, "exact_check" });
+	TempConfigFile temp_config2{ConfigArgs{ .init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/custom_rule_check", .exclusions = exclude }};
+	DirectoryCompleter completer2(DCArgs{ .config_path = temp_config2.path });
+	EXPECT_EQ(completer2.get_size(), 3);
 
-// 	exclude.push_back({ ExclusionType::Contains, "ain" });
-// 	DirectoryCompleter completer3(DCArgs{ .config_path = test_config });
-// 	EXPECT_EQ(completer3.get_size(), 2);
+	exclude.push_back({ ExclusionType::Contains, "ain" });
+	TempConfigFile temp_config3{ConfigArgs{ .init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/custom_rule_check", .exclusions = exclude }};
+	DirectoryCompleter completer3(DCArgs{ .config_path = temp_config3.path });
+	EXPECT_EQ(completer3.get_size(), 2);
 
-// 	exclude.push_back({ ExclusionType::Suffix, "eck" });
-// 	DirectoryCompleter completer4(DCArgs{ .config_path = test_config });
-// 	EXPECT_EQ(completer4.get_size(), 0);
-// }
+	exclude.push_back({ ExclusionType::Suffix, "eck" });
+	TempConfigFile temp_config4{ConfigArgs{ .init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/custom_rule_check", .exclusions = exclude }};
+	DirectoryCompleter completer4(DCArgs{ .config_path = temp_config4.path });
+	EXPECT_EQ(completer4.get_size(), 0);
+}
 
-// TEST(DirectoryCompleter, Refresh) {
-// 	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json";
+TEST(DirectoryCompleter, Refresh) {
+	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json";
 
-// 	// First create a completer that excludes a directory
-// 	vector<ExclusionRule> exclude1 = {
-// 		{ ExclusionType::Exact, "custom_rule_check" }
-// 	};
-// 	string cache_path = "test-refresh-cache.json";
-// 	DirectoryCompleter original(DCArgs{ .config_path = test_config });
-// 	string root = original.get_config()["paths"]["init"].get<string>();
+	// First create a completer that excludes a directory
+	vector<ExclusionRule> exclude1 = {
+		{ ExclusionType::Exact, "custom_rule_check" }
+	};
+	string cache_path = "test-refresh-cache.json";
+	DirectoryCompleter original(DCArgs{ .config_path = test_config });
+	string root = original.get_config()["paths"]["init"].get<string>();
 
-// 	// Verify initial state with strict exclusion
-// 	EXPECT_EQ(original.get_size(), 11);
+	// Verify initial state with strict exclusion
+	EXPECT_EQ(original.get_size(), 11);
 
-// 	// Save the current state
-// 	original.save();
+	// Save the current state
+	original.save();
 
-// 	// Create a new completer that includes the previously excluded directory, but excludes another
-// 	vector<ExclusionRule> exclude2 = {
-// 		{ ExclusionType::Prefix, "." },
-// 		{ ExclusionType::Exact, root + "/1/1/1/4" }
-// 	};
-// 	DirectoryCompleter refreshed(DCArgs{ .build = false, .refresh = true, .config_path = test_config });
+	// Create a new completer that includes the previously excluded directory, but excludes another
+	vector<ExclusionRule> exclude2 = {
+		{ ExclusionType::Prefix, "." },
+		{ ExclusionType::Exact, root + "/1/1/1/4" }
+	};
+	DirectoryCompleter refreshed(DCArgs{ .build = false, .refresh = true, .config_path = test_config });
 
-// 	// Verify that previously excluded directories are now included
-// 	EXPECT_EQ(refreshed.get_size(), 14);
+	// Verify that previously excluded directories are now included
+	EXPECT_EQ(refreshed.get_size(), 14);
 	
-// 	// Verify specific directories are now accessible
-// 	auto matches = refreshed.get_matches(".1");
-// 	check(root, matches, {}); // Make sure the excluded directory is not included
-// 	matches = refreshed.get_matches("custom_rule_check");
-// 	check(root, matches, {"/custom_rule_check"}); // Make sure the previously excluded directory is now included
+	// Verify specific directories are now accessible
+	auto matches = refreshed.get_matches(".1");
+	check(root, matches, {}); // Make sure the excluded directory is not included
+	matches = refreshed.get_matches("custom_rule_check");
+	check(root, matches, {"/custom_rule_check"}); // Make sure the previously excluded directory is now included
 
-// 	refreshed.save();
+	refreshed.save();
 
-// 	// Verify the order of the directories is preserved
-// 	refreshed.access(root + "/2/2/4");
-// 	refreshed.access(root + "/3/4");
-// 	refreshed.access(root + "/4");
-// 	vector<ExclusionRule> exclude3 = {
-// 		{ ExclusionType::Exact, root + "/4" }
-// 	};
-// 	DirectoryCompleter refreshed2(DCArgs{ .build = false, .refresh = true, .config_path = test_config });
-// 	auto refreshed2_matches = refreshed2.get_matches("4");
-// 	check(root, refreshed2_matches, {"/3/4", "/2/2/4", "/1/1/1/4"});
-// }
+	// Verify the order of the directories is preserved
+	refreshed.access(root + "/2/2/4");
+	refreshed.access(root + "/3/4");
+	refreshed.access(root + "/4");
+	vector<ExclusionRule> exclude3 = {
+		{ ExclusionType::Exact, root + "/4" }
+	};
+	DirectoryCompleter refreshed2(DCArgs{ .build = false, .refresh = true, .config_path = test_config });
+	auto refreshed2_matches = refreshed2.get_matches("4");
+	check(root, refreshed2_matches, {"/3/4", "/2/2/4", "/1/1/1/4"});
+}
 
-// TEST(DirectoryCompleter, SaveAndLoad) {
-// 	// Create a DirectoryCompleter with known data
-// 	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json";
+TEST(DirectoryCompleter, SaveAndLoad) {
+	// Create a DirectoryCompleter with known data
+	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json";
 
-// 	vector<ExclusionRule> exclude = {
-// 		{ ExclusionType::Prefix, "."},
-//     { ExclusionType::Exact, "custom_rule_check" },
-//   };
-// 	DirectoryCompleter original(DCArgs{ .config_path = test_config });
-// 	string root = original.get_config()["paths"]["init"].get<string>();
+	vector<ExclusionRule> exclude = {
+		{ ExclusionType::Prefix, "."},
+    { ExclusionType::Exact, "custom_rule_check" },
+  };
+	DirectoryCompleter original(DCArgs{ .config_path = test_config });
+	string root = original.get_config()["paths"]["init"].get<string>();
 
-// 	// Access some paths
-// 	original.access(root + "/1/1");
-// 	original.access(root + "/2/2");
-// 	original.access(root + "/2/2/4");
+	// Access some paths
+	original.access(root + "/1/1");
+	original.access(root + "/2/2");
+	original.access(root + "/2/2/4");
 
-// 	// Save the completer state
-// 	original.save();
+	// Save the completer state
+	original.save();
 
-// 	// Create a new completer instance and load the saved state
-// 	DirectoryCompleter loaded(DCArgs{ false, false, test_config });
+	// Create a new completer instance and load the saved state
+	DirectoryCompleter loaded(DCArgs{ false, false, test_config });
 
-// 	// Verify the loaded completer has the same matches
-// 	auto loaded_matches_1 = loaded.get_matches("1");
-// 	auto loaded_matches_2 = loaded.get_matches("2");
-// 	auto loaded_matches_4 = loaded.get_matches("4");
+	// Verify the loaded completer has the same matches
+	auto loaded_matches_1 = loaded.get_matches("1");
+	auto loaded_matches_2 = loaded.get_matches("2");
+	auto loaded_matches_4 = loaded.get_matches("4");
 
-// 	// Compare the results (reordering should persist)
-// 	check(root, loaded_matches_1, {"/1/1", "/1", "/1/1/1"});
-// 	check(root, loaded_matches_2, {"/2/2", "/2"});
-// 	check(root, loaded_matches_4, {"/2/2/4", "/1/1/1/4", "/4", "/3/4"});
+	// Compare the results (reordering should persist)
+	check(root, loaded_matches_1, {"/1/1", "/1", "/1/1/1"});
+	check(root, loaded_matches_2, {"/2/2", "/2"});
+	check(root, loaded_matches_4, {"/2/2/4", "/1/1/1/4", "/4", "/3/4"});
 
-// 	// Verify that both completers have the same number of directories
-// 	EXPECT_EQ(original.get_size(), loaded.get_size());
-// }
+	// Verify that both completers have the same number of directories
+	EXPECT_EQ(original.get_size(), loaded.get_size());
+}
