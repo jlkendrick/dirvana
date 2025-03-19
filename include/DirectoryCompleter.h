@@ -1,7 +1,7 @@
 #ifndef DIRECTORYCOMPLETER_H
 #define DIRECTORYCOMPLETER_H
 
-#include "caches/BaseCache.h"
+#include "caches/BaseCache.hpp"
 #include "nlohmann/json.hpp"
 #include "Helpers.h"
 #include "Types.h"
