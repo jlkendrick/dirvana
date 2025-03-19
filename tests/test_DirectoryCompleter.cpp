@@ -10,10 +10,17 @@
 using namespace std;
 using ConfigArgs = TempConfigFile::Args;
 
-void check(const string& root, const vector<string>& completions, const vector<string>& expected) {
+void ordered_check(const string& root, const vector<string>& completions, const vector<string>& expected) {
 	EXPECT_EQ(completions.size(), expected.size());
 	for (int i = 0; i < completions.size(); i++) {
 		EXPECT_EQ(completions[i], root + expected[i]);
+	}
+}
+
+void unordered_check(const string& root, const vector<string>& completions, const vector<string>& expected) {
+	EXPECT_EQ(completions.size(), expected.size());
+	for (const auto& expected_path : expected) {
+		EXPECT_NE(find(completions.begin(), completions.end(), root + expected_path), completions.end());
 	}
 }
 
@@ -90,24 +97,53 @@ TEST(DirectoryCompleter, Initialization) {
 
 
 TEST(DirectoryCompleter, ExactCompletion) {
-	DirectoryCompleter completer(DCArgs{ .config_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json" });
+	TempConfigFile temp_config{ConfigArgs()};
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path });
 	string root = completer.get_config()["paths"]["init"].get<string>();
 
 	auto completions = completer.get_matches("0");
-	check(root, completions, {});
+	ordered_check(root, completions, {});
 
 	completions = completer.get_matches("1");
-	check(root, completions, {"/1", "/1/1", "/1/1/1"});
+	ordered_check(root, completions, {"/1", "/1/1", "/1/1/1"});
 
 	completions = completer.get_matches("2");
-	check(root, completions, {"/2", "/2/2"});
+	ordered_check(root, completions, {"/2", "/2/2"});
 
 	completions = completer.get_matches("3");
-	check(root, completions, {"/3"});
+	ordered_check(root, completions, {"/3"});
 
 	completions = completer.get_matches("4");
-	check(root, completions, {"/1/1/1/4", "/4", "/3/4", "/2/2/4"});
+	ordered_check(root, completions, {"/1/1/1/4", "/4", "/3/4", "/2/2/4"});
 }
+
+TEST(DirectoryCompleter, PrefixCompletion) {
+	TempConfigFile temp_config{ConfigArgs{ .max_results = 5, .match_type = "prefix" }};
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path });
+	string root = completer.get_config()["paths"]["init"].get<string>();
+	
+	// use .access() method to add new directories to the cache
+	completer.access(root + "/word1");
+	completer.access(root + "/intermediate/word1");
+	completer.access(root + "/word2");
+	completer.access(root + "/intermediate/word2");
+	completer.access(root + "/word3");
+	completer.access(root + "/word4");
+	completer.access(root + "/word5");
+	completer.access(root + "/notword1");
+	completer.access(root + "/intermediate/notword1");
+	completer.access(root + "/notword2");
+	completer.access(root + "/notword3");
+
+	auto completions = completer.get_matches("word");
+	unordered_check(root, completions, {"/word1", "/word2", "/word3", "/word4", "/word5"});
+
+	completions = completer.get_matches("no");
+	unordered_check(root, completions, {"/notword1", "/notword2", "/notword3", "/intermediate/notword1"});
+}
+
+
+	
 
 TEST(DirectoryCompleter, Access) {
 	string test_config = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/base.json";
@@ -119,16 +155,16 @@ TEST(DirectoryCompleter, Access) {
 	string root = completer.get_config()["paths"]["init"].get<string>();
 
 	completer.access(root + "/0");
-	check(root, completer.get_matches("0"), {"/0"});
+	ordered_check(root, completer.get_matches("0"), {"/0"});
 
 	completer.access(root + "/1/1");
-	check(root, completer.get_matches("1"), {"/1/1", "/1", "/1/1/1"});
+	ordered_check(root, completer.get_matches("1"), {"/1/1", "/1", "/1/1/1"});
 
 	completer.access(root + "/1/1/1");
-	check(root, completer.get_matches("1"), {"/1/1/1", "/1/1", "/1"});
+	ordered_check(root, completer.get_matches("1"), {"/1/1/1", "/1/1", "/1"});
 
 	completer.access(root + "/1/1/1");
-	check(root, completer.get_matches("1"), {"/1/1/1", "/1/1", "/1"});
+	ordered_check(root, completer.get_matches("1"), {"/1/1/1", "/1/1", "/1"});
 }
 
 TEST(DirectoryCompleter, Exclusion) {
@@ -139,7 +175,7 @@ TEST(DirectoryCompleter, Exclusion) {
 	DirectoryCompleter completer(DCArgs{ .config_path = temp_config1.path });
 	EXPECT_EQ(completer.get_size(), 4);
 
-	exclude.push_back({ ExclusionType::Exact, "exact_check" });
+	exclude.push_back({ ExclusionType::Exact, "ordered_check" });
 	TempConfigFile temp_config2{ConfigArgs{ .init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/custom_rule_check", .exclusions = exclude }};
 	DirectoryCompleter completer2(DCArgs{ .config_path = temp_config2.path });
 	EXPECT_EQ(completer2.get_size(), 3);
@@ -184,9 +220,9 @@ TEST(DirectoryCompleter, Refresh) {
 	
 	// Verify specific directories are now accessible
 	auto matches = refreshed.get_matches(".1");
-	check(root, matches, {}); // Make sure the excluded directory is not included
+	ordered_check(root, matches, {}); // Make sure the excluded directory is not included
 	matches = refreshed.get_matches("custom_rule_check");
-	check(root, matches, {"/custom_rule_check"}); // Make sure the previously excluded directory is now included
+	ordered_check(root, matches, {"/custom_rule_check"}); // Make sure the previously excluded directory is now included
 
 	refreshed.save();
 
@@ -199,7 +235,7 @@ TEST(DirectoryCompleter, Refresh) {
 	};
 	DirectoryCompleter refreshed2(DCArgs{ .build = false, .refresh = true, .config_path = test_config });
 	auto refreshed2_matches = refreshed2.get_matches("4");
-	check(root, refreshed2_matches, {"/3/4", "/2/2/4", "/1/1/1/4"});
+	ordered_check(root, refreshed2_matches, {"/3/4", "/2/2/4", "/1/1/1/4"});
 }
 
 TEST(DirectoryCompleter, SaveAndLoad) {
@@ -230,9 +266,9 @@ TEST(DirectoryCompleter, SaveAndLoad) {
 	auto loaded_matches_4 = loaded.get_matches("4");
 
 	// Compare the results (reordering should persist)
-	check(root, loaded_matches_1, {"/1/1", "/1", "/1/1/1"});
-	check(root, loaded_matches_2, {"/2/2", "/2"});
-	check(root, loaded_matches_4, {"/2/2/4", "/1/1/1/4", "/4", "/3/4"});
+	ordered_check(root, loaded_matches_1, {"/1/1", "/1", "/1/1/1"});
+	ordered_check(root, loaded_matches_2, {"/2/2", "/2"});
+	ordered_check(root, loaded_matches_4, {"/2/2/4", "/1/1/1/4", "/4", "/3/4"});
 
 	// Verify that both completers have the same number of directories
 	EXPECT_EQ(original.get_size(), loaded.get_size());

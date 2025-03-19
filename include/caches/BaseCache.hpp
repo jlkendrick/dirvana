@@ -6,7 +6,6 @@
 #include <list>
 #include <string>
 #include <iostream>
-#include <algorithm>
 #include <unordered_map>
 
 class ICache {

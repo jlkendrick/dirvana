@@ -33,7 +33,7 @@ void PathMap::access(const std::string& path, const std::string& dirname) {
 	if (!res.first)
 		return;
 
-	// If the path is not in the cache, add it
+	// If the dirname does not have a cache for it, create one
 	if (map.find(res.second) == map.end())
 		map[res.second] = CacheFactory::create_cache(strategy);
 
