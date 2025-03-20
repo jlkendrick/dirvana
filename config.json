@@ -28,11 +28,10 @@
             ]
         },
         "max_results": 10,
-        "promotion_strategy": "recently_accessed",
+        "promotion_strategy": "frequency_based",
         "type": "prefix"
     },
     "paths": {
-        "cache": "/Users/jameskendrick/.cache/dirvana/cache.json",
         "init": "/Users/jameskendrick/"
     }
 }

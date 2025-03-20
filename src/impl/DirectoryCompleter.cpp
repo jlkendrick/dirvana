@@ -114,12 +114,12 @@ void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
 	
 	// Check if the cache file exists for the promotion strategy we are using
 	if (!fs::exists(cache_path)) {
-		std::cerr << "Cache file does not exist for the promotion strategy: " << cache_path << std::endl;
-		std::cerr << "Please use the --rebuild or --refresh option to create a new cache." << std::endl;
+		// std::cerr << "Cache file does not exist for the promotion strategy: " << cache_path << std::endl;
+		// std::cerr << "Please use the --rebuild or --refresh option to create a new cache." << std::endl;
 
 		// If not, here we force a refresh with old_dirs empty so we essentially rebuild the cache
-		// refresh_directories(old_dirs);
-		// save(); // We also want to save the cache to the file for next time 
+		refresh_directories(old_dirs);
+		save(); // We also want to save the cache to the file for next time 
 		return;
 	}
 
@@ -298,9 +298,9 @@ bool DirectoryCompleter::validate_config(json& user_config) const {
 
 	// Now that the promotion strategy is guaranteed to be defined, we can define the cache path
 	if (user_config["matching"]["promotion_strategy"].get<std::string>() == "recently_accessed")
-		user_config["paths"]["cache"] = default_config["paths"]["cache"] + "recently_accessed-cache.json";
+		user_config["paths"]["cache"] = default_config["paths"]["cache"].get<std::string>() + "recently_accessed-cache.json";
 	else
-		user_config["paths"]["cache"] = default_config["paths"]["cache"] + "frequency_based-cache.json";
+		user_config["paths"]["cache"] = default_config["paths"]["cache"].get<std::string>() + "frequency_based-cache.json";
 
 	return modified;
 }
