@@ -15,6 +15,15 @@ std::pair<bool, std::string> get_deepest_dir(const std::string& path) {
 	return std::make_pair(true, path.substr(pos + 1));
 }
 
+std::string extract_promotion_strategy(const std::string& dirname) {
+	size_t pos = dirname.find_first_of('-');
+	if (pos == std::string::npos)
+		return "";
+	
+	return dirname.substr(0, pos);
+}
+	
+
 MatchingType TypeConversions::s_to_matching_type(const std::string& type) {
 	if (type == "exact") return MatchingType::Exact;
 	else if (type == "prefix") return MatchingType::Prefix;

@@ -87,19 +87,19 @@ private:
 	json default_config = {
 		{"paths", {
 			{"init", std::getenv("HOME") + std::string("/")},
-			{"cache", std::getenv("HOME") + std::string("/Code/Projects/dirvana/build/cache.json")},
+			{"cache", std::getenv("HOME") + std::string("/.cache/dirvana/")} // Just the prefix, the rest is added in the constructor based on the promotion strategy
+		}},
+		{"matching", {
+			{"max_results", 10},
+			{"type", "exact"},
+			{"promotion_strategy", "recently_accessed"},
 			{"exclusions", {
-				{"prefix", "."},
+				{"prefix", {"."}},
 				{"exact", {"node_modules", "bower_components", "dist", "out", "target", "tmp", "temp", "cache", "venv", "env", "obj", "pkg", "bin"}},
 				{"suffix", {"sdk", "Library"}},
 				{"contains", {"release"}}
 				}
 			}
-		}},
-		{"matching", {
-			{"max_results", 10},
-			{"type", "exact"},
-			{"promotion_strategy", "recently_accessed"}
 		}}
 	}; // Default config file
 	json load_config() const; // Loads the config file from the given path to override the default settings if needed

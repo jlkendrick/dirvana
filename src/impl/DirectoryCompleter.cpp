@@ -110,7 +110,20 @@ void DirectoryCompleter::save() const {
 }
 
 void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
-	std::ifstream file(config["paths"]["cache"].get<std::string>());
+	std::string cache_path = config["paths"]["cache"].get<std::string>();
+	
+	// Check if the cache file exists for the promotion strategy we are using
+	if (!fs::exists(cache_path)) {
+		std::cerr << "Cache file does not exist for the promotion strategy: " << cache_path << std::endl;
+		std::cerr << "Please use the --rebuild or --refresh option to create a new cache." << std::endl;
+
+		// If not, here we force a refresh with old_dirs empty so we essentially rebuild the cache
+		// refresh_directories(old_dirs);
+		// save(); // We also want to save the cache to the file for next time 
+		return;
+	}
+
+	std::ifstream file(cache_path);
 	if (file.is_open()) {
 		json j;
 		file >> j;
@@ -179,7 +192,7 @@ std::vector<ExclusionRule> DirectoryCompleter::generate_exclusion_rules(const js
 json DirectoryCompleter::load_config() const {
 	// Check if the config file exists
 	if (!fs::exists(config_path)) {
-		std::cerr << "Config file does not exist: " << config_path << ". Creating a new one." << std::endl;
+		// std::cerr << "Config file does not exist: " << config_path << ". Creating a new one." << std::endl;
 		std::ofstream out_file(config_path);
 		out_file << default_config.dump(4);
 		out_file.close();
@@ -189,7 +202,7 @@ json DirectoryCompleter::load_config() const {
 	try {
 		std::ifstream in_file(config_path);
 		if (!in_file.is_open()) {
-			std::cerr << "Unable to open config file: " << config << std::endl;
+			// std::cerr << "Unable to open config file: " << config << std::endl;
 			return default_config;
 		}
 
@@ -199,7 +212,7 @@ json DirectoryCompleter::load_config() const {
 
 		// Validate the config file
 		if (validate_config(user_config)) {
-			std::cerr << "Config file invalid. Fixing it with default values." << std::endl;
+			// std::cerr << "Config file invalid. Fixing it with default values." << std::endl;
 			std::ofstream out_file(config_path);
 			out_file << user_config.dump(4);
 			out_file.close();
@@ -231,10 +244,10 @@ bool DirectoryCompleter::validate_config(json& user_config) const {
 			modified = true;
 		}
 
-		if (!user_config["paths"].contains("cache") || (!fs::exists(user_config["paths"]["cache"].get<std::string>()))) {
-			user_config["paths"]["cache"] = default_config["paths"]["cache"];
-			modified = true;
-		}
+		// if (!user_config["paths"].contains("cache") || (!fs::exists(user_config["paths"]["cache"].get<std::string>()))) {
+		// 	user_config["paths"]["cache"] = default_config["paths"]["cache"];
+		// 	modified = true;
+		// }
 	}
 
 
@@ -263,6 +276,7 @@ bool DirectoryCompleter::validate_config(json& user_config) const {
 			modified = true;
 		}
 
+		
 		if (!user_config["matching"].contains("exclusions")) {
 			user_config["matching"]["exclusions"] = default_config["matching"]["exclusions"];
 			modified = true;
@@ -281,6 +295,12 @@ bool DirectoryCompleter::validate_config(json& user_config) const {
 			}
 		}
 	}
+
+	// Now that the promotion strategy is guaranteed to be defined, we can define the cache path
+	if (user_config["matching"]["promotion_strategy"].get<std::string>() == "recently_accessed")
+		user_config["paths"]["cache"] = default_config["paths"]["cache"] + "recently_accessed-cache.json";
+	else
+		user_config["paths"]["cache"] = default_config["paths"]["cache"] + "frequency_based-cache.json";
 
 	return modified;
 }
