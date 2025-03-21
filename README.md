@@ -98,6 +98,8 @@ source ~/.zshrc
 ## Usage
 
 You now have access to the `dv` command, here are some examples of how to use it:
+
+Note: The examples below show results assuming the matching type is set to `exact`, but you can change it to the options seen in the [Configuration](#configuration) section.
 ```sh
 # --------- Navigating to a directory ---------
 dv project + 'Tab' = dv path/to/project # Autocompletes to top match and displays a menu of other matches. Consecutive 'Tab' presses cycle through matches.
@@ -130,3 +132,38 @@ dv -- rebuild + 'Enter' = # Will try to cd into 'rebuild' (if it exists) or find
 ```
 
 Dirvana will remember the directories you visit and use this information to provide better autocompletion suggestions in the case of similarly named directories.
+
+---
+## Configuration
+Dirvana can be configured to suit your needs through the configuration JSON file. The configuration file is located at `~/.config/dirvana/config.json`. Here are the available options:
+
+```json
+{
+  "paths": {
+    "init": "/some/path", // Dirvana will have knowledge of all the directories that branch off of this path. 
+                          // Keep in mind that this path will be used to build the database, so it should be a 
+                          // directory that contains all the directories you want to track, but not too many to 
+                          // avoid performance issues.
+  },
+  "matching": {
+    "max_results": 10, // The maximum number of results to display when using the 'Tab' key for autocompletion.
+    "promotion_strategy": "strategy_name", // Controls how Dirvana adjusts the order of the results based on your 
+                                           // usage patterns. Available strategies include:
+                                           // 1. "recently_accessed" - Promotes the directory you most recently 
+                                           // accessed to the top of the list.
+                                           // 2. "frequency_based" - Sorts the results based on how frequently you
+                                           // have accessed each directory.
+    "type": "type_name", // Controls how Dirvana matches the results. Available types include:
+                         // 1. "exact" - Only matches directories whose names exactly match the search term.
+                         // 2. "prefix" - Matches directories whose names start with the search term.
+                         // 3. "suffix" - Matches directories whose names end with the search term.
+                         // 4. "contains" - Matches directories whose names contain the search term (substring matching).
+    "exclusions": { // Lists of directories to exclude from the database along with the patterns to match them.
+                    // will not track these directories or their subdirectories.
+      "exact": ["/path/to/exclude1", "/path/to/exclude2"], // Will exclude these exact directories and their subdirectories.
+      "prefix": ["/path/to/prefix_exclude1", "/path/to/prefix_exclude2"], // Will exclude direcotories that start with these prefixes and their subdirectories.
+      "suffix": ["/path/to/suffix_exclude1", "/path/to/suffix_exclude2"], // Will exclude directories that end with these suffixes and their subdirectories.
+      "contains": ["/path/to/contains_exclude1", "/path/to/contains_exclude2"] // Will exclude directories that contain these substrings and their subdirectories.
+    }
+}
+```

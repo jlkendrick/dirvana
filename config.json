@@ -29,7 +29,7 @@
         },
         "max_results": 10,
         "promotion_strategy": "frequency_based",
-        "type": "prefix"
+        "type": "contains"
     },
     "paths": {
         "init": "/Users/jameskendrick/"
