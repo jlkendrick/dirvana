@@ -137,7 +137,7 @@ Dirvana will remember the directories you visit and use this information to prov
 ## Configuration
 Dirvana can be configured to suit your needs through the configuration JSON file. The configuration file is located at `~/.config/dirvana/config.json`. Here are the available options:
 
-```json
+```ts
 {
   "paths": {
     "init": "/some/path", // Dirvana will have knowledge of all the directories that branch off of this path. 
