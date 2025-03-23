@@ -14,6 +14,7 @@ struct DCArgs {
 	bool build = true;
 	bool refresh = false;
 	std::string config_path = "";
+	bool test_mode = false;
 };
 
 // Stores the available matching types for the cache

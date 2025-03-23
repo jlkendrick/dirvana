@@ -11,7 +11,8 @@ using json = nlohmann::json;
 using ordered_json = nlohmann::ordered_json;
 namespace fs = std::filesystem;
 
-DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
+
+DirectoryCompleter::DirectoryCompleter(const DCArgs& args) : test_mode(args.test_mode) {
 	// If we were given a config path, use it (should only be used for testing, not available in the main program)
 	if (!args.config_path.empty())
 		this->config_path = args.config_path;
@@ -19,12 +20,13 @@ DirectoryCompleter::DirectoryCompleter(const DCArgs& args) {
 	this->config = load_config();
 	// If we were given exclusion rules, use them
 	this->exclusion_rules = generate_exclusion_rules(config["matching"]["exclusions"]);
+	// Now we need to indicate the promotion strategy from the config for add()s to the PathMap (now path_map)
+	this->strategy = TypeConversions::s_to_promotion_strategy(config["matching"]["promotion_strategy"].get<std::string>());
 	
 	// If we are building the cache, we add every directory in the root directory to the PathMap
-	this->directories = PathMap(TypeConversions::s_to_promotion_strategy(config["matching"]["promotion_strategy"].get<std::string>()));
 	if (args.build) {
 		for (const auto& [path, dir] : collect_directories())
-			directories.add(path, dir);
+			this->add(path, dir);
 		
 	// If we are not building the cache, we need to load the cache from the file and, if refreshing, update the cache
 	} else {
@@ -74,7 +76,7 @@ void DirectoryCompleter::refresh_directories(std::unordered_set<std::string>& ol
 	for (const auto& [path, dir] : collect_directories()) {
 		// If the directory is new, add it to the PathMap
 		if (old_dirs.find(path) == old_dirs.end())
-			directories.add(path, dir);
+			add(path, dir);
 		
 		// Otherwise, remove it from the set of old directories
 		else
@@ -83,15 +85,15 @@ void DirectoryCompleter::refresh_directories(std::unordered_set<std::string>& ol
 
 	// Now, old_dirs contains the directories that were removed so remove them from the PathMap
 	for (const std::string& dir : old_dirs)
-		directories.remove(dir);
+		this->remove(dir);
 }
 
 void DirectoryCompleter::save() const {
+	// Create a JSON object to hold the cache
 	json j;
-	for (const auto& [dir, cache] : directories.map) {
+	for (const auto& [dir, cache] : path_map) {
 		json entry;
 		entry["dir"] = dir;
-		
 
 		ordered_json paths = ordered_json::array();
 		for (const auto& path : cache->get_all_paths())
@@ -100,6 +102,8 @@ void DirectoryCompleter::save() const {
 
 		j.push_back(entry);
 	}
+
+	// Save the cache to the file
 	std::ofstream file(config["paths"]["cache"].get<std::string>());
 	if (file.is_open()) {
 		file << j.dump(4);
@@ -134,7 +138,7 @@ void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
 			ordered_json paths = entry["paths"];
 
 			for (const auto& path : paths) {
-				directories.add(path.get<std::string>(), dir);
+				this->add(path.get<std::string>(), dir);
 				old_dirs.insert(path.get<std::string>());
 			}
 		}
@@ -296,11 +300,13 @@ bool DirectoryCompleter::validate_config(json& user_config) const {
 		}
 	}
 
-	// Now that the promotion strategy is guaranteed to be defined, we can define the cache path
-	if (user_config["matching"]["promotion_strategy"].get<std::string>() == "recently_accessed")
-		user_config["paths"]["cache"] = default_config["paths"]["cache"].get<std::string>() + "recently_accessed-cache.json";
-	else
-		user_config["paths"]["cache"] = default_config["paths"]["cache"].get<std::string>() + "frequency_based-cache.json";
+	// Now that the promotion strategy is guaranteed to be defined, we can define the cache path or, if in testing mode, use the one given (in user_config already)
+	if (!test_mode) {
+		if (user_config["matching"]["promotion_strategy"].get<std::string>() == "recently_accessed")
+			user_config["paths"]["cache"] = default_config["paths"]["cache"].get<std::string>() + "recently_accessed-cache.json";
+		else
+			user_config["paths"]["cache"] = default_config["paths"]["cache"].get<std::string>() + "frequency_based-cache.json";
+	}
 
 	return modified;
 }

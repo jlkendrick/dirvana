@@ -19,21 +19,17 @@ using json = nlohmann::json;
 // DirectoryCompleter is the main class that sets up the caches and is the API for the main program
 class DirectoryCompleter {
 public:
-
 	// Constructors and destructor
 	DirectoryCompleter(const DCArgs& args);
 	DirectoryCompleter() = default;
 	~DirectoryCompleter() = default;
 
-	// Functions needed to get matches and update the cache ordering (proxies to PathMap so see PathMap for details)
-	std::vector<std::string> get_matches(const std::string& dir = "") const {
-		return directories.get_matches(
-			dir, 
-			TypeConversions::s_to_matching_type(config["matching"]["type"].get<std::string>()), 
-			config["matching"]["max_results"].get<int>());
-	}
-	void access(const std::string& path) { directories.access(path, get_deepest_dir(path).second); }
-	
+	// PathMap methods
+	void add(const std::string& path, const std::string& dirname = "");
+	void remove(const std::string& path, const std::string& dirname = "");
+	void access(const std::string& path, const std::string& dirname = "");
+	std::vector<std::string> get_matches(const std::string& query = "") const;
+		
 	// Members needed to manage exclusion rules for directory names
 	void add_exclusion_rule(const ExclusionRule& rule) { exclusion_rules.push_back(rule); }
 	
@@ -41,46 +37,20 @@ public:
 	void save() const;
 	void load(std::unordered_set<std::string>& old_dirs);
 	
-	// Utility functions (proxies to PathMap)
-	int get_size() const { return directories.get_size(); }
-	bool has_matches(const std::string& dir) const { return directories.contains(dir); }
+	// Utility functions
+	int get_size() const;
+	bool contains(const std::string& dir) const { return path_map.find(dir) != path_map.end(); }
+	std::vector<std::string> get_all_keys() const;
 
 	// Getters for the configuration data (used for testing)
 	const json& get_config() const { return config; }
 
-	// PathMap is the primary data structure that holds all the directories.
-	// It is a map of the deepest directory name to a cache of recently accessed paths
-	// which have that directory name.
-	struct PathMap {
-
-		PathMap(PromotionStrategy strat = PromotionStrategy::RECENTLY_ACCESSED) : strategy(strat) {};
-
-		// Adds a new path to the cache containing other paths with the same directory name
-		// Ex. Adding "/Users/jameskendrick/Code/Projects/dirvana/cpp/src" will add it to the cache for "src"
-		// then adding "/Users/jameskendrick/Code/Projects/courtvision/src" will add it to that same cache
-		// that way, users can simply type the directory name and get the most recently accessed paths
-		void add(const std::string& path, const std::string& dirname = "");
-		void remove(const std::string& path, const std::string& dirname = "");
-		// Access the given path in the cache for the directory name
-		void access(const std::string& path, const std::string& dirname = "");
-
-		// Returns the paths in the cache for the given directory name
-		std::vector<std::string> get_matches(const std::string& dir = "", const MatchingType& type = MatchingType::Exact, int max_results = 10) const;
-
-		// Returns true if the map contains the given directory name
-		bool contains(const std::string& dir) const { return map.find(dir) != map.end(); }
-		// Returns the total number of paths in the map (sum of all caches)
-		int get_size() const;
-		// Returns all the paths in the map
-		std::vector<std::string> get_all_keys() const;
-
-		// Map of directory names to caches of recently accessed paths
-		std::unordered_map<std::string, std::unique_ptr<ICache>> map;
-		PromotionStrategy strategy = PromotionStrategy::RECENTLY_ACCESSED; // Promotion strategy for the caches, default is recently accessed
-	};
 
 private:
-	PathMap directories; // PathMap object to hold the directories and caches
+	bool test_mode = false; // Flag to indicate if we are in test mode
+
+	std::unordered_map<std::string, std::unique_ptr<ICache>> path_map; // Previously PathMap
+	PromotionStrategy strategy = PromotionStrategy::RECENTLY_ACCESSED; // Promotion strategy for the caches, default is recently accessed
 
 	json config; // JSON object to hold the config file
 	std::string config_path = std::string(std::getenv("HOME")) + std::string("/Code/Projects/dirvana/config.json");
@@ -95,7 +65,7 @@ private:
 			{"promotion_strategy", "recently_accessed"},
 			{"exclusions", {
 				{"prefix", {"."}},
-				{"exact", {"node_modules", "bower_components", "dist", "out", "target", "tmp", "temp", "cache", "venv", "env", "obj", "pkg", "bin"}},
+				{"exact", {"node_modules", "browser_components", "dist", "out", "target", "tmp", "temp", "cache", "venv", "env", "obj", "pkg", "bin"}},
 				{"suffix", {"sdk", "Library"}},
 				{"contains", {"release"}}
 				}

@@ -91,6 +91,9 @@ std::string TypeConversions::exclusion_type_to_s(const ExclusionType& type) {
 }
 
 json TypeConversions::exclusion_rules_to_json(const std::vector<ExclusionRule>& rules) {
+	if (rules.empty())
+		return json::object();
+
 	json j;
 	for (const auto& rule : rules) {
 		std::string type = TypeConversions::exclusion_type_to_s(rule.type);

@@ -10,6 +10,7 @@
 using namespace std;
 using ConfigArgs = TempConfigFile::Args;
 
+
 void ordered_check(const string& root, const vector<string>& completions, const vector<string>& expected) {
 	EXPECT_EQ(completions.size(), expected.size());
 	for (int i = 0; i < completions.size(); i++) {
@@ -24,10 +25,18 @@ void unordered_check(const string& root, const vector<string>& completions, cons
 	}
 }
 
+
+TEST(DirectoryCompleter, Initialization) {
+	TempConfigFile temp_config{ConfigArgs()};
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path, .test_mode = true });
+	
+	EXPECT_EQ(completer.get_size(), 10);
+}
+
 TEST(DirectoryCompleter, ConfigParsing) {
 	// Test the default test config
 	TempConfigFile temp_config1{ConfigArgs()};
-	DirectoryCompleter completer1(DCArgs{ .config_path = temp_config1.path });
+	DirectoryCompleter completer1(DCArgs{ .config_path = temp_config1.path, .test_mode = true });
 
 	json config1 = completer1.get_config();
 	EXPECT_EQ(config1["paths"]["init"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs");
@@ -40,7 +49,7 @@ TEST(DirectoryCompleter, ConfigParsing) {
 
 	// Test a custom config
 	TempConfigFile temp_config2{ConfigArgs{
-		.cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json",
+		.cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/frequency_based-cache.json",
 		.init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs",
 		.max_results = 5,
 		.match_type = "prefix",
@@ -55,11 +64,11 @@ TEST(DirectoryCompleter, ConfigParsing) {
 			{ ExclusionType::Contains, "g" },
 			{ ExclusionType::Contains, "h" }
 	}}};
-	DirectoryCompleter completer2(DCArgs{ .config_path = temp_config2.path });
+	DirectoryCompleter completer2(DCArgs{ .config_path = temp_config2.path, .test_mode = true });
 
 	json config2 = completer2.get_config();
 	EXPECT_EQ(config2["paths"]["init"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs");
-	EXPECT_EQ(config2["paths"]["cache"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json");
+	EXPECT_EQ(config2["paths"]["cache"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/frequency_based-cache.json");
 	EXPECT_EQ(config2["matching"]["max_results"].get<int>(), 5);
 	EXPECT_EQ(config2["matching"]["type"].get<string>(), "prefix");
 	EXPECT_EQ(config2["matching"]["promotion_strategy"].get<string>(), "frequency_based");
@@ -70,35 +79,29 @@ TEST(DirectoryCompleter, ConfigParsing) {
 
 	// Test a faulty config
 	TempConfigFile temp_config3{ConfigArgs{
-		.cache_path = "/somthing/that/does/not/exist",
-		.init_path = "/somthing/that/does/not/exist",
+		.init_path = "/something/that/does/not/exist",
 		.max_results = -1,
 		.match_type = "not_a_valid_type",
-		.promotion_strategy = "not_a_valid_strategy"
+		.promotion_strategy = "not_a_valid_strategy",
+		.forget = {"exclusions"}
 	}};
-	DirectoryCompleter completer3(DCArgs{ .build = false, .config_path = temp_config3.path });
+	DirectoryCompleter completer3(DCArgs{ .build = false, .config_path = temp_config3.path, .test_mode = true });
 
 	json config3 = completer3.get_config();
 	EXPECT_EQ(config3["paths"]["init"].get<string>(), "/Users/jameskendrick/");
-	EXPECT_EQ(config3["paths"]["cache"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/build/cache.json");
+	EXPECT_EQ(config3["paths"]["cache"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json");
 	EXPECT_EQ(config3["matching"]["max_results"].get<int>(), 10);
 	EXPECT_EQ(config3["matching"]["type"].get<string>(), "exact");
 	EXPECT_EQ(config3["matching"]["promotion_strategy"].get<string>(), "recently_accessed");
 	EXPECT_EQ(config3["matching"]["exclusions"]["prefix"].get<vector<string>>(), vector<string>{"."});
-	EXPECT_EQ(config3["matching"]["exclusions"]["exact"].get<vector<string>>(), vector<string>{"custom_rule_check"});
+	EXPECT_EQ(config3["matching"]["exclusions"]["exact"].get<vector<string>>(), (vector<string>{"node_modules", "browser_components", "dist", "out", "target", "tmp", "temp", "cache", "venv", "env", "obj", "pkg", "bin"}));
+	EXPECT_EQ(config3["matching"]["exclusions"]["suffix"].get<vector<string>>(), (vector<string>{"sdk", "Library"}));
+	EXPECT_EQ(config3["matching"]["exclusions"]["contains"].get<vector<string>>(), (vector<string>{"release"}));
 }
-
-TEST(DirectoryCompleter, Initialization) {
-	TempConfigFile temp_config{ConfigArgs()};
-	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path });
-
-	EXPECT_EQ(completer.get_size(), 10);
-}
-
 
 TEST(DirectoryCompleter, ExactCompletion) {
 	TempConfigFile temp_config{ConfigArgs()};
-	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path });
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path, .test_mode = true });
 	string root = completer.get_config()["paths"]["init"].get<string>();
 
 	auto completions = completer.get_matches("0");
@@ -119,7 +122,7 @@ TEST(DirectoryCompleter, ExactCompletion) {
 
 TEST(DirectoryCompleter, PrefixCompletion) {
 	TempConfigFile temp_config{ConfigArgs{ .max_results = 5, .match_type = "prefix" }};
-	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path });
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path, .test_mode = true });
 	string root = completer.get_config()["paths"]["init"].get<string>();
 	
 	// use .access() method to add new directories to the cache
@@ -147,7 +150,7 @@ TEST(DirectoryCompleter, PrefixCompletion) {
 
 TEST(DirectoryCompleter, SuffixCompletion) {
 	TempConfigFile temp_config{ConfigArgs{ .max_results = 5, .match_type = "suffix" }};
-	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path });
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path, .test_mode = true });
 	string root = completer.get_config()["paths"]["init"].get<string>();
 
 	completer.access(root + "/jubilation");
@@ -169,7 +172,7 @@ TEST(DirectoryCompleter, SuffixCompletion) {
 
 TEST(DirectoryCompleter, ContainsCompletion) {
 	TempConfigFile temp_config{ConfigArgs{ .max_results = 100, .match_type = "contains" }};
-	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path });
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path, .test_mode = true });
 	string root = completer.get_config()["paths"]["init"].get<string>();
 
 	completer.access(root + "/eating");
@@ -194,7 +197,7 @@ TEST(DirectoryCompleter, ContainsCompletion) {
 
 TEST(DirectoryCompleter, Access) {
 	TempConfigFile temp_config{ConfigArgs()};
-	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path });
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path, .test_mode = true });
 	string root = completer.get_config()["paths"]["init"].get<string>();
 
 	completer.access(root + "/0");
@@ -215,22 +218,22 @@ TEST(DirectoryCompleter, Exclusion) {
 		{ ExclusionType::Prefix, "."},
 	};
 	TempConfigFile temp_config1{ConfigArgs{ .init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/custom_rule_check", .exclusions = exclude }};
-	DirectoryCompleter completer(DCArgs{ .config_path = temp_config1.path });
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config1.path, .test_mode = true });
 	EXPECT_EQ(completer.get_size(), 4);
 
 	exclude.push_back({ ExclusionType::Exact, "exact_check" });
 	TempConfigFile temp_config2{ConfigArgs{ .init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/custom_rule_check", .exclusions = exclude }};
-	DirectoryCompleter completer2(DCArgs{ .config_path = temp_config2.path });
+	DirectoryCompleter completer2(DCArgs{ .config_path = temp_config2.path, .test_mode = true });
 	EXPECT_EQ(completer2.get_size(), 3);
 
 	exclude.push_back({ ExclusionType::Contains, "ain" });
 	TempConfigFile temp_config3{ConfigArgs{ .init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/custom_rule_check", .exclusions = exclude }};
-	DirectoryCompleter completer3(DCArgs{ .config_path = temp_config3.path });
+	DirectoryCompleter completer3(DCArgs{ .config_path = temp_config3.path, .test_mode = true });
 	EXPECT_EQ(completer3.get_size(), 2);
 
 	exclude.push_back({ ExclusionType::Suffix, "eck" });
 	TempConfigFile temp_config4{ConfigArgs{ .init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/custom_rule_check", .exclusions = exclude }};
-	DirectoryCompleter completer4(DCArgs{ .config_path = temp_config4.path });
+	DirectoryCompleter completer4(DCArgs{ .config_path = temp_config4.path, .test_mode = true });
 	EXPECT_EQ(completer4.get_size(), 0);
 }
 
@@ -239,8 +242,8 @@ TEST(DirectoryCompleter, Refresh) {
 	vector<ExclusionRule> exclude1 = {
 		{ ExclusionType::Exact, "custom_rule_check" }
 	};
-	TempConfigFile temp_config{ConfigArgs{ .cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-refresh-cache.json", .exclusions = exclude1 }}; 
-	DirectoryCompleter original(DCArgs{ .config_path = temp_config.path });
+	TempConfigFile temp_config{ConfigArgs{ .exclusions = exclude1 }}; 
+	DirectoryCompleter original(DCArgs{ .config_path = temp_config.path, .test_mode = true });
 	string root = original.get_config()["paths"]["init"].get<string>();
 
 	// Verify initial state with strict exclusion
@@ -254,8 +257,8 @@ TEST(DirectoryCompleter, Refresh) {
 		{ ExclusionType::Prefix, "." },
 		{ ExclusionType::Exact, root + "/1/1/1/4" }
 	};
-	TempConfigFile temp_config2{ConfigArgs{ .cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-refresh-cache.json", .exclusions = exclude2 }};
-	DirectoryCompleter refreshed(DCArgs{ .build = false, .refresh = true, .config_path = temp_config2.path });
+	TempConfigFile temp_config2{ConfigArgs{ .exclusions = exclude2 }};
+	DirectoryCompleter refreshed(DCArgs{ .build = false, .refresh = true, .config_path = temp_config2.path, .test_mode = true });
 
 	// Verify that previously excluded directories are now included
 	EXPECT_EQ(refreshed.get_size(), 14);
@@ -275,8 +278,8 @@ TEST(DirectoryCompleter, Refresh) {
 	vector<ExclusionRule> exclude3 = {
 		{ ExclusionType::Exact, root + "/4" }
 	};
-	TempConfigFile temp_config3{ConfigArgs{ .cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-refresh-cache.json", .exclusions = exclude3 }};
-	DirectoryCompleter refreshed2(DCArgs{ .build = false, .refresh = true, .config_path = temp_config3.path });
+	TempConfigFile temp_config3{ConfigArgs{ .exclusions = exclude3 }};
+	DirectoryCompleter refreshed2(DCArgs{ .build = false, .refresh = true, .config_path = temp_config3.path, .test_mode = true });
 	auto refreshed2_matches = refreshed2.get_matches("4");
 	ordered_check(root, refreshed2_matches, {"/3/4", "/2/2/4", "/1/1/1/4"});
 }
@@ -284,7 +287,7 @@ TEST(DirectoryCompleter, Refresh) {
 TEST(DirectoryCompleter, SaveAndLoad) {
 	// Create a DirectoryCompleter with known data
 	TempConfigFile test_config{ConfigArgs()};
-	DirectoryCompleter original(DCArgs{ .config_path = test_config.path });
+	DirectoryCompleter original(DCArgs{ .config_path = test_config.path, .test_mode = true });
 	string root = original.get_config()["paths"]["init"].get<string>();
 
 	// Access some paths
@@ -296,7 +299,7 @@ TEST(DirectoryCompleter, SaveAndLoad) {
 	original.save();
 
 	// Create a new completer instance and load the saved state
-	DirectoryCompleter loaded(DCArgs{ false, false, test_config.path });
+	DirectoryCompleter loaded(DCArgs{ false, false, test_config.path, .test_mode = true });
 
 	// Verify the loaded completer has the same matches
 	auto loaded_matches_1 = loaded.get_matches("1");

@@ -10,6 +10,7 @@
 #include <fstream>
 #include <filesystem>
 #include <vector>
+#include <set>
 
 using json = nlohmann::json;
 
@@ -24,18 +25,26 @@ struct TempConfigFile {
 			{ ExclusionType::Prefix, "."},
 			{ ExclusionType::Exact, "custom_rule_check" },
 		};
+
+		std::set<std::string> forget;
+		bool should_forget(const std::string& field) const {
+			auto it = forget.find(field);
+			if (it != forget.end())
+				return true;
+			return false;
+		}
 	};
 
 	TempConfigFile(const Args& args) {
 		json config;
-		config["paths"]["cache"] = args.cache_path;
-		config["paths"]["init"] = args.init_path;
-		config["matching"]["max_results"] = args.max_results;
-		config["matching"]["type"] = args.match_type;
-		config["matching"]["promotion_strategy"] = args.promotion_strategy;
-		config["matching"]["exclusions"] = TypeConversions::exclusion_rules_to_json(args.exclusions);
+		if (!args.should_forget("cache_path")) config["paths"]["cache"] = args.cache_path;
+		if (!args.should_forget("init_path")) config["paths"]["init"] = args.init_path;
+		if (!args.should_forget("max_results")) config["matching"]["max_results"] = args.max_results;
+		if (!args.should_forget("match_type")) config["matching"]["type"] = args.match_type;
+		if (!args.should_forget("promotion_strategy")) config["matching"]["promotion_strategy"] = args.promotion_strategy;
+		if (!args.should_forget("exclusions")) config["matching"]["exclusions"] = TypeConversions::exclusion_rules_to_json(args.exclusions);
 
-		save(config);
+		save_to_file(config);
 	};
 	~TempConfigFile() {
 		if (std::filesystem::exists(path))
@@ -43,7 +52,7 @@ struct TempConfigFile {
 	}; // Delete the temporary file when the object is destroyed
 
 	// Save the config to a temporary file
-	void save(const json& config) const {
+	void save_to_file(const json& config) const {
 		std::ofstream out_file(path);
 		out_file << config.dump(4);
 		out_file.close();
