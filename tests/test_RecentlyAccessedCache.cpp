@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "caches/BaseCache.hpp"
+#include "BaseCache.hpp"
 
 #include <string>
 #include <vector>
