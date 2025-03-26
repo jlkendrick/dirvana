@@ -52,8 +52,10 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<ICache>> path_map; // Previously PathMap
 	PromotionStrategy strategy = PromotionStrategy::RECENTLY_ACCESSED; // Promotion strategy for the caches, default is recently accessed
 
+	
+
 	json config; // JSON object to hold the config file
-	std::string config_path = std::string(std::getenv("HOME")) + std::string("/Code/Projects/dirvana/config.json");
+	std::string config_path = std::string(std::getenv("HOME")) + std::string("/.config/dirvana/config.json");
 	json default_config = {
 		{"paths", {
 			{"init", std::getenv("HOME") + std::string("/")},

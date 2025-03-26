@@ -200,7 +200,11 @@ json DirectoryCompleter::load_config() const {
 		std::ofstream out_file(config_path);
 		out_file << default_config.dump(4);
 		out_file.close();
-		return default_config;
+
+		json user_config = default_config;
+		// Remember we have to complete the cache path and since this sets the default, we use recently_accessed
+		user_config["paths"]["cache"] += "recently_accessed-cache.json";
+		return user_config;
 	}
 
 	try {
