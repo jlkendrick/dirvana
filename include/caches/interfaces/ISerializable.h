@@ -1,5 +1,5 @@
-#ifndef SERIALIZABLE_H
-#define SERIALIZABLE_H
+#ifndef ISERIALIZABLE_H
+#define ISERIALIZABLE_H
 
 #include <string>
 #include "nlohmann/json.hpp"
@@ -12,4 +12,4 @@ public:
 	virtual ordered_json serialize() const = 0;
 };
 
-#endif // SERIALIZABLE_H
+#endif // ISERIALIZABLE_H

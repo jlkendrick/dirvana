@@ -1,7 +1,7 @@
 #ifndef FREQUENCY_BASED_CACHE_HPP
 #define FREQUENCY_BASED_CACHE_HPP
 
-#include "Serializable.h"
+#include "ISerializable.h"
 #include "nlohmann/json.hpp"
 
 #include <string>

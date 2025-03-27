@@ -1,7 +1,7 @@
 #ifndef RECENTLYACCESSEDCACHE_HPP
 #define RECENTLYACCESSEDCACHE_HPP
 
-#include "Serializable.h"
+#include "ISerializable.h"
 #include "nlohmann/json.hpp"
 
 #include <string>

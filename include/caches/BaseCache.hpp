@@ -4,6 +4,7 @@
 #include "Types.h"
 #include "FrequencyBased.hpp"
 #include "RecentlyAccessed.hpp"
+#include "ICache.hpp"
 #include "nlohmann/json.hpp"
 
 #include <list>
@@ -13,19 +14,6 @@
 
 using ordered_json = nlohmann::ordered_json;
 
-
-class ICache {
-public:
-	virtual ~ICache() = default;
-	virtual void add(const std::string& path) = 0;
-	virtual void add(const ordered_json& entry) = 0;
-	virtual void remove(const std::string& path) = 0;
-	virtual void access(const std::string& path) = 0;
-	virtual std::vector<std::string> get_all_paths() const = 0;
-	virtual ordered_json serialize_entries() const = 0;
-	virtual bool contains(const std::string& path) const = 0;
-	virtual int get_size() const = 0;
-};
 
 // Base cache template implementation, key is always a path (string) so we only need to specify the type of entry and the promotion policy
 template <typename T, typename PromotionPolicy>
