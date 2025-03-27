@@ -93,12 +93,9 @@ void DirectoryCompleter::save() const {
 	json j;
 	for (const auto& [dir, cache] : path_map) {
 		json entry;
-		entry["dir"] = dir;
+		entry["key"] = dir;
 
-		ordered_json paths = ordered_json::array();
-		for (const auto& path : cache->get_all_paths())
-			paths.push_back(path);
-		entry["paths"] = paths;
+		entry["entries"] = cache->serialize_entries();
 
 		j.push_back(entry);
 	}
@@ -134,11 +131,11 @@ void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
 		file.close();
 
 		for (const auto& entry : j) {
-			std::string dir = entry["dir"];
-			ordered_json paths = entry["paths"];
+			std::string key = entry["key"];
+			ordered_json paths = entry["entries"];
 
 			for (const auto& path : paths) {
-				this->add(path.get<std::string>(), dir);
+				this->add(path.get<std::string>(), key);
 				old_dirs.insert(path.get<std::string>());
 			}
 		}
