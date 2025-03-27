@@ -11,7 +11,6 @@
 #include <iostream>
 #include <unordered_map>
 
-using json = nlohmann::json;
 using ordered_json = nlohmann::ordered_json;
 
 
@@ -19,6 +18,7 @@ class ICache {
 public:
 	virtual ~ICache() = default;
 	virtual void add(const std::string& path) = 0;
+	virtual void add(const ordered_json& entry) = 0;
 	virtual void remove(const std::string& path) = 0;
 	virtual void access(const std::string& path) = 0;
 	virtual std::vector<std::string> get_all_paths() const = 0;
@@ -33,6 +33,7 @@ class BaseCache : public ICache, public PromotionPolicy {
 public:
 	BaseCache() = default;
 	
+	// Implementation that is only used for testing
 	void add(const std::string& path) override {
 		// If the path is already in the cache, do nothing
 		if (contains(path))
@@ -43,6 +44,19 @@ public:
 		
 		// Add the entry to the list
 		order.push_back(entry);
+		cache[path] = --order.end();
+		size++;
+	}
+
+	void add(const ordered_json& entry) override {
+		std::string path = entry["path"].get<std::string>();
+
+		if (contains(path))
+			return;
+		
+		T new_entry = this->create_entry(entry);
+
+		order.push_back(new_entry);
 		cache[path] = --order.end();
 		size++;
 	}

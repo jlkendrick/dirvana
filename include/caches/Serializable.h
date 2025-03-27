@@ -4,12 +4,12 @@
 #include <string>
 #include "nlohmann/json.hpp"
 
-using json = nlohmann::json;
+using ordered_json = nlohmann::ordered_json;
 
 class ISerializable {
 public:
 	virtual ~ISerializable() = default;
-	virtual json serialize() const = 0;
+	virtual ordered_json serialize() const = 0;
 };
 
 #endif // SERIALIZABLE_H

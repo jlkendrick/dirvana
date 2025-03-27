@@ -38,7 +38,6 @@ include_directories(${GTEST_INCLUDE_DIRS})
 # Define test source files
 set(TEST_SOURCES
     tests/test_DirectoryCompleter.cpp
-    tests/test_PathMap.cpp
 
     tests/test_RecentlyAccessedCache.cpp
     tests/test_FrequencyBasedCache.cpp

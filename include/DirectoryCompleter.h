@@ -26,6 +26,7 @@ public:
 
 	// PathMap methods
 	void add(const std::string& path, const std::string& dirname = "");
+	void add(const ordered_json& entry, const std::string& dirname = "");
 	void remove(const std::string& path, const std::string& dirname = "");
 	void access(const std::string& path, const std::string& dirname = "");
 	std::vector<std::string> get_matches(const std::string& query = "") const;
@@ -52,6 +53,7 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<ICache>> path_map; // Previously PathMap
 	PromotionStrategy strategy = PromotionStrategy::RECENTLY_ACCESSED; // Promotion strategy for the caches, default is recently accessed
 
+	// History will go here
 	
 
 	json config; // JSON object to hold the config file

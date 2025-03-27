@@ -6,7 +6,7 @@
 
 #include <string>
 
-using json = nlohmann::json;
+using ordered_json = nlohmann::ordered_json;
 
 
 // Frequency-based promotion policy
@@ -17,19 +17,23 @@ public:
 		int access_count;
 		
 		FBCEntry() : path(""), access_count(-1) {}
-		FBCEntry(const std::string& p) : path(p), access_count(1) {}
+		FBCEntry(const std::string& p, int count = 0) : path(p), access_count(count) {}
 
-		json serialize() const override {
-			json j;
+		ordered_json serialize() const override {
+			ordered_json j;
 			j["path"] = path;
 			j["access_count"] = access_count;
 			return j;
 		}
 	};
-	
+
 
 	FBCEntry create_entry(const std::string& path) const {
 		return FBCEntry(path);
+	}
+
+	FBCEntry create_entry(const ordered_json& entry) const {
+		return FBCEntry(entry["path"].get<std::string>(), entry["access_count"].get<int>());
 	}
 		
 	std::string get_path(const FBCEntry& entry) const {

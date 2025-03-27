@@ -16,13 +16,13 @@ TEST(FrequencyBasedCache, AddingPaths) {
 	FrequencyBasedCache cache;
 
 	// Add a single path
-	cache.add("/path/to/dir1");
+	cache.add(string("/path/to/dir1"));
 	EXPECT_EQ(cache.get_size(), 1);
 	EXPECT_TRUE(cache.contains("/path/to/dir1"));
 
 	// Add multiple paths
-	cache.add("/path/to/dir2");
-	cache.add("/path/to/dir3");
+	cache.add(string("/path/to/dir2"));
+	cache.add(string("/path/to/dir3"));
 	EXPECT_EQ(cache.get_size(), 3);
 	EXPECT_TRUE(cache.contains("/path/to/dir2"));
 	EXPECT_TRUE(cache.contains("/path/to/dir3"));
@@ -39,9 +39,9 @@ TEST(FrequencyBasedCache, FrequencyOrdering) {
 	FrequencyBasedCache cache;
 
 	// Add paths and access them different numbers of times
-	cache.add("/path/to/dir3"); // count: 1
-	cache.add("/path/to/dir2"); // count: 1
-	cache.add("/path/to/dir1"); // count: 1
+	cache.add(string("/path/to/dir3")); // count: 1
+	cache.add(string("/path/to/dir2")); // count: 1
+	cache.add(string("/path/to/dir1")); // count: 1
 
 	cache.access("/path/to/dir1"); // count: 2
 	cache.access("/path/to/dir1"); // count: 3
@@ -60,9 +60,9 @@ TEST(FrequencyBasedCache, DuplicateHandling) {
 	FrequencyBasedCache cache;
 
 	// Add paths and verify size
-	cache.add("/path/to/dir2");
-	cache.add("/path/to/dir1");
-	cache.add("/path/to/dir1"); // Should do nothing
+	cache.add(string("/path/to/dir2"));
+	cache.add(string("/path/to/dir1"));
+	cache.add(string("/path/to/dir1")); // Should do nothing
 
 	EXPECT_EQ(cache.get_size(), 2);
 	vector<string> paths = cache.get_all_paths();

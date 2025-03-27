@@ -4,6 +4,7 @@
 #include <iostream>
 
 
+// Only used for testing and when rebuilding the cache (so we can pass strings instead of json objects)
 void DirectoryCompleter::add(const std::string& path, const std::string& dirname) {
 	// Get the deepest directory name in the path which is the key for the cache
 	auto res = dirname.empty() ? get_deepest_dir(path) : std::make_pair(true, dirname);
@@ -14,6 +15,18 @@ void DirectoryCompleter::add(const std::string& path, const std::string& dirname
 	if (path_map.find(res.second) == path_map.end())
 		path_map[res.second] = CacheFactory::create_cache(strategy);
 	path_map[res.second]->add(path);
+}
+
+void DirectoryCompleter::add(const ordered_json& entry, const std::string& dirname) {
+	// Get the deepest directory name in the path which is the key for the cache
+	auto res = dirname.empty() ? get_deepest_dir(entry["path"]) : std::make_pair(true, dirname);
+	if (!res.first)
+		return;
+	
+	// Add the path to the cache or do nothing if the path is already in the cache, create a new cache if needed
+	if (path_map.find(res.second) == path_map.end())
+		path_map[res.second] = CacheFactory::create_cache(strategy);
+	path_map[res.second]->add(entry);
 }
 
 void DirectoryCompleter::remove(const std::string& path, const std::string& dirname) {

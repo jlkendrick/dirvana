@@ -286,7 +286,7 @@ TEST(DirectoryCompleter, Refresh) {
 
 TEST(DirectoryCompleter, SaveAndLoad) {
 	// Create a DirectoryCompleter with known data
-	TempConfigFile test_config{ConfigArgs()};
+	TempConfigFile test_config{ConfigArgs{ .promotion_strategy = "frequency_based" }};
 	DirectoryCompleter original(DCArgs{ .config_path = test_config.path, .test_mode = true });
 	string root = original.get_config()["paths"]["init"].get<string>();
 

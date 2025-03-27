@@ -115,9 +115,6 @@ void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
 	
 	// Check if the cache file exists for the promotion strategy we are using
 	if (!fs::exists(cache_path)) {
-		// std::cerr << "Cache file does not exist for the promotion strategy: " << cache_path << std::endl;
-		// std::cerr << "Please use the --rebuild or --refresh option to create a new cache." << std::endl;
-
 		// If not, here we force a refresh with old_dirs empty so we essentially rebuild the cache
 		refresh_directories(old_dirs);
 		save(); // We also want to save the cache to the file for next time 
@@ -130,13 +127,13 @@ void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
 		file >> j;
 		file.close();
 
-		for (const auto& entry : j) {
-			std::string key = entry["key"];
-			ordered_json paths = entry["entries"];
+		for (const auto& item : j) {
+			std::string key = item["key"];
+			ordered_json entries = item["entries"];
 
-			for (const auto& path : paths) {
-				this->add(path.get<std::string>(), key);
-				old_dirs.insert(path.get<std::string>());
+			for (const auto& entry : entries) {
+				this->add(entry, key);
+				old_dirs.insert(entry["path"].get<std::string>());
 			}
 		}
 	} else

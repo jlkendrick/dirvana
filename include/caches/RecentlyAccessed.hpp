@@ -6,7 +6,7 @@
 
 #include <string>
 
-using json = nlohmann::json;
+using ordered_json = nlohmann::ordered_json;
 
 
 // Recently accessed promotion policy
@@ -18,21 +18,25 @@ public:
 		RACEntry() : path("") {}
 		RACEntry(const std::string& p) : path(p) {}
 
-		json serialize() const override {
-			json j;
+		ordered_json serialize() const override {
+			ordered_json j;
 			j["path"] = path;
 			return j;
 		}
 	};
-	
+
 
 	RACEntry create_entry(const std::string& path) const {
 		return RACEntry(path);
 	}
+
+	RACEntry create_entry(const ordered_json& entry) const {
+		return RACEntry(entry["path"].get<std::string>());
+	}
 			
 	std::string get_path(const RACEntry& entry) const {
 		return entry.path;
-	}
+	}	
 			
 	template <typename CacheType>
 	void promote(const std::string& path) {
