@@ -70,11 +70,18 @@ public:
 			add(path);
 	}
 	
-	std::vector<std::string> get_all_paths() const override {
+	// Note: we have to set default value here as well as in the function signature so polymorphism can work correctly
+	std::vector<std::string> get_all_paths(int max_results = -1) const override {
+		int count = 0;
 		std::vector<std::string> paths;
 		for (const auto& entry : order) {
+			// If max_results is set and we've reached the limit, break out of the loop
+			if (max_results > 0 && count >= max_results)
+				break;
 			paths.push_back(this->get_path(entry));
+			count++;
 		}
+
 		return paths;
 	}
 

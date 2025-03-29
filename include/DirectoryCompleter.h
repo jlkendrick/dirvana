@@ -6,10 +6,11 @@
 #include "Helpers.h"
 #include "Types.h"
 
+#include <tuple>
+#include <queue>
 #include <memory>
 #include <string>
 #include <vector>
-#include <variant>
 #include <cstdlib>
 #include <unordered_set>
 
@@ -53,8 +54,11 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<ICache>> path_map; // Previously PathMap
 	PromotionStrategy strategy = PromotionStrategy::RECENTLY_ACCESSED; // Promotion strategy for the caches, default is recently accessed
 
-	// History will go here
-	
+	// To quantify the history of accesses for the purposes of match return order prioritization, we map the accessed path to an int (simulating to access_count for frequency-based promotion)
+	static std::unordered_map<std::string, int> access_history;
+	struct AHComparator {
+		bool operator()(const std::tuple<int, int, std::string>& a, const std::tuple<int, int, std::string>& b);
+	};
 
 	json config; // JSON object to hold the config file
 	std::string config_path = std::string(std::getenv("HOME")) + std::string("/.config/dirvana/config.json");
@@ -90,6 +94,9 @@ private:
 	bool should_exclude(const std::string& dir, const std::string& path = "") const;
 	// Stores exclusion rules for directories
 	std::vector<ExclusionRule> exclusion_rules;
+
+	// Utils
+	std::vector<std::string> merge_k_sorted_lists(const std::vector<std::vector<std::string>>& lists, int max_results) const; // Merges k sorted lists into a single sorted list based on the access history
 };
 
 #endif // DIRECTORYCOMPLETER_H

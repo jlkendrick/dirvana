@@ -1,8 +1,5 @@
 #include "DirectoryCompleter.h"
 
-#include <string>
-#include <iostream>
-
 
 // Only used for testing and when rebuilding the cache (so we can pass strings instead of json objects)
 void DirectoryCompleter::add(const std::string& path, const std::string& dirname) {
@@ -66,10 +63,9 @@ std::vector<std::string> DirectoryCompleter::get_matches(const std::string& quer
 	// Get the matching type and max results from the config
 	MatchingType type = TypeConversions::s_to_matching_type(config["matching"]["type"].get<std::string>());
 	int max_results = config["matching"]["max_results"].get<int>();
-	std::vector<std::string> matches; // Vector to hold the matches
 
 	// Lambda to handle the different types of matching
-	auto handle_matching = [&](MatchingType match_type) {
+	auto handle_matching = [&](MatchingType match_type) -> std::vector<std::string> {
 
 		// Go through all entries the map and check if the key starts with the query to find matching directories
 		std::vector<std::string> matching_dirs;
@@ -102,33 +98,66 @@ std::vector<std::string> DirectoryCompleter::get_matches(const std::string& quer
 		for (const auto& dir : matching_dirs) 
 			all_matches.push_back(path_map.at(dir)->get_all_paths());
 
-		// Go column-by-column to get the highest priority matches
-		size_t max_depth = 0;
-		for (const auto& vec : all_matches)
-			max_depth = std::max(max_depth, vec.size());
-		
-		for (size_t i = 0; i < max_depth && matches.size() < max_results; i++) {
-			for (const auto& vec : all_matches) {
-				if (i < vec.size()) {
-					matches.push_back(vec[i]);
-					if (matches.size() >= max_results)
-						break;
-				}
-			}
-		}
+		// Merge the locally sorted vectors into a single globally sorted vector based on the matching type
+		// We use the history of accesses to prioritize paths across the different caches for recently-accessed
+		// We can juse use the access_count for frequency-based promotion because it captures cross-cache accesses
+		return merge_k_sorted_lists(all_matches, max_results);
 	};
 
 	// Handle the different types of matching
 	if (type == MatchingType::Exact) {
 		// If the directory is in the map, get the paths from the cache
 		if (path_map.find(query) != path_map.end())
-			matches = path_map.at(query)->get_all_paths();
+			// Return the first max_results paths from the cache for the exact match
+			return path_map.at(query)->get_all_paths(max_results);
 	} else if (type == MatchingType::Prefix || type == MatchingType::Suffix || type == MatchingType::Contains) {
-		handle_matching(type);
+		return handle_matching(type);
 	}
 
-	return matches;
+	return {};
 }
+
+std::unordered_map<std::string, int> DirectoryCompleter::access_history; // Initialize the static access history map
+bool DirectoryCompleter::AHComparator::operator()(const std::tuple<int, int, std::string>& a, const std::tuple<int, int, std::string>& b) {
+	// Get the paths from the tuples
+	std::string path_a = std::get<2>(a); // The path is the third element in the tuple
+	std::string path_b = std::get<2>(b);
+	
+	// Compare the access history counts for the two paths (if they exist in the access history)
+	int count_a = access_history.find(path_a) != access_history.end() ? access_history[path_a] : 0; // Default to 0 if not found
+	int count_b = access_history.find(path_b) != access_history.end() ? access_history[path_b] : 0;
+
+	return count_a > count_b; // Higher counts should come first
+};
+
+std::vector<std::string> DirectoryCompleter::merge_k_sorted_lists(const std::vector<std::vector<std::string>>& lists, int max_results) const {
+	std::vector<std::string> results;
+
+	// Create a max-heap with (index of vector path is in, index of the path in the vector, path itself)
+	std::priority_queue<std::tuple<int, int, std::string>, std::vector<std::tuple<int, int, std::string>>, AHComparator> min_heap;
+	// Initialize the min-heap with the first element from each list
+	for (int i = 0; i < lists.size(); ++i) {
+		if (lists[i].empty()) continue; // Skip empty lists
+		min_heap.push(std::make_tuple(i, 0, lists[i][0]));
+	}
+
+	while (!min_heap.empty() && (results.size() < max_results)) {
+		// Get the smallest element from the heap
+		auto [list_index, element_index, path] = min_heap.top();
+		min_heap.pop();
+
+		// Add the path to the results
+		results.push_back(path);
+
+		// If there is a next element in the same list, push it to the heap
+		if (element_index + 1 < lists[list_index].size()) {
+			min_heap.push(std::make_tuple(list_index, element_index + 1, lists[list_index][element_index + 1]));
+		}
+	}
+
+	return results;
+};
+
 
 int DirectoryCompleter::get_size() const {
 	int size = 0;
