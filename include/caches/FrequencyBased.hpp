@@ -1,6 +1,7 @@
 #ifndef FREQUENCY_BASED_CACHE_HPP
 #define FREQUENCY_BASED_CACHE_HPP
 
+#include "IPromotionStrategy.h"
 #include "ISerializable.h"
 #include "nlohmann/json.hpp"
 

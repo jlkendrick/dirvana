@@ -7,8 +7,6 @@
 #include <filesystem>
 #include <unordered_set>
 
-using json = nlohmann::json;
-using ordered_json = nlohmann::ordered_json;
 namespace fs = std::filesystem;
 
 
@@ -90,15 +88,26 @@ void DirectoryCompleter::refresh_directories(std::unordered_set<std::string>& ol
 
 void DirectoryCompleter::save() const {
 	// Create a JSON object to hold the cache
-	json j;
+
+	// First we need to serialize the path_map into a JSON object
+	json mappings;
 	for (const auto& [dir, cache] : path_map) {
 		json entry;
 		entry["key"] = dir;
 
 		entry["entries"] = cache->serialize_entries();
 
-		j.push_back(entry);
+		mappings.push_back(entry);
 	}
+
+	// Second, we need to keep track of the history of accesses for the purposes of match return order prioritization
+	ordered_json history = json::array();
+	// Do something
+		
+	// Now create the final JSON object to save
+	json j;
+	j["mappings"] = mappings;
+	j["access_history"] = history;
 
 	// Save the cache to the file
 	std::ofstream file(config["paths"]["cache"].get<std::string>());

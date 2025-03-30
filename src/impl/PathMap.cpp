@@ -127,13 +127,13 @@ bool DirectoryCompleter::AHComparator::operator()(const std::tuple<int, int, std
 	int count_a = access_history.find(path_a) != access_history.end() ? access_history[path_a] : 0; // Default to 0 if not found
 	int count_b = access_history.find(path_b) != access_history.end() ? access_history[path_b] : 0;
 
-	return count_a > count_b; // Higher counts should come first
+	return count_a < count_b; // Lower counts should come first
 };
 
 std::vector<std::string> DirectoryCompleter::merge_k_sorted_lists(const std::vector<std::vector<std::string>>& lists, int max_results) const {
 	std::vector<std::string> results;
 
-	// Create a max-heap with (index of vector path is in, index of the path in the vector, path itself)
+	// Create a min-heap with (index of vector path is in, index of the path in the vector, path itself)
 	std::priority_queue<std::tuple<int, int, std::string>, std::vector<std::tuple<int, int, std::string>>, AHComparator> min_heap;
 	// Initialize the min-heap with the first element from each list
 	for (int i = 0; i < lists.size(); ++i) {

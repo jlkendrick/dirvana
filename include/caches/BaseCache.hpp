@@ -4,7 +4,7 @@
 #include "Types.h"
 #include "FrequencyBased.hpp"
 #include "RecentlyAccessed.hpp"
-#include "ICache.hpp"
+#include "ICache.h"
 #include "nlohmann/json.hpp"
 
 #include <list>
@@ -21,7 +21,7 @@ class BaseCache : public ICache, public PromotionPolicy {
 public:
 	BaseCache() = default;
 	
-	// Implementation that is only used for testing
+	// Implementation that is only used for testing and when building the cache (so we can pass strings instead of json objects)
 	void add(const std::string& path) override {
 		// If the path is already in the cache, do nothing
 		if (contains(path))

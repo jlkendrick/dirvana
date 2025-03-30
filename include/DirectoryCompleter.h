@@ -54,7 +54,9 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<ICache>> path_map; // Previously PathMap
 	PromotionStrategy strategy = PromotionStrategy::RECENTLY_ACCESSED; // Promotion strategy for the caches, default is recently accessed
 
-	// To quantify the history of accesses for the purposes of match return order prioritization, we map the accessed path to an int (simulating to access_count for frequency-based promotion)
+	// To quantify the history of accesses for the purposes of match return order prioritization, we map the accessed path to an int
+	// The caches preseve the local order, but this serves as a recently_accessed layer on top of the caches that can be used to prioritize paths across all caches
+	// Ex. cache1 = {A, B}, cache2 = {C, D}, history = {D:0, B:1, C:2, A:3}, output -> {C, D, A, B}
 	static std::unordered_map<std::string, int> access_history;
 	struct AHComparator {
 		bool operator()(const std::tuple<int, int, std::string>& a, const std::tuple<int, int, std::string>& b);
