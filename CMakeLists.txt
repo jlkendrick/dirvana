@@ -23,6 +23,7 @@ set(LIB_SOURCES
     # Caches implemented in .h files
 
     src/impl/utils/Helpers.cpp
+    src/impl/utils/Types.cpp
 )
 
 # Create a library for shared application code

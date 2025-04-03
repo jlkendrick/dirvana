@@ -1,62 +1,65 @@
-[
-    {
-        "entries": [
-            {
-                "access_count": 1,
-                "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/2/2"
-            },
-            {
-                "access_count": 0,
-                "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/2"
-            }
-        ],
-        "key": "2"
-    },
-    {
-        "entries": [
-            {
-                "access_count": 0,
-                "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/3"
-            }
-        ],
-        "key": "3"
-    },
-    {
-        "entries": [
-            {
-                "access_count": 1,
-                "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/2/2/4"
-            },
-            {
-                "access_count": 0,
-                "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/1/1/1/4"
-            },
-            {
-                "access_count": 0,
-                "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/4"
-            },
-            {
-                "access_count": 0,
-                "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/3/4"
-            }
-        ],
-        "key": "4"
-    },
-    {
-        "entries": [
-            {
-                "access_count": 1,
-                "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/1/1"
-            },
-            {
-                "access_count": 0,
-                "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/1"
-            },
-            {
-                "access_count": 0,
-                "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/1/1/1"
-            }
-        ],
-        "key": "1"
-    }
-]
+{
+    "access_history": [],
+    "mappings": [
+        {
+            "entries": [
+                {
+                    "access_count": 1,
+                    "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/2/2"
+                },
+                {
+                    "access_count": 0,
+                    "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/2"
+                }
+            ],
+            "key": "2"
+        },
+        {
+            "entries": [
+                {
+                    "access_count": 0,
+                    "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/3"
+                }
+            ],
+            "key": "3"
+        },
+        {
+            "entries": [
+                {
+                    "access_count": 1,
+                    "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/2/2/4"
+                },
+                {
+                    "access_count": 0,
+                    "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/1/1/1/4"
+                },
+                {
+                    "access_count": 0,
+                    "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/4"
+                },
+                {
+                    "access_count": 0,
+                    "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/3/4"
+                }
+            ],
+            "key": "4"
+        },
+        {
+            "entries": [
+                {
+                    "access_count": 1,
+                    "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/1/1"
+                },
+                {
+                    "access_count": 0,
+                    "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/1"
+                },
+                {
+                    "access_count": 0,
+                    "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/1/1/1"
+                }
+            ],
+            "key": "1"
+        }
+    ]
+}

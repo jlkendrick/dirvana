@@ -1,6 +1,9 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+#include "caches/FrequencyBasedCache.hpp"
+#include "caches/RecentlyAccessedCache.hpp"
+#include "caches/interfaces/ICache.h"
 #include "nlohmann/json.hpp"
 #include "Types.h"
 
@@ -26,5 +29,10 @@ namespace TypeConversions {
 namespace ListUtils {
 	// Merges k sorted lists into a single sorted list, based on the 
 }
+
+// Factory for creating the appropriate cache type
+namespace CacheFactory {
+	std::unique_ptr<ICache> create_cache(PromotionStrategy strategy);
+};
 
 #endif // HELPERS_H

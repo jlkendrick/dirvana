@@ -107,3 +107,8 @@ json TypeConversions::exclusion_rules_to_json(const std::vector<ExclusionRule>& 
 	return j;
 }
 
+std::unique_ptr<ICache> CacheFactory::create_cache(PromotionStrategy strategy) {
+	if (strategy == PromotionStrategy::RECENTLY_ACCESSED)
+		return std::make_unique<RecentlyAccessedCache>();
+	return std::make_unique<FrequencyBasedCache>();
+};

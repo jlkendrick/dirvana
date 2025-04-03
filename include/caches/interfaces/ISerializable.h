@@ -6,6 +6,7 @@
 
 using ordered_json = nlohmann::ordered_json;
 
+
 class ISerializable {
 public:
 	virtual ~ISerializable() = default;

@@ -46,7 +46,7 @@ TEST(DirectoryCompleter, ConfigParsing) {
 	EXPECT_EQ(config1["matching"]["promotion_strategy"].get<string>(), "recently_accessed");
 	EXPECT_EQ(config1["matching"]["exclusions"]["prefix"].get<vector<string>>(), vector<string>{"."});
 	EXPECT_EQ(config1["matching"]["exclusions"]["exact"].get<vector<string>>(), vector<string>{"custom_rule_check"});
-
+	
 	// Test a custom config
 	TempConfigFile temp_config2{ConfigArgs{
 		.cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/frequency_based-cache.json",

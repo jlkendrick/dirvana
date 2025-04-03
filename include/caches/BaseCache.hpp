@@ -2,8 +2,6 @@
 #define BASECACHE_H
 
 #include "Types.h"
-#include "FrequencyBased.hpp"
-#include "RecentlyAccessed.hpp"
 #include "ICache.h"
 #include "nlohmann/json.hpp"
 
@@ -16,8 +14,8 @@ using ordered_json = nlohmann::ordered_json;
 
 
 // Base cache template implementation, key is always a path (string) so we only need to specify the type of entry and the promotion policy
-template <typename T, typename PromotionPolicy>
-class BaseCache : public ICache, public PromotionPolicy {
+template <typename T>
+class BaseCache : public ICache {
 public:
 	BaseCache() = default;
 	
@@ -28,7 +26,7 @@ public:
 			return;
 				
 		// Create the appropriate entry
-		T entry = this->create_entry(path);
+		T entry = create_entry(path);
 		
 		// Add the entry to the list
 		order.push_back(entry);
@@ -42,7 +40,7 @@ public:
 		if (contains(path))
 			return;
 		
-		T new_entry = this->create_entry(entry);
+		T new_entry = create_entry(entry);
 
 		order.push_back(new_entry);
 		cache[path] = --order.end();
@@ -63,7 +61,7 @@ public:
 	void access(const std::string& path) override {
 		// Promote the path in the cache
 		if (contains(path))
-			this->template promote<BaseCache<T, PromotionPolicy>>(path);
+			promote(path);
 
 		// If we try to promote a path that is not in the cache, add it
 		else
@@ -78,7 +76,7 @@ public:
 			// If max_results is set and we've reached the limit, break out of the loop
 			if (max_results > 0 && count >= max_results)
 				break;
-			paths.push_back(this->get_path(entry));
+			paths.push_back(get_path(entry));
 			count++;
 		}
 
@@ -101,24 +99,16 @@ public:
 		return size;
 	}
     
+protected:
 	std::unordered_map<std::string, typename std::list<T>::iterator> cache;
 	std::list<T> order;
 	int size = 0;
-};
 
-// Define the concrete cache types
-using RecentlyAccessedCache = BaseCache<RACEntry, RecentlyAccessedPolicy>;
-using FrequencyBasedCache = BaseCache<FBCEntry, FrequencyBasedPolicy>;
-	
-// Factory for creating the appropriate cache type
-class CacheFactory {
-public:
-	static std::unique_ptr<ICache> create_cache(PromotionStrategy strategy) {
-		if (strategy == PromotionStrategy::FREQUENCY_BASED) {
-			return std::make_unique<FrequencyBasedCache>();
-		}
-		return std::make_unique<RecentlyAccessedCache>();
-	}
+	// Pure virtual functions to be implemented by derived classes
+	virtual T create_entry(const std::string& path) const = 0;
+	virtual T create_entry(const ordered_json& entry) const = 0;
+	virtual std::string get_path(const T& entry) const = 0;
+	virtual void promote(const std::string& path) = 0;
 };
 
 #endif // BASECACHE_H

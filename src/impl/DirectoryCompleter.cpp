@@ -136,7 +136,8 @@ void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
 		file >> j;
 		file.close();
 
-		for (const auto& item : j) {
+		json mappings = j["mappings"];
+		for (const auto& item : mappings) {
 			std::string key = item["key"];
 			ordered_json entries = item["entries"];
 

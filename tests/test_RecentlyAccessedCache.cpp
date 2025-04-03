@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "BaseCache.hpp"
+#include "RecentlyAccessedCache.hpp"
 
 #include <string>
 #include <vector>

@@ -1,10 +1,8 @@
 #ifndef DIRECTORYCOMPLETER_H
 #define DIRECTORYCOMPLETER_H
 
-#include "BaseCache.hpp"
 #include "nlohmann/json.hpp"
 #include "Helpers.h"
-#include "Types.h"
 
 #include <tuple>
 #include <queue>
