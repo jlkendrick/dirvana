@@ -25,15 +25,7 @@ public:
 		return entry.path;
 	}
 
-	void promote(const std::string& path) override {
-		auto it = cache[path];
-		RACEntry entry = *it;
-			
-		// Move the entry to the front of the list
-		order.erase(it);
-		order.push_front(entry);
-		cache[path] = order.begin();
-	}
+	void promote(const std::string& path) override;
 };
 
 #endif // RECENTLYACCESSEDCACHE_HPP

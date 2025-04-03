@@ -20,7 +20,9 @@ set(LIB_SOURCES
     src/impl/DirectoryCompleter.cpp
     src/impl/PathMap.cpp
 
-    # Caches implemented in .h files
+    # BaseCache implemented in .hpp file
+    src/impl/caches/RecentlyAccessedCache.cpp
+    src/impl/caches/FrequencyBasedCache.cpp
 
     src/impl/utils/Helpers.cpp
     src/impl/utils/Types.cpp

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "FrequencyBasedCache.hpp"
+#include "FrequencyBasedCache.h"
 
 #include <string>
 #include <vector>

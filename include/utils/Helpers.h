@@ -1,9 +1,9 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
-#include "caches/FrequencyBasedCache.hpp"
-#include "caches/RecentlyAccessedCache.hpp"
-#include "caches/interfaces/ICache.h"
+#include "FrequencyBasedCache.h"
+#include "RecentlyAccessedCache.h"
+#include "interfaces/ICache.h"
 #include "nlohmann/json.hpp"
 #include "Types.h"
 
