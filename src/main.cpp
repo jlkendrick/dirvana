@@ -96,6 +96,13 @@ int main(int argc, char* argv[]) {
 			cerr << "Enter handler requires 'dv' as the first argument" << endl;
 			return 1;
 		}
+
+		// If -enter was called with no arguments, that is the eqivalent of "cd"
+		// where we want to cd to home dir
+		if (argc == 3 ) {
+			cout << "cd ~" << endl;
+			return 0;
+		}
 			
 		// Check for bypass flag
 		bool bypass = false;
