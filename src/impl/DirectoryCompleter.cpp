@@ -87,6 +87,7 @@ void DirectoryCompleter::refresh_directories(std::unordered_set<std::string>& ol
 }
 
 void DirectoryCompleter::save() const {
+	std::cout << "Saving cache to " << config["paths"]["cache"].get<std::string>() << std::endl;
 	// First we need to serialize the path_map into a JSON object
 	json mappings;
 	for (const auto& [dir, cache] : path_map) {
@@ -96,12 +97,18 @@ void DirectoryCompleter::save() const {
 		entry["entries"] = cache->serialize_entries();
 
 		mappings.push_back(entry);
+		std::cout << entry.dump(4) << std::endl;
 	}
 
 	// Second, we need to keep track of the history of accesses for the purposes of match return order prioritization
 	int max_history_size = config["matching"]["max_history_size"].get<int>();
 	ordered_json history = access_history.serialize_entries(max_history_size);
-		
+
+	std::cout << "History:" << std::endl;
+
+	for (const auto& entry : history)
+		std::cout << entry.dump(4) << std::endl;
+	
 	// Now create the final JSON object to save
 	json j;
 	j["mappings"] = mappings;

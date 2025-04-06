@@ -1,100 +1,13 @@
 {
     "history": [
         {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/2/2/4"
+            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/1/1"
         },
         {
             "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/2/2"
         },
         {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/1/1"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/4"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/3/4"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/1/1/1"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/0"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/intermediate/plea"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/intermediate/toenail"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/toenail"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/intermediate/dealer"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/dealer"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/plea"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/intermediate/eating"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/eating"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/amalgamation"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/salutation"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/intermediate/jubilation"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/imagination"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/celebration"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/jubilation"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/intermediate/notword1"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/notword3"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/notword2"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/notword1"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/word5"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/word4"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/word3"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/intermediate/word2"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/word2"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/intermediate/word1"
-        },
-        {
-            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/word1"
+            "path": "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs/2/2/4"
         }
     ],
     "mappings": [

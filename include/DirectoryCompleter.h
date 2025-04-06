@@ -46,6 +46,7 @@ public:
 	// Getters for the configuration data (used for testing)
 	const json& get_config() const { return config; }
 	std::vector<std::string> get_history() const { return access_history.get_all_paths(); }
+	void add_to_history(const std::string& path) { access_history.add(path); }
 
 private:
 	bool test_mode = false; // Flag to indicate if we are in test mode
@@ -56,8 +57,12 @@ private:
 	// To quantify the history of accesses for the purposes of match return order prioritization, we map the accessed path to an int
 	// The caches preseve the local order, but this serves as a recently_accessed layer on top of the caches that can be used to prioritize paths across all caches
 	// Ex. cache1 = {A, B}, cache2 = {C, D}, history = {D:0, B:1, C:2, A:3}, output -> {C, D, A, B}
-	static HistoryCache access_history;
+	HistoryCache access_history; // History cache to keep track of the access history
 	struct AHComparator {
+		const HistoryCache& history_ref;
+		AHComparator(const HistoryCache& ah) : history_ref(ah) {}
+
+		// Comparator for the priority queue to sort the paths based on the access history
 		bool operator()(const std::tuple<int, int, std::string>& a, const std::tuple<int, int, std::string>& b);
 	};
 

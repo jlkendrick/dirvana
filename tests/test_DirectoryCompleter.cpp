@@ -203,7 +203,6 @@ TEST(DirectoryCompleter, ContainsCompletion) {
 	completions = completer.get_matches("xxxxxx");
 	ordered_check(root, completions, {});
 }
-	
 
 TEST(DirectoryCompleter, Access) {
 	TempConfigFile temp_config{ConfigArgs()};
@@ -326,15 +325,15 @@ TEST(DirectoryCompleter, SaveAndLoad) {
 }
 
 TEST(DirectoryCompleter, HistoryPrioritization) {
-	// TempConfigFile temp_config{ConfigArgs{ .promotion_strategy = "recently_accessed", .match_type= "contains" }};
-	// DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path, .test_mode = true });
-	// string root = completer.get_config()["paths"]["init"].get<string>();
+	TempConfigFile temp_config{ConfigArgs{ .promotion_strategy = "recently_accessed", .match_type= "contains" }};
+	DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path, .test_mode = true });
+	string root = completer.get_config()["paths"]["init"].get<string>();
 
-	// completer.access(root + "/1/1/1");
-	// completer.access(root + "/2/2");
-	// completer.access(root + "/3");
+	completer.access(root + "/1/1/1");
+	completer.access(root + "/2/2");
+	completer.access(root + "/3");
 	
-	// vector<string> history = completer.get_history();
-	// EXPECT_EQ(history.size(), 3);
+	vector<string> history = completer.get_history();
+	EXPECT_EQ(history.size(), 3);
 	EXPECT_EQ(1, 1);
 }

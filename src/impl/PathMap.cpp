@@ -119,15 +119,14 @@ std::vector<std::string> DirectoryCompleter::get_matches(const std::string& quer
 	return {};
 }
 
-HistoryCache DirectoryCompleter::access_history; // Initialize the static access history map
 bool DirectoryCompleter::AHComparator::operator()(const std::tuple<int, int, std::string>& a, const std::tuple<int, int, std::string>& b) {
 	// Get the paths from the tuples
 	std::string path_a = std::get<2>(a); // The path is the third element in the tuple
 	std::string path_b = std::get<2>(b);
 	
 	// Compare the access history index for the two paths (if they exist in the access history)
-	int index_a = access_history.lookup_index(path_a); // Default to current_index if not found
-	int index_b = access_history.lookup_index(path_b);
+	int index_a = history_ref.lookup_index(path_a); // Default to current_index if not found
+	int index_b = history_ref.lookup_index(path_b);
 
 	return index_a > index_b; // Lower indices should come first
 };
@@ -135,8 +134,10 @@ bool DirectoryCompleter::AHComparator::operator()(const std::tuple<int, int, std
 std::vector<std::string> DirectoryCompleter::merge_k_sorted_lists(const std::vector<std::vector<std::string>>& lists, int max_results) const {
 	std::vector<std::string> results;
 
+	AHComparator comp(access_history);
+
 	// Create a min-heap with (index of vector path is in, index of the path in the vector, path itself)
-	std::priority_queue<std::tuple<int, int, std::string>, std::vector<std::tuple<int, int, std::string>>, AHComparator> min_heap;
+	std::priority_queue<std::tuple<int, int, std::string>, std::vector<std::tuple<int, int, std::string>>, AHComparator> min_heap(comp);
 	// Initialize the min-heap with the first element from each list
 	for (int i = 0; i < lists.size(); ++i) {
 		if (lists[i].empty()) continue; // Skip empty lists
