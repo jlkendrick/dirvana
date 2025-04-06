@@ -83,10 +83,15 @@ public:
 		return paths;
 	}
 
-	ordered_json serialize_entries() const override {
+	ordered_json serialize_entries(int max_results = -1) const override {
+		int count = 0;
 		ordered_json serialized_entries = ordered_json::array();
 		for (const auto& entry : order) {
+			// If max_results is set and we've reached the limit, break out of the loop
+			if (max_results > 0 && count >= max_results)
+				break;
 			serialized_entries.push_back(entry.serialize());
+			count++;
 		}
 		return serialized_entries;
 	}
@@ -105,8 +110,8 @@ protected:
 	int size = 0;
 
 	// Pure virtual functions to be implemented by derived classes
-	virtual T create_entry(const std::string& path) const = 0;
-	virtual T create_entry(const ordered_json& entry) const = 0;
+	virtual T create_entry(const std::string& path) = 0;
+	virtual T create_entry(const ordered_json& entry) = 0;
 	virtual std::string get_path(const T& entry) const = 0;
 	virtual void promote(const std::string& path) = 0;
 };

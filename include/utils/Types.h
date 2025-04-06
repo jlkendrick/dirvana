@@ -53,4 +53,15 @@ struct FBCEntry : public ISerializable {
 	ordered_json serialize() const override;
 };
 
+// Struct to hold the history cache entry
+struct HCEntry : public ISerializable {
+	std::string path;
+	int index;
+
+	HCEntry() : path(""), index(-1) {}
+	HCEntry(const std::string& p, int i = 0) : path(p), index(i) {}
+
+	ordered_json serialize() const override;
+};
+
 #endif // TYPES_H

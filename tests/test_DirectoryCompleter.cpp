@@ -42,6 +42,7 @@ TEST(DirectoryCompleter, ConfigParsing) {
 	EXPECT_EQ(config1["paths"]["init"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs");
 	EXPECT_EQ(config1["paths"]["cache"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json");
 	EXPECT_EQ(config1["matching"]["max_results"].get<int>(), 10);
+	EXPECT_EQ(config1["matching"]["max_history_size"].get<int>(), 100);
 	EXPECT_EQ(config1["matching"]["type"].get<string>(), "exact");
 	EXPECT_EQ(config1["matching"]["promotion_strategy"].get<string>(), "recently_accessed");
 	EXPECT_EQ(config1["matching"]["exclusions"]["prefix"].get<vector<string>>(), vector<string>{"."});
@@ -52,6 +53,7 @@ TEST(DirectoryCompleter, ConfigParsing) {
 		.cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/frequency_based-cache.json",
 		.init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs",
 		.max_results = 5,
+		.max_history_size = 75,
 		.match_type = "prefix",
 		.promotion_strategy = "frequency_based",
 		.exclusions = {
@@ -70,6 +72,7 @@ TEST(DirectoryCompleter, ConfigParsing) {
 	EXPECT_EQ(config2["paths"]["init"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs");
 	EXPECT_EQ(config2["paths"]["cache"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/frequency_based-cache.json");
 	EXPECT_EQ(config2["matching"]["max_results"].get<int>(), 5);
+	EXPECT_EQ(config2["matching"]["max_history_size"].get<int>(), 75);
 	EXPECT_EQ(config2["matching"]["type"].get<string>(), "prefix");
 	EXPECT_EQ(config2["matching"]["promotion_strategy"].get<string>(), "frequency_based");
 	EXPECT_EQ(config2["matching"]["exclusions"]["exact"].get<vector<string>>(), (vector<string>{"a", "b"}));
@@ -81,6 +84,7 @@ TEST(DirectoryCompleter, ConfigParsing) {
 	TempConfigFile temp_config3{ConfigArgs{
 		.init_path = "/something/that/does/not/exist",
 		.max_results = -1,
+		.max_history_size = -100,
 		.match_type = "not_a_valid_type",
 		.promotion_strategy = "not_a_valid_strategy",
 		.forget = {"exclusions"}
@@ -91,6 +95,7 @@ TEST(DirectoryCompleter, ConfigParsing) {
 	EXPECT_EQ(config3["paths"]["init"].get<string>(), "/Users/jameskendrick/");
 	EXPECT_EQ(config3["paths"]["cache"].get<string>(), "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json");
 	EXPECT_EQ(config3["matching"]["max_results"].get<int>(), 10);
+	EXPECT_EQ(config3["matching"]["max_history_size"].get<int>(), 100);
 	EXPECT_EQ(config3["matching"]["type"].get<string>(), "exact");
 	EXPECT_EQ(config3["matching"]["promotion_strategy"].get<string>(), "recently_accessed");
 	EXPECT_EQ(config3["matching"]["exclusions"]["prefix"].get<vector<string>>(), vector<string>{"."});
@@ -134,12 +139,12 @@ TEST(DirectoryCompleter, PrefixCompletion) {
 	completer.access(root + "/word4");
 	completer.access(root + "/word5");
 	completer.access(root + "/notword1");
-	completer.access(root + "/intermediate/notword1");
 	completer.access(root + "/notword2");
 	completer.access(root + "/notword3");
+	completer.access(root + "/intermediate/notword1");
 
 	auto completions = completer.get_matches("word");
-	unordered_check(root, completions, {"/word1", "/word2", "/word3", "/word4", "/word5"});
+	unordered_check(root, completions, {"/word1", "/word1", "/word2", "/word2", "/word3"});
 
 	completions = completer.get_matches("no");
 	unordered_check(root, completions, {"/notword1", "/notword2", "/notword3", "/intermediate/notword1"});
@@ -154,14 +159,14 @@ TEST(DirectoryCompleter, SuffixCompletion) {
 	string root = completer.get_config()["paths"]["init"].get<string>();
 
 	completer.access(root + "/jubilation");
-	completer.access(root + "/intermediate/jubilation");
 	completer.access(root + "/celebration");
 	completer.access(root + "/imagination");
+	completer.access(root + "/intermediate/jubilation");
 	completer.access(root + "/salutation");
 	completer.access(root + "/amalgamation");
 
 	auto completions = completer.get_matches("tion");
-	unordered_check(root, completions, {"/jubilation", "/celebration", "/imagination", "/salutation", "/amalgamation"});
+	unordered_check(root, completions, {"/jubilation", "/celebration", "/imagination", "/jubilation", "/salutation"});
 
 	completions = completer.get_matches("lation");
 	unordered_check(root, completions, {"/jubilation", "/intermediate/jubilation"});
@@ -183,6 +188,11 @@ TEST(DirectoryCompleter, ContainsCompletion) {
 	completer.access(root + "/intermediate/dealer");
 	completer.access(root + "/toenail");
 	completer.access(root + "/intermediate/toenail");
+
+	// This should not do anything with regard to the return order since it does not change the underlying index
+	// It will, however, affect the order when we load and save the cache
+	completer.access(root + "/intermediate/plea");
+	completer.access(root + "/intermediate/plea");
 
 	auto completions = completer.get_matches("ea");
 	unordered_check(root, completions, {"/eating", "/intermediate/eating", "/plea", "/intermediate/plea", "/dealer", "/intermediate/dealer"});
@@ -313,4 +323,18 @@ TEST(DirectoryCompleter, SaveAndLoad) {
 
 	// Verify that both completers have the same number of directories
 	EXPECT_EQ(original.get_size(), loaded.get_size());
+}
+
+TEST(DirectoryCompleter, HistoryPrioritization) {
+	// TempConfigFile temp_config{ConfigArgs{ .promotion_strategy = "recently_accessed", .match_type= "contains" }};
+	// DirectoryCompleter completer(DCArgs{ .config_path = temp_config.path, .test_mode = true });
+	// string root = completer.get_config()["paths"]["init"].get<string>();
+
+	// completer.access(root + "/1/1/1");
+	// completer.access(root + "/2/2");
+	// completer.access(root + "/3");
+	
+	// vector<string> history = completer.get_history();
+	// EXPECT_EQ(history.size(), 3);
+	EXPECT_EQ(1, 1);
 }

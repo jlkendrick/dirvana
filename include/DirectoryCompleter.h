@@ -1,8 +1,9 @@
 #ifndef DIRECTORYCOMPLETER_H
 #define DIRECTORYCOMPLETER_H
 
-#include "nlohmann/json.hpp"
+#include "HistoryCache.h"
 #include "Helpers.h"
+#include "nlohmann/json.hpp"
 
 #include <tuple>
 #include <queue>
@@ -44,7 +45,7 @@ public:
 
 	// Getters for the configuration data (used for testing)
 	const json& get_config() const { return config; }
-
+	std::vector<std::string> get_history() const { return access_history.get_all_paths(); }
 
 private:
 	bool test_mode = false; // Flag to indicate if we are in test mode
@@ -55,7 +56,7 @@ private:
 	// To quantify the history of accesses for the purposes of match return order prioritization, we map the accessed path to an int
 	// The caches preseve the local order, but this serves as a recently_accessed layer on top of the caches that can be used to prioritize paths across all caches
 	// Ex. cache1 = {A, B}, cache2 = {C, D}, history = {D:0, B:1, C:2, A:3}, output -> {C, D, A, B}
-	static std::unordered_map<std::string, int> access_history;
+	static HistoryCache access_history;
 	struct AHComparator {
 		bool operator()(const std::tuple<int, int, std::string>& a, const std::tuple<int, int, std::string>& b);
 	};
@@ -69,6 +70,7 @@ private:
 		}},
 		{"matching", {
 			{"max_results", 10},
+			{"max_history_size", 100},
 			{"type", "exact"},
 			{"promotion_strategy", "recently_accessed"},
 			{"exclusions", {

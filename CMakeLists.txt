@@ -23,6 +23,7 @@ set(LIB_SOURCES
     # BaseCache implemented in .hpp file
     src/impl/caches/RecentlyAccessedCache.cpp
     src/impl/caches/FrequencyBasedCache.cpp
+    src/impl/caches/HistoryCache.cpp
 
     src/impl/utils/Helpers.cpp
     src/impl/utils/Types.cpp
@@ -45,6 +46,7 @@ set(TEST_SOURCES
 
     tests/test_RecentlyAccessedCache.cpp
     tests/test_FrequencyBasedCache.cpp
+    tests/test_HistoryCache.cpp
 )
 
 # Create the test executable

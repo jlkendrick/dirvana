@@ -19,6 +19,7 @@ struct TempConfigFile {
 		std::string cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json";
 		std::string init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs";
 		int max_results = 10;
+		int max_history_size = 100;
 		std::string match_type = "exact";
 		std::string promotion_strategy = "recently_accessed";
 		std::vector<ExclusionRule> exclusions = {
@@ -40,6 +41,7 @@ struct TempConfigFile {
 		if (!args.should_forget("cache_path")) config["paths"]["cache"] = args.cache_path;
 		if (!args.should_forget("init_path")) config["paths"]["init"] = args.init_path;
 		if (!args.should_forget("max_results")) config["matching"]["max_results"] = args.max_results;
+		if (!args.should_forget("max_history_size")) config["matching"]["max_history_size"] = args.max_history_size;
 		if (!args.should_forget("match_type")) config["matching"]["type"] = args.match_type;
 		if (!args.should_forget("promotion_strategy")) config["matching"]["promotion_strategy"] = args.promotion_strategy;
 		if (!args.should_forget("exclusions")) config["matching"]["exclusions"] = TypeConversions::exclusion_rules_to_json(args.exclusions);

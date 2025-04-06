@@ -87,8 +87,6 @@ void DirectoryCompleter::refresh_directories(std::unordered_set<std::string>& ol
 }
 
 void DirectoryCompleter::save() const {
-	// Create a JSON object to hold the cache
-
 	// First we need to serialize the path_map into a JSON object
 	json mappings;
 	for (const auto& [dir, cache] : path_map) {
@@ -101,13 +99,13 @@ void DirectoryCompleter::save() const {
 	}
 
 	// Second, we need to keep track of the history of accesses for the purposes of match return order prioritization
-	ordered_json history = json::array();
-	// Do something
+	int max_history_size = config["matching"]["max_history_size"].get<int>();
+	ordered_json history = access_history.serialize_entries(max_history_size);
 		
 	// Now create the final JSON object to save
 	json j;
 	j["mappings"] = mappings;
-	j["access_history"] = history;
+	j["history"] = history;
 
 	// Save the cache to the file
 	std::ofstream file(config["paths"]["cache"].get<std::string>());
@@ -146,6 +144,11 @@ void DirectoryCompleter::load(std::unordered_set<std::string>& old_dirs) {
 				old_dirs.insert(entry["path"].get<std::string>());
 			}
 		}
+
+		ordered_json history = j["history"];
+		for (const auto& entry : history)
+			access_history.add(entry);
+
 	} else
 		std::cerr << "Unable to open file for reading: " << config["paths"]["cache"].get<std::string>() << std::endl;
 }
@@ -271,6 +274,11 @@ bool DirectoryCompleter::validate_config(json& user_config) const {
 		// Now check the sub-keys to see if they are present and valid
 		if (!user_config["matching"].contains("max_results") || (user_config["matching"]["max_results"].get<int>() <= 0)) {
 			user_config["matching"]["max_results"] = default_config["matching"]["max_results"];
+			modified = true;
+		}
+
+		if (!user_config["matching"].contains("max_history_size") || (user_config["matching"]["max_history_size"].get<int>() <= 0)) {
+			user_config["matching"]["max_history_size"] = default_config["matching"]["max_history_size"];
 			modified = true;
 		}
 

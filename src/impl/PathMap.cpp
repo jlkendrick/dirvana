@@ -48,6 +48,8 @@ void DirectoryCompleter::access(const std::string& path, const std::string& dirn
 
 	// Access the path in the cache
 	path_map[res.second]->access(path);
+	// Access the path in the history cache (will be added if not already present)
+	access_history.access(path);
 }
 
 std::vector<std::string> DirectoryCompleter::get_matches(const std::string& query) const {
@@ -117,17 +119,17 @@ std::vector<std::string> DirectoryCompleter::get_matches(const std::string& quer
 	return {};
 }
 
-std::unordered_map<std::string, int> DirectoryCompleter::access_history; // Initialize the static access history map
+HistoryCache DirectoryCompleter::access_history; // Initialize the static access history map
 bool DirectoryCompleter::AHComparator::operator()(const std::tuple<int, int, std::string>& a, const std::tuple<int, int, std::string>& b) {
 	// Get the paths from the tuples
 	std::string path_a = std::get<2>(a); // The path is the third element in the tuple
 	std::string path_b = std::get<2>(b);
 	
-	// Compare the access history counts for the two paths (if they exist in the access history)
-	int count_a = access_history.find(path_a) != access_history.end() ? access_history[path_a] : 0; // Default to 0 if not found
-	int count_b = access_history.find(path_b) != access_history.end() ? access_history[path_b] : 0;
+	// Compare the access history index for the two paths (if they exist in the access history)
+	int index_a = access_history.lookup_index(path_a); // Default to current_index if not found
+	int index_b = access_history.lookup_index(path_b);
 
-	return count_a < count_b; // Lower counts should come first
+	return index_a > index_b; // Lower indices should come first
 };
 
 std::vector<std::string> DirectoryCompleter::merge_k_sorted_lists(const std::vector<std::vector<std::string>>& lists, int max_results) const {

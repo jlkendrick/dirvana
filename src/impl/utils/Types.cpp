@@ -12,3 +12,9 @@ ordered_json FBCEntry::serialize() const {
 	j["access_count"] = access_count;
 	return j;
 }
+
+ordered_json HCEntry::serialize() const {
+	ordered_json j;
+	j["path"] = path;
+	return j;
+}
