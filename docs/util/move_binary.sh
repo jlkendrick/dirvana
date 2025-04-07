@@ -2,10 +2,11 @@
 # move_binary.sh - Copy the new binary to /usr/local/bin and remove the old one
 
 # Set the source path to the new binary.
-SOURCE="../../build/dv-binary"
+# SOURCE="../../build/dv-binary"
+SOURCE="../scripts/_dv"
 
 # Set the destination path in /usr/local/bin.
-DEST="/usr/local/bin/dv-binary"
+DEST="/Users/jameskendrick/.local/bin/_dv"
 
 echo "Installing new binary from $SOURCE to $DEST..."
 

@@ -63,7 +63,7 @@ std::vector<std::pair<std::string, std::string>> DirectoryCompleter::collect_dir
 		}
 		
 	} catch (const fs::filesystem_error& e) {
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Error scanning filesystem: " << e.what() << std::endl;
 	}
 
 	return dirs;
@@ -92,7 +92,6 @@ void DirectoryCompleter::save() const {
 	for (const auto& [dir, cache] : path_map) {
 		json entry;
 		entry["key"] = dir;
-
 		entry["entries"] = cache->serialize_entries();
 
 		mappings.push_back(entry);

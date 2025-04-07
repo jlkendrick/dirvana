@@ -1,0 +1,9 @@
+#!/bin/zsh
+
+cmd=$(dv-binary -enter dv "$@")
+
+if [[ -n "$cmd" ]]; then
+	eval "$cmd"
+else
+	echo "dv-error: No command found for '$*'"
+fi
