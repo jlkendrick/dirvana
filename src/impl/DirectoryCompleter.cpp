@@ -88,7 +88,7 @@ void DirectoryCompleter::refresh_directories(std::unordered_set<std::string>& ol
 
 void DirectoryCompleter::save() const {
 	// First we need to serialize the path_map into a JSON object
-	json mappings;
+	json mappings = json::array();
 	for (const auto& [dir, cache] : path_map) {
 		json entry;
 		entry["key"] = dir;
@@ -108,12 +108,24 @@ void DirectoryCompleter::save() const {
 	j["history"] = history;
 
 	// Save the cache to the file
-	std::ofstream file(config["paths"]["cache"].get<std::string>());
-	if (file.is_open()) {
-		file << j.dump(4);
-		file.close();
-	} else {
-		std::cerr << "Unable to open file for writing: " << config["paths"]["cache"].get<std::string>() << std::endl;
+	std::string cache_path = config["paths"]["cache"].get<std::string>();
+	
+	// Create parent directories if they don't exist
+	try {
+		fs::path dir_path = fs::path(cache_path).parent_path();
+		if (!dir_path.empty() && !fs::exists(dir_path)) {
+			fs::create_directories(dir_path);
+		}
+		
+		std::ofstream file(cache_path);
+		if (file.is_open()) {
+			file << j.dump(4);
+			file.close();
+		} else {
+			std::cerr << "Unable to open file for writing: " << cache_path << std::endl;
+		}
+	} catch (const fs::filesystem_error& e) {
+		std::cerr << "Error creating directories: " << e.what() << std::endl;
 	}
 }
 
@@ -203,14 +215,27 @@ std::vector<ExclusionRule> DirectoryCompleter::generate_exclusion_rules(const js
 json DirectoryCompleter::load_config() const {
 	// Check if the config file exists
 	if (!fs::exists(config_path)) {
-		// std::cerr << "Config file does not exist: " << config_path << ". Creating a new one." << std::endl;
+		// If not, create it with default values
+		// std::cerr << "Config file not found. Creating default config file at: " << config_path << std::endl;
+
+		// Create the parent directories if they don't exist
+		try {
+			fs::path dir_path = fs::path(config_path).parent_path();
+			if (!dir_path.empty() && !fs::exists(dir_path)) {
+				fs::create_directories(dir_path);
+			}
+		} catch (const fs::filesystem_error& e) {
+			std::cerr << "Error creating directories: " << e.what() << std::endl;
+		}
+		
+		// Create the default config
 		std::ofstream out_file(config_path);
 		out_file << default_config.dump(4);
 		out_file.close();
-
+		
 		json user_config = default_config;
 		// Remember we have to complete the cache path and since this sets the default, we use recently_accessed
-		user_config["paths"]["cache"] += "recently_accessed-cache.json";
+		user_config["paths"]["cache"] = default_config["paths"]["cache"].get<std::string>() + "recently_accessed-cache.json";
 		return user_config;
 	}
 
