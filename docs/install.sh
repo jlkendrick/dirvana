@@ -102,6 +102,10 @@ if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.zshrc"; then
   echo "✅ Added ~/.local/bin to PATH in .zshrc"
 fi
 
+# Preemptively create the necessary directories
+mkdir -p "$HOME/.cache/dirvana"
+mkdir -p "$HOME/.config/dirvana"
+echo "✅ Created necessary directories for Dirvana"
 
 echo "Installation complete! Please restart your terminal to apply the changes."
 exit 0
