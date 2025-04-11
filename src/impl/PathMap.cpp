@@ -19,7 +19,7 @@ void DirectoryCompleter::add(const ordered_json& entry, const std::string& dirna
 	auto res = dirname.empty() ? get_deepest_dir(entry["path"]) : std::make_pair(true, dirname);
 	if (!res.first)
 		return;
-	
+
 	// Add the path to the cache or do nothing if the path is already in the cache, create a new cache if needed
 	if (path_map.find(res.second) == path_map.end())
 		path_map[res.second] = CacheFactory::create_cache(strategy);
@@ -64,7 +64,7 @@ std::vector<std::string> DirectoryCompleter::get_matches(const std::string& quer
 
 	// Get the matching type and max results from the config
 	MatchingType type = TypeConversions::s_to_matching_type(config["matching"]["type"].get<std::string>());
-	int max_results = config["matching"]["max_results"].get<int>();
+	unsigned int max_results = config["matching"]["max_results"].get<unsigned int>();
 
 	// Lambda to handle the different types of matching
 	auto handle_matching = [&](MatchingType match_type) -> std::vector<std::string> {
@@ -75,6 +75,10 @@ std::vector<std::string> DirectoryCompleter::get_matches(const std::string& quer
 			bool is_match = false;
 
 			switch (match_type) {
+				case MatchingType::Exact: // This should never happen
+					is_match = (key == query);
+					break;
+
 				case MatchingType::Prefix:
 					is_match = (key.size() >= query.size() && key.find(query) == 0);
 					break;
@@ -111,7 +115,7 @@ std::vector<std::string> DirectoryCompleter::get_matches(const std::string& quer
 		// If the directory is in the map, get the paths from the cache
 		if (path_map.find(query) != path_map.end())
 			// Return the first max_results paths from the cache for the exact match
-			return path_map.at(query)->get_all_paths(max_results);
+			return path_map.at(query)->get_paths(max_results);
 	} else if (type == MatchingType::Prefix || type == MatchingType::Suffix || type == MatchingType::Contains) {
 		return handle_matching(type);
 	}
@@ -131,15 +135,15 @@ bool DirectoryCompleter::AHComparator::operator()(const std::tuple<int, int, std
 	return index_a > index_b; // Lower indices should come first
 };
 
-std::vector<std::string> DirectoryCompleter::merge_k_sorted_lists(const std::vector<std::vector<std::string>>& lists, int max_results) const {
+std::vector<std::string> DirectoryCompleter::merge_k_sorted_lists(const std::vector<std::vector<std::string>>& lists, unsigned int max_results) const {
 	std::vector<std::string> results;
 
 	AHComparator comp(access_history);
 
 	// Create a min-heap with (index of vector path is in, index of the path in the vector, path itself)
-	std::priority_queue<std::tuple<int, int, std::string>, std::vector<std::tuple<int, int, std::string>>, AHComparator> min_heap(comp);
+	std::priority_queue<std::tuple<unsigned int, unsigned int, std::string>, std::vector<std::tuple<unsigned int, unsigned int, std::string>>, AHComparator> min_heap(comp);
 	// Initialize the min-heap with the first element from each list
-	for (int i = 0; i < lists.size(); ++i) {
+	for (unsigned int i = 0; i < static_cast<unsigned int>(lists.size()); ++i) {
 		if (lists[i].empty()) continue; // Skip empty lists
 		min_heap.push(std::make_tuple(i, 0, lists[i][0]));
 	}

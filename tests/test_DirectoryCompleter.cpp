@@ -3,8 +3,6 @@
 #include "DirectoryCompleter.h"
 #include "utils/TempConfigFile.hpp"
 
-#include <iostream>
-#include <fstream>
 #include <string>
 
 using namespace std;
@@ -13,7 +11,7 @@ using ConfigArgs = TempConfigFile::Args;
 
 void ordered_check(const string& root, const vector<string>& completions, const vector<string>& expected) {
 	EXPECT_EQ(completions.size(), expected.size());
-	for (int i = 0; i < completions.size(); i++) {
+	for (unsigned int i = 0; i < completions.size(); i++) {
 		EXPECT_EQ(completions[i], root + expected[i]);
 	}
 }

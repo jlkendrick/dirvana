@@ -1,7 +1,6 @@
 #ifndef ISERIALIZABLE_H
 #define ISERIALIZABLE_H
 
-#include <string>
 #include "nlohmann/json.hpp"
 
 using ordered_json = nlohmann::ordered_json;

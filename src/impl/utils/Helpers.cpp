@@ -1,3 +1,5 @@
+#include "RecentlyAccessedCache.h"
+#include "FrequencyBasedCache.h"
 #include "Helpers.h"
 #include "Types.h"
 

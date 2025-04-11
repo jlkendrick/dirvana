@@ -1,7 +1,5 @@
 #include "DirectoryCompleter.h"
 
-#include <memory>
-#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <filesystem>

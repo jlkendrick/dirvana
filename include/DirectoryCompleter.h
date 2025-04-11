@@ -6,7 +6,6 @@
 #include "nlohmann/json.hpp"
 
 #include <tuple>
-#include <queue>
 #include <memory>
 #include <string>
 #include <vector>
@@ -103,7 +102,7 @@ private:
 	std::vector<ExclusionRule> exclusion_rules;
 
 	// Utils
-	std::vector<std::string> merge_k_sorted_lists(const std::vector<std::vector<std::string>>& lists, int max_results) const; // Merges k sorted lists into a single sorted list based on the access history
+	std::vector<std::string> merge_k_sorted_lists(const std::vector<std::vector<std::string>>& lists, unsigned int max_results) const; // Merges k sorted lists into a single sorted list based on the access history
 };
 
 #endif // DIRECTORYCOMPLETER_H

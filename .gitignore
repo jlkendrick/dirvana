@@ -1,4 +1,5 @@
-.vscode
+.cache
 build/
+.vscode
 docs/misc
 include/nlohmann/json.hpp

@@ -5,7 +5,6 @@
 #include "ISerializable.h"
 
 #include <string>
-#include <vector>
 
 using ordered_json = nlohmann::ordered_json;
 
