@@ -22,4 +22,4 @@ sudo cp "$SOURCE" "$DEST"
 # Ensure the new binary is executable.
 sudo chmod +x "$DEST"
 
-echo "Installation complete. New binary is now in /usr/local/bin."
+echo "Installation complete. New binary is now in $DEST."
