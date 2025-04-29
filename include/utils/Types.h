@@ -1,7 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include "nlohmann/json.hpp"
+#include <json.hpp>
 #include "ISerializable.h"
 
 #include <string>

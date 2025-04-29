@@ -12,8 +12,6 @@
 #include <cstdlib>
 #include <unordered_set>
 
-using json = nlohmann::json;
-
 
 // DirectoryCompleter is the main class that sets up the caches and is the API for the main program
 class DirectoryCompleter {

@@ -35,7 +35,6 @@ target_include_directories(dirvana_lib PUBLIC
 
 target_include_directories(dirvana_lib SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include/lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/lib/nlohmann
 )
 
 # Create the main executable

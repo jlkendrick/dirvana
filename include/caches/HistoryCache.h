@@ -3,7 +3,7 @@
 
 #include "BaseCache.hpp"
 #include "ISerializable.h"
-#include "nlohmann/json.hpp"
+#include <json.hpp>
 
 // HistoryCache is a mix between the recently accessed cache and the frequency-based cache
 // It stores the index of the path in the frequency-based style to allow for order comparisons in the priority queue

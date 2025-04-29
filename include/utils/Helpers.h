@@ -2,7 +2,7 @@
 #define HELPERS_H
 
 #include "interfaces/ICache.h"
-#include "nlohmann/json.hpp"
+#include <json.hpp>
 #include "Types.h"
 
 #include <string>

@@ -1,10 +1,10 @@
-
 #include "DirectoryCompleter.h"
 
 #include <chrono>
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <vector>
 
 void rebuild() {
 	// To build the DirectoryCompleter, we need to create it and save it to a file

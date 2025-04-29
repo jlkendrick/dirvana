@@ -3,7 +3,7 @@
 
 #include "Types.h"
 #include "ICache.h"
-#include "nlohmann/json.hpp"
+#include <json.hpp>
 
 #include <list>
 #include <string>
