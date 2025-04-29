@@ -1,5 +1,7 @@
 .cache
+.clangd
 build/
 .vscode
 docs/misc
-include/nlohmann/json.hpp
+include/lib/nlohmann/
+include/lib/sqlite/

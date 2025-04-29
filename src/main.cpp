@@ -1,7 +1,10 @@
+
 #include "DirectoryCompleter.h"
 
+#include <chrono>
 #include <iostream>
 #include <string>
+#include <fstream>
 
 void rebuild() {
 	// To build the DirectoryCompleter, we need to create it and save it to a file
@@ -34,8 +37,19 @@ std::vector<std::string> query(const std::string& partial, const DirectoryComple
 	return completer.get_matches(partial);
 }
 
+void write_log(const std::string& message) {
+	std::ofstream log_file("/Users/jameskendrick/Code/Projects/dirvana/build/logs.txt", std::ios::app);
+	if (log_file.is_open()) {
+		log_file << message << std::endl;
+		log_file.close();
+	} else {
+		std::cerr << "Unable to open log file" << std::endl;
+	}
+}
+
 
 int main(int argc, char* argv[]) {
+	auto start = std::chrono::high_resolution_clock::now();
 	// Write the arguments to a file for debugging
 	// ofstream io_file("/Users/jameskendrick/Code/Projects/dirvana/build/debug_io.txt", ios::app);
 	// for (int i = 0; i < argc; i++)
@@ -74,6 +88,12 @@ int main(int argc, char* argv[]) {
 		// Print the matches with appropriate prefixes for zsh completion
 		for (const auto& match : matches)
 			std::cout << match << std::endl;
+
+		// Log the time taken for the operation
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		std::string log_message = "Tab completion took " + std::to_string(duration.count()) + " ms for partial: " + partial;
+		write_log(log_message);
 		
 		return 0;
 	}
@@ -105,10 +125,20 @@ int main(int argc, char* argv[]) {
 				if (command == "rebuild") {
 					rebuild();
 					std::cout << "echo Rebuild complete" << std::endl;
+					// Write the time taken for the operation
+					auto end = std::chrono::high_resolution_clock::now();
+					auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+					std::string log_message = "Rebuild took " + std::to_string(duration.count()) + " ms";
+					write_log(log_message);
 					return 0;
 				} else if (command == "refresh") {
 					refresh();
 					std::cout << "echo Refresh complete" << std::endl;
+					// Write the time taken for the operation
+					auto end = std::chrono::high_resolution_clock::now();
+					auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+					std::string log_message = "Refresh took " + std::to_string(duration.count()) + " ms";
+					write_log(log_message);
 					return 0;
 				} else {
 					std::cerr << "Invalid command: " << command << std::endl;
@@ -180,6 +210,12 @@ int main(int argc, char* argv[]) {
 			// Case iii or iiii: Execute the command with the path
 			std::cout << current_command << " " << result << std::endl;
 		}
+
+		// Write the time taken for the operation
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		std::string log_message = "Enter handler took " + std::to_string(duration.count()) + " ms for path: " + path;
+		write_log(log_message);
 
 		return 0;
 	}

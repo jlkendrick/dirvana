@@ -1,9 +1,9 @@
 #ifndef DIRECTORYCOMPLETER_H
 #define DIRECTORYCOMPLETER_H
 
-#include "HistoryCache.h"
 #include "Helpers.h"
-#include "nlohmann/json.hpp"
+#include "HistoryCache.h"
+#include <json.hpp>
 
 #include <tuple>
 #include <memory>

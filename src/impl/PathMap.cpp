@@ -143,7 +143,7 @@ std::vector<std::string> DirectoryCompleter::merge_k_sorted_lists(const std::vec
 	// Create a min-heap with (index of vector path is in, index of the path in the vector, path itself)
 	std::priority_queue<std::tuple<unsigned int, unsigned int, std::string>, std::vector<std::tuple<unsigned int, unsigned int, std::string>>, AHComparator> min_heap(comp);
 	// Initialize the min-heap with the first element from each list
-	for (unsigned int i = 0; i < static_cast<unsigned int>(lists.size()); ++i) {
+	for (unsigned int i = 0; i < lists.size(); ++i) {
 		if (lists[i].empty()) continue; // Skip empty lists
 		min_heap.push(std::make_tuple(i, 0, lists[i][0]));
 	}
