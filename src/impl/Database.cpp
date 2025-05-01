@@ -1,7 +1,7 @@
 #include "Database.h"
+#include "Helpers.h"
 #include "Types.h"
 
-#include <chrono>
 #include <filesystem>
 #include <sqlite_modern_cpp.h>
 #include <unordered_set>
@@ -27,7 +27,7 @@ void Database::refresh() {
 	select_all_paths([&old_dirs](std::string path) {
 		old_dirs.insert(path);
 	});
-	std::vector<std::tuple<std::string, std::string, int>> new_rows;
+	std::vector<std::tuple<std::string, std::string>> new_rows;
 	for (const auto& exclusion_rule : config.get_exclusion_rules()) {
 		std::cout << "Exclusion rule: " << exclusion_rule.pattern << std::endl;
 
@@ -35,9 +35,9 @@ void Database::refresh() {
 
 	// Collect directories and perform a diff with the old directories
 	auto rows = collect_directories();
-	for (const auto& [path, dir_name, last_accessed] : rows) {
+	for (const auto& [path, dir_name] : rows) {
 		if (old_dirs.find(path) == old_dirs.end())
-			new_rows.push_back({path, dir_name, last_accessed});
+			new_rows.push_back({ path, dir_name });
 		else
 			old_dirs.erase(path);
 	}
@@ -47,7 +47,8 @@ void Database::refresh() {
 	delete_paths(std::vector<std::string>(old_dirs.begin(), old_dirs.end()));
 }
 
-std::vector<std::string> Database::query(const std::string& dir_name) const {
+std::vector<std::string> Database::query(const std::string& input) const {
+	std::string dir_name = get_dir_name(input);
 	std::vector<std::string> paths;
 	
 	try {
@@ -69,13 +70,11 @@ std::vector<std::string> Database::query(const std::string& dir_name) const {
 }
 
 void Database::access(const std::string& path) {
-	auto now = std::chrono::system_clock::now();
-	auto duration_since_epoch = now.time_since_epoch();
-	auto micros_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(duration_since_epoch).count();
+	long long last_accessed = get_current_time();
 	try {
 		
 		db << "UPDATE paths SET last_accessed = ?, access_count = access_count + 1 WHERE path = ?;"
-			<< micros_since_epoch
+			<< last_accessed
 			<< path;
 
 	} catch (const sqlite::sqlite_exception& e) {
@@ -84,11 +83,8 @@ void Database::access(const std::string& path) {
 }
 
 
-std::vector<std::tuple<std::string, std::string, int>> Database::collect_directories() {
-	auto now = std::chrono::system_clock::now();
-	auto duration_since_epoch = now.time_since_epoch();
-	auto micros_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(duration_since_epoch).count();
-	std::vector<std::tuple<std::string, std::string, int>> rows;
+std::vector<std::tuple<std::string, std::string>> Database::collect_directories() {
+	std::vector<std::tuple<std::string, std::string>> rows;
 	try {
 		std::filesystem::recursive_directory_iterator it(config.get_init_path(), std::filesystem::directory_options::skip_permission_denied);
 		std::filesystem::recursive_directory_iterator end;
@@ -97,13 +93,12 @@ std::vector<std::tuple<std::string, std::string, int>> Database::collect_directo
 			const auto& entry = *it;
 
 			// Get the deepest directory name
-			std::pair<bool, std::string> res = get_deepest_dir(entry.path().string());
+			std::string dir_name = get_dir_name(entry.path().string());
 
 			// If the entry is a directory and it's not in the exclude list, add it to the PathMap
 			if (std::filesystem::is_directory(entry)) {
-				std::string dir_name = res.second;
-				if (res.first and not should_exclude(dir_name, entry.path().string()))
-					rows.push_back({entry.path().string(), dir_name, micros_since_epoch});
+				if (not dir_name.empty() and not should_exclude(dir_name, entry.path().string()))
+					rows.push_back({entry.path().string(), dir_name});
 				
 				// Otherwise, don't add it to the PathMap and disable recursion into it's children
 				else
@@ -153,12 +148,14 @@ bool Database::should_exclude(const std::string& dirname, const std::string& pat
 	return false;
 }
 
-void Database::bulk_insert(const std::vector<std::tuple<std::string, std::string, int>>& rows) {
+void Database::bulk_insert(const std::vector<std::tuple<std::string, std::string>>& rows) {
+	long long last_accessed = get_current_time();
+
 	try {
 		db << "BEGIN TRANSACTION;";
 		
 		auto stmt = db << "INSERT INTO paths (path, dir_name, last_accessed) VALUES (?, ?, ?);";
-		for (const auto& [path, dir_name, last_accessed] : rows) {
+		for (const auto& [path, dir_name] : rows) {
 			stmt << path << dir_name << last_accessed;
 			stmt++;
 		}

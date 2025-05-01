@@ -12,7 +12,7 @@ using json = nlohmann::json;
 // Config class loads, validates, and provides access to the configuration data
 class Config {
 public:
-	Config(const std::string& config_path);
+	Config(const std::string& config_path = "");
 
 	// Getters for the configuration data
 	const json& get_config() const { return config; }
@@ -48,7 +48,7 @@ public:
 
 	
 private:
-	std::string config_path;
+	std::string config_path = std::getenv("HOME") + std::string("/.config/dirvana/config.json");
 	json config;
 	json default_config = {
 		{"paths", {

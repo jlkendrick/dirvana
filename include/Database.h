@@ -13,7 +13,7 @@ public:
 	
 	void build();
 	void refresh();
-	std::vector<std::string> query(const std::string& dir_name) const;
+	std::vector<std::string> query(const std::string& input) const;
 	void access(const std::string& path);
 
 private:
@@ -38,10 +38,10 @@ private:
 				callback(path);
 			};
 	};
-	void bulk_insert(const std::vector<std::tuple<std::string, std::string, int>>& rows);
+	void bulk_insert(const std::vector<std::tuple<std::string, std::string>>& rows);
 	void delete_paths(const std::vector<std::string>& paths);
 
-	std::vector<std::tuple<std::string, std::string, int>> collect_directories();
+	std::vector<std::tuple<std::string, std::string>> collect_directories();
 	bool should_exclude(const std::string& dirname, const std::string& path) const;
 	std::string get_query_pattern(const std::string& dir_name) const {
 		switch (config.get_matching_type()) {
@@ -56,6 +56,13 @@ private:
 		}
 		return "";
 	};
+	long long get_current_time() const {
+		auto now = std::chrono::system_clock::now();
+		auto duration_since_epoch = now.time_since_epoch();
+		auto micros_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(duration_since_epoch);
+
+		return micros_since_epoch.count();
+	}
 };
 
 #endif // DATABASE_H

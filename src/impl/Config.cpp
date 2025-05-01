@@ -6,18 +6,40 @@
 
 
 Config::Config(const std::string& config_path) {
-	this->config_path = config_path;
+	// We only use this for testing purposes
+	if (not config_path.empty())
+		this->config_path = config_path;
 
-	// If the config path is empty or doesn't exist, use the default config.
-	// We don't worry about creating the config file, setting the default config is enough
-	if (config_path.empty() || !std::filesystem::exists(config_path)) {
+	// If we haven't created a config file yet, or the user has deleted it, or they are pointing to a non-existent file, create a new config file
+	if (!std::filesystem::exists(this->config_path)) {
 		this->config = default_config;
+
+		try {
+			// Create the parent directory if it doesn't exist
+			std::filesystem::path parent_path = std::filesystem::path(this->config_path).parent_path();
+			if (!parent_path.empty() && !std::filesystem::exists(parent_path))
+				std::filesystem::create_directories(parent_path);
+
+		} catch (const std::exception& e) {
+			std::cerr << "Error creating directories: " << e.what() << std::endl;
+			return;
+		}
+
+		try {
+			std::ofstream out_file(this->config_path);
+			out_file << this->config.dump(4);
+			out_file.close();
+		} catch (const std::exception& e) {
+			std::cerr << "Error writing config file: " << e.what() << std::endl;
+			return;
+		}
+
 		return;
 	}
 
-	// Load the user's config file
+	// Here, we can assume that the either our default config file exists in the default location or the user has provided a custom, valid path
 	try {
-		std::ifstream in_file(config_path);
+		std::ifstream in_file(this->config_path);
 
 		// On failure to open the file, use the default config
 		if (!in_file.is_open()) {
@@ -33,7 +55,7 @@ Config::Config(const std::string& config_path) {
 		// Validate the config file
 		if (validate_config(user_config)) {
 			// If the config file is invalid, fix it with default values
-			std::ofstream out_file(config_path);
+			std::ofstream out_file(this->config_path);
 			out_file << user_config.dump(4);
 			out_file.close();
 		}
@@ -42,8 +64,10 @@ Config::Config(const std::string& config_path) {
 		this->config = user_config;
 
 	} catch (const std::exception& e) {
+		
 		std::cerr << "Error reading config file: " << e.what() << ". Using default config." << std::endl;
 		this->config = default_config;
+		std::cout << this->config.dump(4) << std::endl;
 		return;
 	}
 }
