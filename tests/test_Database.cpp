@@ -6,6 +6,12 @@
 using namespace std;
 using ConfigArgs = TempConfigFile::Args;
 
+void unordered_check(const string& root, const vector<string>& completions, const vector<string>& expected) {
+	EXPECT_EQ(completions.size(), expected.size());
+	for (const auto& expected_path : expected) {
+		EXPECT_NE(find(completions.begin(), completions.end(), root + expected_path), completions.end());
+	}
+}
 
 class DatabaseTest : public ::testing::Test {
 	protected:
@@ -54,4 +60,40 @@ TEST(Database, RefreshDatabase) {
 		{ ExclusionType::Exact, config.get_init_path() + "/1/1/1/4" }
 	});
 	EXPECT_NO_THROW(db.refresh());
+}
+
+TEST_F(DatabaseTest, QueryDatabase) {
+	// Test if the database can be queried successfully
+
+	// Exact check
+	EXPECT_NO_THROW(db = make_unique<Database>(*config));
+	EXPECT_NO_THROW(db->build());
+	unordered_check(config->get_init_path(), db->query("1"), {"/1", "/1/1", "/1/1/1"});
+
+	config->set_exclusion_rules({});
+
+	// Prefix check
+	config->set_matching_type("prefix");
+	EXPECT_NO_THROW(db->build());
+	unordered_check(config->get_init_path(), db->query("."), {"/.1", "/custom_rule_check/.dot_check" }); 
+
+	// Suffix check
+	config->set_matching_type("suffix");
+	EXPECT_NO_THROW(db->build());
+	unordered_check(config->get_init_path(), db->query("eck"), {
+		"/custom_rule_check",
+		"/custom_rule_check/.dot_check",
+		"/custom_rule_check/contains_check",
+		"/custom_rule_check/exact_check",
+		"/custom_rule_check/prefix_check",
+		"/custom_rule_check/suffix_check"
+	});
+
+	// Contains check
+	config->set_matching_type("contains");
+	EXPECT_NO_THROW(db->build());
+	unordered_check(config->get_init_path(), db->query("fix"), {
+		"/custom_rule_check/prefix_check",
+		"/custom_rule_check/suffix_check"
+	});
 }

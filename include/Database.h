@@ -13,6 +13,7 @@ public:
 	
 	void build();
 	void refresh();
+std::vector<std::string> query(const std::string& dir_name);
 
 private:
 	sqlite::database db;
@@ -30,7 +31,7 @@ private:
 	void drop_table() { db << "DROP TABLE IF EXISTS paths;"; };
 
 	template <typename Callback>
-	void select_all(Callback callback) {
+	void select_all_paths(Callback callback) {
 		db << "SELECT path FROM paths;"
 			>> [&callback](std::string path) {
 				callback(path);
@@ -41,6 +42,19 @@ private:
 
 	std::vector<std::tuple<std::string, std::string, int>> collect_directories();
 	bool should_exclude(const std::string& dirname, const std::string& path) const;
+	std::string get_query_pattern(const std::string& dir_name) const {
+		switch (config.get_matching_type()) {
+			case MatchingType::Exact:
+				return "'" + dir_name + "'";
+			case MatchingType::Prefix:
+				return "'%" + dir_name + "%'";
+			case MatchingType::Suffix:
+				return "'%" + dir_name + "'";
+			case MatchingType::Contains:
+				return "'%" + dir_name + "%'";
+		}
+		return "";
+	};
 };
 
 #endif // DATABASE_H

@@ -1,7 +1,9 @@
 #include "Database.h"
+#include "Types.h"
 
 #include <chrono>
 #include <filesystem>
+#include <sqlite_modern_cpp.h>
 #include <unordered_set>
 
 Database::Database(const Config& config) : db(config.get_db_path()), config(config) {
@@ -22,7 +24,7 @@ void Database::build() {
 void Database::refresh() {
 	// Fetch all existing directories and associated data from the database
 	std::unordered_set<std::string> old_dirs;
-	select_all([&old_dirs](std::string path) {
+	select_all_paths([&old_dirs](std::string path) {
 		old_dirs.insert(path);
 	});
 	std::vector<std::tuple<std::string, std::string, int>> new_rows;
@@ -44,6 +46,27 @@ void Database::refresh() {
 	bulk_insert(new_rows);
 	delete_paths(std::vector<std::string>(old_dirs.begin(), old_dirs.end()));
 }
+
+std::vector<std::string> Database::query(const std::string& dir_name) {
+	std::vector<std::string> paths;
+	
+	try {
+		std::string query = std::format("SELECT path FROM paths WHERE dir_name {} {} ORDER BY {} DESC LIMIT {};",
+			config.get_matching_type() == MatchingType::Exact ? "=" : "LIKE",
+			get_query_pattern(dir_name),
+			config.get_promotion_strategy() == PromotionStrategy::RECENTLY_ACCESSED ? "last_accessed" : "access_count",
+			config.get_max_results());
+
+		db << query >> [&](std::string path) {
+			paths.push_back(path);
+		};
+
+	} catch (const sqlite::sqlite_exception& e) {
+		std::cerr << "Error querying database: " << e.what() << std::endl;
+	}
+	
+	return paths;
+}	
 
 
 std::vector<std::tuple<std::string, std::string, int>> Database::collect_directories() {
@@ -151,8 +174,6 @@ void Database::delete_paths(const std::vector<std::string>& paths) {
 			stmt << path;
 			stmt++;
 		}
-		
-		stmt.execute();
 
 		db << "COMMIT;";
 	} catch (const sqlite::sqlite_exception& e) {

@@ -21,7 +21,7 @@ public:
 	std::string get_history_path() const { return config["paths"]["history"].get<std::string>(); }
 	int get_max_results() const { return config["matching"]["max_results"].get<int>(); }
 	int get_max_history_size() const { return config["matching"]["max_history_size"].get<int>(); }
-	std::string get_matching_type() const { return config["matching"]["type"].get<std::string>(); }
+	MatchingType get_matching_type() const { return TypeConversions::s_to_matching_type(config["matching"]["type"].get<std::string>()); }
 	PromotionStrategy get_promotion_strategy() const {
 		return TypeConversions::s_to_promotion_strategy(config["matching"]["promotion_strategy"].get<std::string>());
 	}
