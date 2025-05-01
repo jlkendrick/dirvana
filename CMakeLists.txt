@@ -28,25 +28,19 @@ endif()
 
 # ======== Application Code Configuration ========
 set(DIRVANA_SOURCES
- src/impl/DirectoryCompleter.cpp
- src/impl/PathMap.cpp
-# BaseCache implemented in .hpp file
- src/impl/caches/RecentlyAccessedCache.cpp
- src/impl/caches/FrequencyBasedCache.cpp
- src/impl/caches/HistoryCache.cpp
- src/impl/utils/Helpers.cpp
- src/impl/utils/Types.cpp
+	src/impl/Config.cpp
+	src/impl/Database.cpp
+	src/impl/utils/Helpers.cpp
+ 	src/impl/utils/Types.cpp
 )
 add_library(dirvana_lib ${DIRVANA_SOURCES})
 target_include_directories(dirvana_lib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/caches
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/caches/interfaces
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/utils
+	${CMAKE_CURRENT_SOURCE_DIR}/include/utils
 )
 target_include_directories(dirvana_lib SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include/lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/lib/sqlite_modern_cpp/hdr
+	${CMAKE_CURRENT_SOURCE_DIR}/include/lib/sqlite_modern_cpp/hdr
 )
 target_compile_options(dirvana_lib PRIVATE ${COMMON_COMPILE_FLAGS})
 
@@ -64,10 +58,7 @@ target_link_libraries(dv-binary dirvana_lib)
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 set(TEST_SOURCES
-    tests/test_DirectoryCompleter.cpp
-    tests/test_RecentlyAccessedCache.cpp
-    tests/test_FrequencyBasedCache.cpp
-    tests/test_HistoryCache.cpp
+    tests/test_Database.cpp
 )
 add_executable(test ${TEST_SOURCES})
 target_link_libraries(test dirvana_lib GTest::GTest GTest::Main pthread)
