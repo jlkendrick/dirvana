@@ -26,6 +26,10 @@ void Database::refresh() {
 		old_dirs.insert(path);
 	});
 	std::vector<std::tuple<std::string, std::string, int>> new_rows;
+	for (const auto& exclusion_rule : config.get_exclusion_rules()) {
+		std::cout << "Exclusion rule: " << exclusion_rule.pattern << std::endl;
+
+	}
 
 	// Collect directories and perform a diff with the old directories
 	auto rows = collect_directories();
@@ -129,19 +133,26 @@ void Database::bulk_insert(const std::vector<std::tuple<std::string, std::string
 }
 
 void Database::delete_paths(const std::vector<std::string>& paths) {
+	if (paths.empty())
+		return;
+
 	try {
 		db << "BEGIN TRANSACTION;";
-		
-		std::string formatted_paths;
-		for (const auto& path : paths) {
-			if (formatted_paths.empty())
-				formatted_paths = "'" + path + "'";
-			else
-				formatted_paths += ", '" + path + "'";
+		std::string sql = "DELETE FROM paths WHERE path IN (";
+		for (size_t i = 0; i < paths.size(); ++i) {
+			sql += "?";
+			if (i < paths.size() - 1)
+				sql += ", ";
 		}
-		auto stmt = db << "DELETE FROM paths WHERE path IN (?);";
-		stmt << formatted_paths;
-		stmt++;
+		sql += ");";
+		
+		auto stmt = db << sql;
+		for (const auto& path : paths) {
+			stmt << path;
+			stmt++;
+		}
+		
+		stmt.execute();
 
 		db << "COMMIT;";
 	} catch (const sqlite::sqlite_exception& e) {

@@ -29,6 +29,23 @@ public:
 		return generate_exclusion_rules(config["matching"]["exclusions"]); 
 	}
 
+	// Setters for the configuration data
+	void set_config(const json& user_config) {
+		config = user_config;
+	}
+	void set_init_path(const std::string& init_path) { config["paths"]["init"] = init_path; }
+	void set_db_path(const std::string& db_path) { config["paths"]["db"] = db_path; }
+	void set_history_path(const std::string& history_path) { config["paths"]["history"] = history_path; }
+	void set_max_results(int max_results) { config["matching"]["max_results"] = max_results; }
+	void set_max_history_size(int max_history_size) { config["matching"]["max_history_size"] = max_history_size; }
+	void set_matching_type(const std::string& matching_type) { config["matching"]["type"] = matching_type; }
+	void set_promotion_strategy(const std::string& promotion_strategy) {
+		config["matching"]["promotion_strategy"] = promotion_strategy;
+	}
+	void set_exclusion_rules(const std::vector<ExclusionRule>& exclusion_rules) {
+		config["matching"]["exclusions"] = TypeConversions::exclusion_rules_to_json(exclusion_rules);
+	}
+
 	
 private:
 	std::string config_path;

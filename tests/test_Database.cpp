@@ -34,3 +34,24 @@ TEST_F(DatabaseTest, BuildDatabase) {
 	EXPECT_NO_THROW(db = make_unique<Database>(*config));
 	EXPECT_NO_THROW(db->build());
 }
+
+TEST(Database, RefreshDatabase) {
+	// Test if the database is refreshed successfully
+	TempConfigFile temp_config{
+		ConfigArgs{ 
+			.exclusions = { 
+				{ ExclusionType::Exact, "custom_rule_check" }
+			} 
+		}
+	};
+	Config config(temp_config.path);
+	Database db(config);
+	EXPECT_NO_THROW(db.build());
+
+	// Change the exclusion rules to include/exclude directories
+	config.set_exclusion_rules({
+		{ ExclusionType::Prefix, "." },
+		{ ExclusionType::Exact, config.get_init_path() + "/1/1/1/4" }
+	});
+	EXPECT_NO_THROW(db.refresh());
+}
