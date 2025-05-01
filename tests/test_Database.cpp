@@ -28,3 +28,9 @@ TEST_F(DatabaseTest, CreateDatabase) {
 	// Test if the database is created successfully
 	EXPECT_NO_THROW(db = make_unique<Database>(*config));
 }
+
+TEST_F(DatabaseTest, BuildDatabase) {
+	// Test if the table is created successfully
+	EXPECT_NO_THROW(db = make_unique<Database>(*config));
+	EXPECT_NO_THROW(db->build());
+}

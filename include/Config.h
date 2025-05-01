@@ -25,7 +25,9 @@ public:
 	PromotionStrategy get_promotion_strategy() const {
 		return TypeConversions::s_to_promotion_strategy(config["matching"]["promotion_strategy"].get<std::string>());
 	}
-	const std::vector<ExclusionRule>& get_exclusion_rules() const { return exclusion_rules;}
+	const std::vector<ExclusionRule> get_exclusion_rules() const { 
+		return generate_exclusion_rules(config["matching"]["exclusions"]); 
+	}
 
 	
 private:
