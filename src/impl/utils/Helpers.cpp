@@ -1,5 +1,3 @@
-#include "RecentlyAccessedCache.h"
-#include "FrequencyBasedCache.h"
 #include "Helpers.h"
 #include "Types.h"
 
@@ -9,12 +7,14 @@
 // Helper function to return the deepest directory name in a path
 // Ex. get_deepest_dir("/Users/jameskendrick/Code/Projects/dirvana/cpp/src") will return "src"
 // We return a pair of bool and string to ensure that the path is valid
-std::pair<bool, std::string> get_deepest_dir(const std::string& path) {
+std::string get_dir_name(const std::string& path) {
 	size_t pos = path.find_last_of('/');
-	if (pos >= std::string::npos)
-		return std::make_pair(false, "");
 
-	return std::make_pair(true, path.substr(pos + 1));
+	// If there is no '/' in the path, return the path itself
+	if (pos == std::string::npos)
+		return path;
+	
+	return path.substr(pos + 1);
 }
 
 std::string extract_promotion_strategy(const std::string& dirname) {
@@ -108,9 +108,3 @@ json TypeConversions::exclusion_rules_to_json(const std::vector<ExclusionRule>& 
 	}
 	return j;
 }
-
-std::unique_ptr<ICache> CacheFactory::create_cache(PromotionStrategy strategy) {
-	if (strategy == PromotionStrategy::RECENTLY_ACCESSED)
-		return std::make_unique<RecentlyAccessedCache>();
-	return std::make_unique<FrequencyBasedCache>();
-};

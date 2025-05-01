@@ -1,7 +1,6 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
-#include "interfaces/ICache.h"
 #include <json.hpp>
 #include "Types.h"
 
@@ -10,7 +9,7 @@
 
 using json = nlohmann::json;
 
-std::pair<bool, std::string> get_deepest_dir(const std::string& path);
+std::string get_dir_name(const std::string& path);
 std::string extract_promotion_strategy(const std::string& dirname);
 
 namespace TypeConversions {
@@ -27,10 +26,5 @@ namespace TypeConversions {
 namespace ListUtils {
 	// Merges k sorted lists into a single sorted list, based on the 
 }
-
-// Factory for creating the appropriate cache type
-namespace CacheFactory {
-	std::unique_ptr<ICache> create_cache(PromotionStrategy strategy);
-};
 
 #endif // HELPERS_H

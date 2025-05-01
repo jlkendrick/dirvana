@@ -15,7 +15,7 @@ using json = nlohmann::json;
 
 struct TempConfigFile {
 	struct Args {
-		std::string cache_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/caches/test-cache.json";
+		std::string db_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/test.db";
 		std::string init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs";
 		int max_results = 10;
 		int max_history_size = 100;
@@ -37,7 +37,7 @@ struct TempConfigFile {
 
 	TempConfigFile(const Args& args) {
 		json config;
-		if (!args.should_forget("cache_path")) config["paths"]["cache"] = args.cache_path;
+		if (!args.should_forget("db_path")) config["paths"]["db"] = args.db_path;
 		if (!args.should_forget("init_path")) config["paths"]["init"] = args.init_path;
 		if (!args.should_forget("max_results")) config["matching"]["max_results"] = args.max_results;
 		if (!args.should_forget("max_history_size")) config["matching"]["max_history_size"] = args.max_history_size;
@@ -59,6 +59,9 @@ struct TempConfigFile {
 		out_file.close();
 	};
 
+	std::string get_path() const {
+		return path;
+	};
 	std::string path = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/temp-config.json";
 };
 
