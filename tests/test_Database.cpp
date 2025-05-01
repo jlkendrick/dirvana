@@ -6,6 +6,13 @@
 using namespace std;
 using ConfigArgs = TempConfigFile::Args;
 
+void ordered_check(const string& root, const vector<string>& completions, const vector<string>& expected) {
+	EXPECT_EQ(completions.size(), expected.size());
+	for (unsigned int i = 0; i < completions.size(); i++) {
+		EXPECT_EQ(completions[i], root + expected[i]);
+	}
+}
+
 void unordered_check(const string& root, const vector<string>& completions, const vector<string>& expected) {
 	EXPECT_EQ(completions.size(), expected.size());
 	for (const auto& expected_path : expected) {
@@ -96,4 +103,22 @@ TEST_F(DatabaseTest, QueryDatabase) {
 		"/custom_rule_check/prefix_check",
 		"/custom_rule_check/suffix_check"
 	});
+}
+
+TEST_F(DatabaseTest, AccessDatabase) {
+	// Test if the database can be accessed and updated successfully
+
+	// Recently accessed check
+	EXPECT_NO_THROW(db = make_unique<Database>(*config));
+	EXPECT_NO_THROW(db->build());
+
+	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1/1"));
+	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1/1/1"));
+	ordered_check(config->get_init_path(), db->query("1"), {"/1/1/1", "/1/1", "/1"});
+
+	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1/1"));
+	ordered_check(config->get_init_path(), db->query("1"), {"/1/1", "/1/1/1", "/1"});
+
+	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1"));
+	ordered_check(config->get_init_path(), db->query("1"), {"/1", "/1/1", "/1/1/1"});
 }

@@ -13,10 +13,11 @@ public:
 	
 	void build();
 	void refresh();
-std::vector<std::string> query(const std::string& dir_name);
+	std::vector<std::string> query(const std::string& dir_name) const;
+	void access(const std::string& path);
 
 private:
-	sqlite::database db;
+	mutable sqlite::database db;
 	const Config& config;
 
 	void create_table() {

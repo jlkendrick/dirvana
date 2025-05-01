@@ -47,7 +47,7 @@ void Database::refresh() {
 	delete_paths(std::vector<std::string>(old_dirs.begin(), old_dirs.end()));
 }
 
-std::vector<std::string> Database::query(const std::string& dir_name) {
+std::vector<std::string> Database::query(const std::string& dir_name) const {
 	std::vector<std::string> paths;
 	
 	try {
@@ -66,13 +66,28 @@ std::vector<std::string> Database::query(const std::string& dir_name) {
 	}
 	
 	return paths;
-}	
+}
+
+void Database::access(const std::string& path) {
+	auto now = std::chrono::system_clock::now();
+	auto duration_since_epoch = now.time_since_epoch();
+	auto micros_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(duration_since_epoch).count();
+	try {
+		
+		db << "UPDATE paths SET last_accessed = ?, access_count = access_count + 1 WHERE path = ?;"
+			<< micros_since_epoch
+			<< path;
+
+	} catch (const sqlite::sqlite_exception& e) {
+		std::cerr << "Error updating database: " << e.what() << std::endl;
+	}
+}
 
 
 std::vector<std::tuple<std::string, std::string, int>> Database::collect_directories() {
 	auto now = std::chrono::system_clock::now();
 	auto duration_since_epoch = now.time_since_epoch();
-	auto seconds_since_epoch = std::chrono::duration_cast<std::chrono::seconds>(duration_since_epoch).count();
+	auto micros_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(duration_since_epoch).count();
 	std::vector<std::tuple<std::string, std::string, int>> rows;
 	try {
 		std::filesystem::recursive_directory_iterator it(config.get_init_path(), std::filesystem::directory_options::skip_permission_denied);
@@ -88,7 +103,7 @@ std::vector<std::tuple<std::string, std::string, int>> Database::collect_directo
 			if (std::filesystem::is_directory(entry)) {
 				std::string dir_name = res.second;
 				if (res.first and not should_exclude(dir_name, entry.path().string()))
-					rows.push_back({entry.path().string(), dir_name, seconds_since_epoch});
+					rows.push_back({entry.path().string(), dir_name, micros_since_epoch});
 				
 				// Otherwise, don't add it to the PathMap and disable recursion into it's children
 				else
