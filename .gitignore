@@ -1,9 +1,4 @@
+build/
 .cache
 .clangd
-build/
 .vscode
-docs/misc
-include/lib/json.hpp
-include/lib/sqlite3.h
-include/lib/sqlite_modern_cpp
-src/impl/lib/sqlite3.c
