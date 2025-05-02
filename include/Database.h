@@ -23,18 +23,18 @@ private:
 	void create_table() {
 		try {
 			db << "BEGIN TRANSACTION;";
-
+			
 			db << "CREATE TABLE IF NOT EXISTS paths ("
-				"id INTEGER PRIMARY KEY AUTOINCREMENT, "
-				"path TEXT NOT NULL, "
-				"dir_name TEXT NOT NULL, "
-				"last_accessed INTEGER NOT NULL, "
-				"access_count INTEGER NOT NULL DEFAULT 0"
-				");";
+			"id INTEGER PRIMARY KEY AUTOINCREMENT, "
+			"path TEXT NOT NULL, "
+			"dir_name TEXT NOT NULL, "
+			"last_accessed INTEGER NOT NULL, "
+			"access_count INTEGER NOT NULL DEFAULT 0"
+			");";
 			db << "CREATE UNIQUE INDEX IF NOT EXISTS idx_path ON paths (path);";
 			db << "CREATE INDEX IF NOT EXISTS idx_paths_dir_recency ON paths (dir_name, last_accessed DESC);";
 			db << "CREATE INDEX IF NOT EXISTS idx_paths_dir_freq ON paths (dir_name, access_count DESC);";
-
+			
 			db << "COMMIT;";
 		} catch (const sqlite::sqlite_exception& e) {
 			db << "ROLLBACK;";
@@ -45,10 +45,11 @@ private:
 
 	template <typename Callback>
 	void select_all_paths(Callback callback) {
-		db << "SELECT path FROM paths;"
-			>> [&callback](std::string path) {
-				callback(path);
-			};
+		try {
+			db << "SELECT path FROM paths;" >> callback;
+		} catch (const sqlite::sqlite_exception& e) {
+			std::cerr << "Error selecting all paths: " << e.what() << std::endl;
+		}
 	};
 	void bulk_insert(const std::vector<std::tuple<std::string, std::string>>& rows);
 	void delete_paths(const std::vector<std::string>& paths);

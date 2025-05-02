@@ -58,8 +58,8 @@ int main(int argc, char* argv[]) {
 
 		// Log the time taken for the operation
 		auto end = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		std::string log_message = "Tab completion took " + std::to_string(duration.count()) + " ms for partial: " + partial;
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+		std::string log_message = "Tab completion took " + std::to_string(duration.count()) + " us for partial: " + partial;
 		write_log(log_message);
 		
 		return 0;
@@ -94,8 +94,8 @@ int main(int argc, char* argv[]) {
 					std::cout << "echo Rebuild complete" << std::endl;
 					// Write the time taken for the operation
 					auto end = std::chrono::high_resolution_clock::now();
-					auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-					std::string log_message = "Rebuild took " + std::to_string(duration.count()) + " ms";
+					auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+					std::string log_message = "Rebuild took " + std::to_string(duration.count()) + " us";
 					write_log(log_message);
 					return 0;
 				} else if (command == "refresh") {
@@ -103,8 +103,8 @@ int main(int argc, char* argv[]) {
 					std::cout << "echo Refresh complete" << std::endl;
 					// Write the time taken for the operation
 					auto end = std::chrono::high_resolution_clock::now();
-					auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-					std::string log_message = "Refresh took " + std::to_string(duration.count()) + " ms";
+					auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+					std::string log_message = "Refresh took " + std::to_string(duration.count()) + " us";
 					write_log(log_message);
 					return 0;
 				} else {
@@ -175,8 +175,8 @@ int main(int argc, char* argv[]) {
 
 		// Write the time taken for the operation
 		auto end = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		std::string log_message = "Enter handler took " + std::to_string(duration.count()) + " ms for path: " + path;
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+		std::string log_message = "Enter handler took " + std::to_string(duration.count()) + " us for path: " + path;
 		write_log(log_message);
 
 		return 0;

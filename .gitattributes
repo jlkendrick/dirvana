@@ -1,3 +1,4 @@
 sqlite3.c linguist-vendored
 sqlite3.h linguist-vendored
 include/lib/json.hpp linguist-vendored
+include/lib/sqlite_modern_cpp linguist-vendored

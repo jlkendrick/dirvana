@@ -28,10 +28,6 @@ void Database::refresh() {
 		old_dirs.insert(path);
 	});
 	std::vector<std::tuple<std::string, std::string>> new_rows;
-	for (const auto& exclusion_rule : config.get_exclusion_rules()) {
-		std::cout << "Exclusion rule: " << exclusion_rule.pattern << std::endl;
-
-	}
 
 	// Collect directories and perform a diff with the old directories
 	auto rows = collect_directories();
@@ -149,17 +145,21 @@ bool Database::should_exclude(const std::string& dirname, const std::string& pat
 }
 
 void Database::bulk_insert(const std::vector<std::tuple<std::string, std::string>>& rows) {
+	if (rows.empty())
+		return;
+	
 	long long last_accessed = get_current_time();
 
 	try {
 		db << "BEGIN TRANSACTION;";
+		
 		
 		auto stmt = db << "INSERT INTO paths (path, dir_name, last_accessed) VALUES (?, ?, ?);";
 		for (const auto& [path, dir_name] : rows) {
 			stmt << path << dir_name << last_accessed;
 			stmt++;
 		}
-
+		
 		db << "COMMIT;";
 	} catch (const sqlite::sqlite_exception& e) {
 		db << "ROLLBACK;";
