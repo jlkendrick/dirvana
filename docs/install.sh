@@ -120,7 +120,7 @@ EOF
 fi
 
 # Add automatic refresh on boot
-if ! grep -q "dv-binary --enter dv refresh" "$ZSHRC"; then
+if ! grep -q "dv-binary --enter dv --cmd refresh" "$ZSHRC"; then
   {
     echo ""
     echo "# Dirvana automatic refresh on boot"
@@ -143,6 +143,14 @@ fi
 mkdir -p "$HOME/.cache/dirvana"
 mkdir -p "$HOME/.config/dirvana"
 echo "✅ Created necessary directories for Dirvana"
+
+# Run rebuild command to initialize the database
+echo "⏸️ Initializing Dirvana database..."
+if ! $BINARY_FILE --enter dv --cmd rebuild &> /dev/null; then
+  echo "❌ Failed to initialize Dirvana database"
+  exit 1
+fi
+echo "✅ Dirvana database initialized successfully"
 
 echo "Installation complete! Please restart your terminal to apply the changes."
 exit 0
