@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 		std::string log_message = "Tab completion took " + std::to_string(duration.count()) + " us for partial: " + partial;
-		write_log(log_message);
+		// write_log(log_message);
 		
 		return 0;
 	}
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
 					auto end = std::chrono::high_resolution_clock::now();
 					auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 					std::string log_message = "Rebuild took " + std::to_string(duration.count()) + " us";
-					write_log(log_message);
+					// write_log(log_message);
 					return 0;
 				} else if (command == "refresh") {
 					db.refresh();
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
 					auto end = std::chrono::high_resolution_clock::now();
 					auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 					std::string log_message = "Refresh took " + std::to_string(duration.count()) + " us";
-					write_log(log_message);
+					// write_log(log_message);
 					return 0;
 				} else {
 					std::cerr << "Invalid command: " << command << std::endl;
@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 		std::string log_message = "Enter handler took " + std::to_string(duration.count()) + " us for path: " + path;
-		write_log(log_message);
+		// write_log(log_message);
 
 		return 0;
 	}

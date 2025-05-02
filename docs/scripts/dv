@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-cmd=$(dv-binary -enter dv "$@")
+cmd=$(dv-binary --enter dv "$@")
 
 if [[ -n "$cmd" ]]; then
 	eval "$cmd"

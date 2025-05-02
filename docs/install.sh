@@ -70,7 +70,7 @@ if ! grep -q "dv() {" "$ZSHRC"; then
 # Dirvana Enter Handler
 dv() {
   local cmd
-  cmd=$(dv-binary -enter dv "$@")
+  cmd=$(dv-binary --enter dv "$@")
 
   if [[ -n "$cmd" ]]; then
     eval "$cmd"
@@ -83,11 +83,11 @@ EOF
 fi
 
 # Add automatic refresh on boot
-if ! grep -q "dv-binary -enter dv refresh" "$ZSHRC"; then
+if ! grep -q "dv-binary --enter dv refresh" "$ZSHRC"; then
   {
     echo ""
     echo "# Dirvana automatic refresh on boot"
-    echo "dv-binary -enter dv refresh &> /dev/null & disown"
+    echo "dv-binary --enter dv refresh &> /dev/null & disown"
   } >> "$ZSHRC"
   echo "✅ Added automatic refresh on boot to $ZSHRC"
 fi
