@@ -1,0 +1,119 @@
+--------------------------------------------------------- TODO ------------------------------------------------------
+1. (done) When dv + 'partial' is 'enter'-ed, generate completions and cd into the first match. If there are none, say so.
+	- Essentially a way to bypass the 'tab' part in 'tab'-ing to get the completion, and then 'enter'-ing to cd into the first match.
+2. (done) Add new version of RecentlyAccessedCache that uses the standard library list.
+3. (done) Move argument parsing out of the Zsh function and into the C++ tool
+	 - Instead of validating and constructing calls to the program in the Zsh function, simply relay the command to the C++ executable
+		that then processes the argument and carries out the logic.
+	 - See NOTES below for further explanation
+4. (done) Implement way to do completions based on prefix or fuzzy matching without changing the main API so I can switch between versions.
+5. (done) Figure out serialization for frequency_based cache.
+6 (pre) (done). Rethink and reimplement OOP design to make it easier to add new cache types (we need a new custom cache type for 6).
+6. (done) For matching types that do a linear search across all dirnames (prefix, suffix, contains), inter-cache prioritization does not apply
+	 so implement functionality for prioritization to work. Current ideas:
+	 - For Recently Accessed, store a sort of history in the JSON cache which will enumerate results and sort the results based on indices.
+	 - For Frequency Based, simply sort by access count. Will need alternative or modification to Cache.get_paths() because it extracts the 
+	 	 path from the Entry but the frequency count is a member of the Entry.
+7. Refactor command handling to have completions be default, and commands requiring a flag (-f).
+8. Provide flags that can be provided in the command line to override the current configurations for only that command.
+
+--------------------------------------------------------- NOTES ------------------------------------------------------
+Arguments that can be passed to the program:
+
+---------------- -tab flag ---------------------
+-tab means the binary was called from a tab completion script
+The only thing we do here is:
+	1) Expect the partial path as the last argument
+	2) Query the DirectoryCompleter using the partial path
+	3) Append matches to the end of the commands that came after "dv" and before the partial path
+In most cases, this handles calls like "dv-binary dv dirvana" which would be processed like
+	1) The last argument (the partial) is "dirvana"
+	2) The only match is "/path/to/dirvana"
+	3) Append matches to "" since there is nothing between "dv" and "dirvana" in the arguments so "compadd" "/path/to/dirvana"
+However, we want this to also support:
+If this is called with "dirvana-binary -tab dv code dirvana", then
+	1) The partial path is "dirvana"
+	2) The only match is "/path/to/dirvana"
+  3) Notice "code" is an extra command between "dv" and "dirvana" so what we "compadd" is "code /path/to/dirvana"
+That way, when Zsh fills the completion, what is displayed in the command line goes from
+	"dv code dirvana" --> "dv code /path/to/dirvana" 
+which can then we handled by the _dv enter function as described below.
+
+---------------- -enter flag --------------------
+-enter means the binary was called from a enter key press (the _dv enter function)
+
+Terminology:
+	- Partial: the deepest name of the directory, for example the partial of "~/absolte/path/to/dirname" is "dirname"
+	- Full path: an absolute path from '~'
+
+What we do here is:
+	1) Check if the bypass flag ("--") was passed, if so
+		1a) Skip to 4)
+	2) Check if the program was called with the "rebuild" command
+		2a) If so, rebuild the DirectoryCompleter from scratch and save it to a file, resetting order, Exit
+	3) Check if the program was called with the "refresh" command
+		3a) If so, rebuild the DirectoryCompleter while preserving the existing data and save it to a file, Exit
+	Now we know we either have:
+		i) a full path to 'cd' into (likely came from --tab complete), or
+		ii) a partial to 'cd' into using the first match (if there is one) (quick-nav feature), or
+		iii) a full path with a preceeding command that we need just to execute (likely came from --tab complete)
+		iiii) a partial with a preceeding command that we need to execute using the first match (if there is one) (quick-nav + nested command feature)
+	To indentify what steps to take:
+	4) Check if the number of arguments after "dv" is 1
+		4a) If so, go into step 5) with the last and only argument being the path (enable cases i and ii)
+		4b) If not, then we are dealing with a command so add it to the "current_command" (enable cases iii and iiii) 
+				and go into step 5) with the last argument being the path
+	5) Check whether the path is a full-path or partial checking for a '/'
+		5a) If it is a full path, no query needed, just set "result" to full path (enable cases i and iii)
+		5a) If it is partial, set "result" to the first match (enable cases ii and iiii)
+	6) Check if "current_command" is empty
+		6a) If so, we do "cd {result} (covers cases i and ii)
+		6b) If not, return command "{current_command} + {result}" (covers cases iii, iiii)
+Summary:
+	Case i    = 4a + 5a + 6a
+	Case ii   = 4a + 5b + 6a
+	Case iii  = 4b + 5a + 6b
+	Case iiii = 4b + 5b + 6b
+
+---------------- Examples --------------------
+Suppose we are in a terminal session located in ~/Code and the path ~/Code/Projects/dirvana exists
+Here are some examples of the desired control flow:
+	These will follow the format: (command executed in terminal) --> (command executed in _dv() tab script or dv() enter script) --> (command or completions generated by C++ program)
+
+	----------------- -tab -----------------
+	- Normal tab complete
+		"dv dirvana" + <tab> 
+		--> "dirvana-binary -tab dv dirvana"
+		--> (print out COMPLETIONS ~/Code/Projects/dirvana to be handled by compadd)
+		Explanation: There are no extra commands so we just query and return raw matches
+
+	- Normal tab complete with nested command
+		"dv code dirvana" + <tab> 
+		--> "dirvana-binary -tab dv code dirvana" 
+		--> (print out COMPLETIONS code ~/Code/Projects/dirvana to be handled by compadd)
+		Explanation: There is an extra command so we query and return the command concatenated with the raw matches
+
+	---------------- -enter ----------------
+	- i, 'cd' command generation for full path
+		"dv ~/Code/Projects/dirvana" + <enter>
+		--> "dirvana-binary -enter dv ~/Code/Projects/dirvana" 
+		--> (print out COMMAND "cd ~/Code/Projects/dirvana" to be executed by caller)
+		Explanation: We notice the path is a full path so we just create command with 'cd' since there is no nested command
+
+	- ii, quick-nav for partial
+		"dv dirvana" + <enter>
+		--> "dirvana-binary -enter dv dirvana" 
+		--> (print out COMMAND "cd ~/Code/Projects/dirvana" to be executed by caller)
+		Explanation: We notice the path is a partial path so we query for first match and 'cd' with that match
+
+	- iii, specified command generation for full-path
+		"dv code ~/Code/Projects/dirvana" + <enter>
+		--> "dirvana-binary -enter dv code ~/Code/Projects/dirvana"
+		--> (print out COMMAND "cd ~/Code/Projects" to be executed by caller)
+		Explanation: We notice the path is a full path so we format the command using the nested "code" command and the full path
+
+	- iiii, specified command generation + quick-nav partial
+		"dv code dirvana" + <enter>
+		--> "dirvana-binary -enter dv dirvana" 
+		--> (print out COMMAND "cd ~/Code/Projects/dirvana" to be executed by caller)
+		Explanation: We notice the path is a partial path so we format the command using the nested "code" command and the first match for the partial
