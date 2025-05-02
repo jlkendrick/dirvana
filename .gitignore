@@ -2,3 +2,4 @@ build/
 .cache
 .clangd
 .vscode
+include/lib/sqlite_modern_cpp/
