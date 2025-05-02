@@ -11,24 +11,61 @@ if [[ "$OS" != "Darwin" ]]; then
 	exit 1
 fi
 ARCH=$(uname -m)
-
-# Download and install the binary
+# Download the binary with backup handling
 echo "⏸️ Downloading Dirvana binary..."
 BINARY_URL="https://raw.githubusercontent.com/jlkendrick/dirvana/main/docs/bin/dv-binary"
 BINARY_PATH="$HOME/.local/bin"
-mkdir -p "$BINARY_PATH"
-curl -sSL -o "$BINARY_PATH/dv-binary" "$BINARY_URL"
-sudo chmod +x "$BINARY_PATH/dv-binary"
-echo "✅ Dirvana binary installed to $BINARY_PATH/dv-binary"
+BINARY_FILE="$BINARY_PATH/dv-binary"
 
-# Copy the tab completion script
+# Create directory if it doesn't exist
+mkdir -p "$BINARY_PATH"
+
+# Back up existing binary if it exists
+if [ -f "$BINARY_FILE" ]; then
+  mv "$BINARY_FILE" "${BINARY_FILE}.backup"
+  echo "📦 Existing binary backed up to ${BINARY_FILE}.backup"
+fi
+
+# Download new binary
+if curl -sSL -o "$BINARY_FILE" "$BINARY_URL"; then
+  chmod +x "$BINARY_FILE"
+  echo "✅ Dirvana binary installed to $BINARY_FILE"
+else
+  echo "❌ Failed to download binary"
+  # Restore backup if available
+  if [ -f "${BINARY_FILE}.backup" ]; then
+    mv "${BINARY_FILE}.backup" "$BINARY_FILE"
+    echo "🔄 Restored previous binary from backup"
+  fi
+  exit 1
+fi
+
+# Similar approach for tab completion script
 echo "⏸️ Installing tab completion..."
 TAB_URL="https://raw.githubusercontent.com/jlkendrick/dirvana/main/docs/scripts/_dv"
 TAB_PATH="$HOME/.zsh/completions"
+TAB_FILE="$TAB_PATH/_dv"
+
 mkdir -p "$TAB_PATH"
-curl -fsSL -o "$TAB_PATH/_dv" "$TAB_URL"
-sudo chmod +x "$TAB_PATH/_dv"
-echo "✅ Tab completion script installed to $TAB_PATH/_dv"
+
+# Back up existing completion script if it exists
+if [ -f "$TAB_FILE" ]; then
+  mv "$TAB_FILE" "${TAB_FILE}.backup"
+  echo "📦 Existing completion script backed up to ${TAB_FILE}.backup"
+fi
+
+# Download new completion script
+if curl -fsSL -o "$TAB_FILE" "$TAB_URL"; then
+  chmod +x "$TAB_FILE"
+  echo "✅ Tab completion script installed to $TAB_FILE"
+else
+  echo "❌ Failed to download tab completion script"
+  # Restore backup if available
+  if [ -f "${TAB_FILE}.backup" ]; then
+    mv "${TAB_FILE}.backup" "$TAB_FILE"
+    echo "🔄 Restored previous completion script from backup"
+  fi
+fi
 
 
 # Add required configurations to .zshrc

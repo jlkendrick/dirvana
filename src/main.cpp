@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 
 	// Need at least 2 arguments: program name and a flag
 	if (argc < 2) {
-		std::cerr << "Usage: " << argv[0] << " [-tab|-enter] dv [command] [path]" << std::endl;
+		std::cerr << "Usage: " << argv[0] << " [--tab|--enter] dv [command] [path]" << std::endl;
 		return 1;
 	}
 
