@@ -15,11 +15,8 @@ void write_log(const std::string& message) {
 
 int main(int argc, char* argv[]) {
 	auto start = std::chrono::high_resolution_clock::now();
-	// // Write the arguments to a file for debugging
-	// std::ofstream io_file("/Users/jameskendrick/Code/Projects/dirvana/build/debug_io.txt", std::ios::app);
-	// for (int i = 0; i < argc; i++)
-	// 	io_file << argv[i] << " ";
-	// io_file << std::endl;
+
+	// Initialize the database
 	Config config;
 	Database db(config);
 
