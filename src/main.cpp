@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
 				}
 			} 
 			
-			// We will add more flags here in the future
+			// Will add more flags here in the future
 			
 			else {
 				std::cerr << "Invalid flag: " << argv[3] << std::endl;
