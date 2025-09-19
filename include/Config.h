@@ -30,9 +30,7 @@ public:
 	}
 
 	// Setters for the configuration data
-	void set_config(const json& user_config) {
-		config = user_config;
-	}
+	void set_config(const json& user_config) { config = user_config; }
 	void set_init_path(const std::string& init_path) { config["paths"]["init"] = init_path; }
 	void set_db_path(const std::string& db_path) { config["paths"]["db"] = db_path; }
 	void set_history_path(const std::string& history_path) { config["paths"]["history"] = history_path; }

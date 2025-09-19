@@ -30,6 +30,11 @@ fi
 if curl -sSL -o "$BINARY_FILE" "$BINARY_URL"; then
   chmod +x "$BINARY_FILE"
   echo "✅ Dirvana binary installed to $BINARY_FILE"
+  # Remove backup if download was successful
+  if [ -f "${BINARY_FILE}.backup" ]; then
+    rm "${BINARY_FILE}.backup"
+    echo "🗑️ Removed backup file ${BINARY_FILE}.backup"
+  fi
 else
   echo "❌ Failed to download binary"
   # Restore backup if available
@@ -58,6 +63,11 @@ fi
 if curl -fsSL -o "$TAB_FILE" "$TAB_URL"; then
   chmod +x "$TAB_FILE"
   echo "✅ Tab completion script installed to $TAB_FILE"
+  # Remove backup if download was successful
+  if [ -f "${TAB_FILE}.backup" ]; then
+    rm "${TAB_FILE}.backup"
+    echo "🗑️ Removed backup file ${TAB_FILE}.backup"
+  fi
 else
   echo "❌ Failed to download tab completion script"
   # Restore backup if available
