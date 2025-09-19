@@ -51,8 +51,7 @@ private:
 	json default_config = {
 		{"paths", {
 			{"init", std::getenv("HOME") + std::string("/")},
-			{"db", std::getenv("HOME") + std::string("/.cache/dirvana/dirvana.db")},
-			{"history", std::getenv("HOME") + std::string("/.cache/dirvana/history.json")}
+			{"db", std::getenv("HOME") + std::string("/.cache/dirvana/dirvana.db")}
 		}},
 		{"matching", {
 			{"max_results", 10},
