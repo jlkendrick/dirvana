@@ -131,13 +131,12 @@ int main(int argc, char* argv[]) {
 		db.access(result);
 			
 		// Decide how to output based on presence of command
-		if (command.empty()) {
+		if (command.empty())
 			// No command, just 'cd' to the path
 			std::cout << "cd " << result << std::endl;
-		} else {
+		else
 			// Execute the command with the path
 			std::cout << command << " " << result << std::endl;
-		}
 
 		return 0;
 	}
