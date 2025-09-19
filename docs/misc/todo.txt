@@ -14,8 +14,12 @@
 	 - For Recently Accessed, store a sort of history in the JSON cache which will enumerate results and sort the results based on indices.
 	 - For Frequency Based, simply sort by access count. Will need alternative or modification to Cache.get_paths() because it extracts the 
 	 	 path from the Entry but the frequency count is a member of the Entry.
-7. Refactor command handling to have completions be default, and commands requiring a flag (-f).
-8. Provide flags that can be provided in the command line to override the current configurations for only that command.
+7. Support argument to refresh that starts the recursive filesystem search from a specified directory
+	- This can, and should, support the native 'dv' autocomplete
+8. Not sure if this is currently implemented but if no match is found, just try to 'cd' into the passed dirname
+	- This will allow 'dv' to completly replace 'cd'
+9. Refactor command handling to have completions be default, and commands requiring a flag (-f).
+10. Provide flags that can be provided in the command line to override the current configurations for only that command.
 
 --------------------------------------------------------- NOTES ------------------------------------------------------
 Arguments that can be passed to the program:
