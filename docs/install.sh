@@ -102,7 +102,7 @@ EOF
 )
 
 # Add missing lines to the top of .zshrc
-if ! grep -Fxq "fpath=($COMPLETION_DIR \$fpath)" "$ZSHRC"; then
+if ! grep -q "# Begin Dirvana Zsh completion configuration" "$ZSHRC"; then
   (echo "$REQUIRED_LINES"; cat "$ZSHRC") > "$TEMP_ZSHRC"
   mv "$TEMP_ZSHRC" "$ZSHRC"
   echo "✅ Added required configurations to $ZSHRC"
@@ -130,7 +130,7 @@ EOF
 fi
 
 # Add automatic refresh on boot
-if ! grep -q "dv-binary --enter dv --cmd refresh" "$ZSHRC"; then
+if ! grep -q "# Dirvana automatic refresh on boot" "$ZSHRC"; then
   {
     echo ""
     echo "# Dirvana automatic refresh on boot"
@@ -140,7 +140,7 @@ if ! grep -q "dv-binary --enter dv --cmd refresh" "$ZSHRC"; then
 fi
 
 # Add PATH to .zshrc
-if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.zshrc"; then
+if ! grep -q "# Add ~/.local/bin to PATH" "$HOME/.zshrc"; then
   {
     echo ""
     echo "# Add ~/.local/bin to PATH"
