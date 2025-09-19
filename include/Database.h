@@ -56,8 +56,8 @@ private:
 
 	std::vector<std::tuple<std::string, std::string>> collect_directories();
 	bool should_exclude(const std::string& dirname, const std::string& path) const;
-	std::string get_query_pattern(const std::string& dir_name) const {
-		switch (config.get_matching_type()) {
+	std::string get_query_pattern(const std::string& dir_name, const std::string& matching_type_override = "") const {
+		switch (matching_type_override.empty() ? config.get_matching_type() : TypeConversions::s_to_matching_type(matching_type_override)) {
 			case MatchingType::Exact:
 				return "'" + dir_name + "'";
 			case MatchingType::Prefix:

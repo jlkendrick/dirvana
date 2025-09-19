@@ -45,24 +45,43 @@ void Database::refresh() {
 
 std::vector<std::string> Database::query(const std::string& input) const {
 	std::string dir_name = get_dir_name(input);
-	std::vector<std::string> paths;
+	std::vector<std::string> path_rankings;
+	std::unordered_set<std::string> path_set; // To avoid duplicates
 	
 	try {
-		std::string query = std::format("SELECT path FROM paths WHERE dir_name {} {} ORDER BY {} DESC LIMIT {};",
-			config.get_matching_type() == MatchingType::Exact ? "=" : "LIKE",
-			get_query_pattern(dir_name),
+		// First, regardless of the matching type, check for exact matches
+		std::string exact_query = std::format("SELECT path FROM paths WHERE dir_name {} {} ORDER BY {} DESC LIMIT {};",
+			"=",
+			get_query_pattern(dir_name, "exact"),
 			config.get_promotion_strategy() == PromotionStrategy::RECENTLY_ACCESSED ? "last_accessed" : "access_count",
 			config.get_max_results());
-
-		db << query >> [&](std::string path) {
-			paths.push_back(path);
+		// On the first insert, we can just insert directly without checking for duplicates
+		db << exact_query >> [&](std::string path) {
+			path_rankings.push_back(path);
+			path_set.insert(path);
 		};
+
+		// If the matching type is not exact, we need to do a second query to rank the non-exact matches after the exact ones
+		if (config.get_matching_type() != MatchingType::Exact) {
+			std::string non_exact_query = std::format("SELECT path FROM paths WHERE dir_name {} {} ORDER BY {} DESC LIMIT {};",
+				config.get_matching_type() == MatchingType::Exact ? "=" : "LIKE",
+				get_query_pattern(dir_name),
+				config.get_promotion_strategy() == PromotionStrategy::RECENTLY_ACCESSED ? "last_accessed" : "access_count",
+				config.get_max_results());
+			// For non-exact matches, we need to check for duplicates
+			db << non_exact_query >> [&](std::string path) {
+				if (path_set.find(path) == path_set.end()) {
+					path_rankings.push_back(path);
+					path_set.insert(path);
+				}
+			};
+		}
 
 	} catch (const sqlite::sqlite_exception& e) {
 		std::cerr << "Error querying database: " << e.what() << std::endl;
 	}
 	
-	return paths;
+	return path_rankings;
 }
 
 void Database::access(const std::string& path) {
