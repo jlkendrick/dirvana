@@ -23,8 +23,9 @@ namespace TypeConversions {
 	std::string exclusion_type_to_s(const ExclusionType& type);
 };
 
-namespace ListUtils {
-	// Merges k sorted lists into a single sorted list, based on the 
+namespace ArgParsing {
+	Flag build_flag(const std::vector<std::string>& flag_parts, const std::string& cmd);
+	std::pair<std::vector<std::string>, std::vector<Flag>> split_cmd_and_flags(int argc, char* argv[]);
 }
 
 #endif // HELPERS_H

@@ -108,3 +108,50 @@ json TypeConversions::exclusion_rules_to_json(const std::vector<ExclusionRule>& 
 	}
 	return j;
 }
+
+Flag ArgParsing::build_flag(const std::vector<std::string>& flag_parts, const std::string& cmd) {
+	Flag flag;
+	flag.cmd = cmd;
+	if (flag_parts.size() > 0)
+		flag.flag = flag_parts[0].substr(2); // Remove the "--" prefix
+	if (flag_parts.size() > 1)
+		flag.value = flag_parts[1];
+	return flag;
+}
+
+std::pair<std::vector<std::string>, std::vector<Flag>> ArgParsing::split_cmd_and_flags(int argc, char* argv[]) {
+	std::vector<std::string> cmd_parts;
+	std::vector<Flag> flags;
+	std::vector<std::string> curr_flag_parts;
+	bool found_flag = false;
+
+	for (int i = 1; i < argc; i++) {
+		std::string arg = argv[i];
+
+		// Condition that indicates the start of a flag
+		if (arg.starts_with("--") and arg.size() > 2) {
+			// If we were already building a flag, save it
+			if (found_flag and !curr_flag_parts.empty()) {
+				std::string cmd = cmd_parts.empty() ? "" : cmd_parts.back(); // We associate the flag with the last command part
+				Flag flag = ArgParsing::build_flag(curr_flag_parts, cmd);
+				flags.push_back(flag);
+				curr_flag_parts.clear();
+			} else
+				found_flag = true;
+		}
+
+		// After we start building a flag, all subsequent args belong to the flag (or another flag)
+		if (found_flag)
+			curr_flag_parts.push_back(arg);
+		else
+			cmd_parts.push_back(arg);
+	}
+
+	// If we ended while building a flag, save it
+	if (found_flag and !curr_flag_parts.empty()) {
+		Flag flag = ArgParsing::build_flag(curr_flag_parts, cmd_parts.empty() ? "" : cmd_parts.back());
+		flags.push_back(flag);
+	}
+
+	return {cmd_parts, flags};
+}

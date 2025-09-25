@@ -30,4 +30,10 @@ enum class PromotionStrategy {
 	FREQUENCY_BASED
 };
 
+struct Flag {
+	std::string cmd;
+	std::string flag;
+	std::string value = "";
+};
+
 #endif // TYPES_H

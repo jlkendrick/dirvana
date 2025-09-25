@@ -15,7 +15,7 @@ void write_log(const std::string& message) {
 
 int main(int argc, char* argv[]) {
 	auto start = std::chrono::high_resolution_clock::now();
-	// Keeping this here for future reference if we want to log time taken for operations
+	// Keeping this here for future reference if we want to log time taken for an operation
 	// Log the time taken for the operation
 	// auto end = std::chrono::high_resolution_clock::now();
 	// auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);

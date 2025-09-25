@@ -17,7 +17,7 @@ Config::Config(const std::string& config_path) {
 		try {
 			// Create the parent directory if it doesn't exist
 			std::filesystem::path parent_path = std::filesystem::path(this->config_path).parent_path();
-			if (!parent_path.empty() && !std::filesystem::exists(parent_path))
+			if (!parent_path.empty() and !std::filesystem::exists(parent_path))
 				std::filesystem::create_directories(parent_path);
 
 		} catch (const std::exception& e) {
@@ -81,12 +81,12 @@ bool Config::validate_config(json& user_config) const {
 		modified = true;
 	} else {
 		// Now check the sub-keys to see if they are present and valid
-		if (!user_config["paths"].contains("init") || (!std::filesystem::exists(user_config["paths"]["init"].get<std::string>()))) {
+		if (!user_config["paths"].contains("init") or (!std::filesystem::exists(user_config["paths"]["init"].get<std::string>()))) {
 			user_config["paths"]["init"] = default_config["paths"]["init"];
 			modified = true;
 		}
 
-		if (!user_config["paths"].contains("db") || (!std::filesystem::exists(user_config["paths"]["db"].get<std::string>()))) {
+		if (!user_config["paths"].contains("db") or (!std::filesystem::exists(user_config["paths"]["db"].get<std::string>()))) {
 			user_config["paths"]["db"] = default_config["paths"]["db"];
 			modified = true;
 		}
@@ -99,25 +99,25 @@ bool Config::validate_config(json& user_config) const {
 		modified = true;
 	} else {
 		// Now check the sub-keys to see if they are present and valid
-		if (!user_config["matching"].contains("max_results") || (user_config["matching"]["max_results"].get<int>() <= 0)) {
+		if (!user_config["matching"].contains("max_results") or (user_config["matching"]["max_results"].get<int>() <= 0)) {
 			user_config["matching"]["max_results"] = default_config["matching"]["max_results"];
 			modified = true;
 		}
 
-		if (!user_config["matching"].contains("max_history_size") || (user_config["matching"]["max_history_size"].get<int>() <= 0)) {
+		if (!user_config["matching"].contains("max_history_size") or (user_config["matching"]["max_history_size"].get<int>() <= 0)) {
 			user_config["matching"]["max_history_size"] = default_config["matching"]["max_history_size"];
 			modified = true;
 		}
 
-		if (!user_config["matching"].contains("type") || (user_config["matching"]["type"].get<std::string>() != "exact" &&
-			user_config["matching"]["type"].get<std::string>() != "prefix" &&
-			user_config["matching"]["type"].get<std::string>() != "suffix" &&
+		if (!user_config["matching"].contains("type") or (user_config["matching"]["type"].get<std::string>() != "exact" and
+			user_config["matching"]["type"].get<std::string>() != "prefix" and
+			user_config["matching"]["type"].get<std::string>() != "suffix" and
 			user_config["matching"]["type"].get<std::string>() != "contains")) {
 			user_config["matching"]["type"] = default_config["matching"]["type"];
 			modified = true;
 		}
 
-		if (!user_config["matching"].contains("promotion_strategy") || (user_config["matching"]["promotion_strategy"].get<std::string>() != "recently_accessed" &&
+		if (!user_config["matching"].contains("promotion_strategy") or (user_config["matching"]["promotion_strategy"].get<std::string>() != "recently_accessed" and
 			user_config["matching"]["promotion_strategy"].get<std::string>() != "frequency_based")) {
 			user_config["matching"]["promotion_strategy"] = default_config["matching"]["promotion_strategy"];
 			modified = true;
@@ -130,12 +130,12 @@ bool Config::validate_config(json& user_config) const {
 		} else {
 			// If any of the exclusion types are not valid, use the default for that type
 			for (auto& type : user_config["matching"]["exclusions"].items()) {
-				if (type.key() != "prefix" && type.key() != "exact" && type.key() != "suffix" && type.key() != "contains") {
+				if (type.key() != "prefix" and type.key() != "exact" and type.key() != "suffix" and type.key() != "contains") {
 					user_config["matching"]["exclusions"][type.key()] = default_config["matching"]["exclusions"][type.key()];
 					modified = true;
 				}
 				// If any of the values are not of type array, use the default for that type
-				if (!type.value().is_array() && !type.value().is_null()) {
+				if (!type.value().is_array() and !type.value().is_null()) {
 					user_config["matching"]["exclusions"][type.key()] = default_config["matching"]["exclusions"][type.key()];
 					modified = true;
 				}
