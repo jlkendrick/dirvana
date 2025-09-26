@@ -11,7 +11,9 @@ if [ -n "$ZSH_VERSION" ]; then
     *:file) DIRVANA_SCRIPT_SOURCED=1 ;;
   esac
 elif [ -n "$BASH_VERSION" ]; then
-  if [ "${BASH_SOURCE[0]}" != "$0" ]; then
+  # If running via 'source', BASH_SOURCE[0] != $0. When piped (curl | bash),
+  # BASH_SOURCE[0] is typically 'stdin' — do not treat that as sourced.
+  if [ "${BASH_SOURCE[0]}" != "$0" ] && [ "${BASH_SOURCE[0]}" != "stdin" ]; then
     DIRVANA_SCRIPT_SOURCED=1
   fi
 fi
