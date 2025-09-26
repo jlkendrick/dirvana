@@ -155,9 +155,28 @@ mkdir -p "$HOME/.config/dirvana"
 echo "✅ Created necessary directories for Dirvana"
 
 # Run rebuild command to initialize the database
-echo "⏸️ Initializing Dirvana database..."
-if ! $BINARY_FILE --enter dv --cmd rebuild &> /dev/null; then
-  echo "❌ Failed to initialize Dirvana database"
+echo "Please specify a root directory to initialize Dirvana from."
+read -p "Root directory (default: $HOME): " root_dir
+
+# If no directory is provided, default to the home directory
+if [ -z "$root_dir" ]; then
+    root_dir="$HOME"
+fi
+
+# Convert to absolute path, expanding ~
+root_dir_expanded="${root_dir/#\~/$HOME}"
+
+# Check if directory exists and get absolute path
+if [ ! -d "$root_dir_expanded" ]; then
+    echo "Error: Directory '$root_dir_expanded' not found."
+    exit 1
+fi
+
+abs_root_dir=$(cd "$root_dir_expanded" && pwd)
+
+echo "⏸️ Initializing Dirvana database from '$abs_root_dir'..."
+if ! $BINARY_FILE --enter dv build --root "$abs_root_dir" &> /dev/null; then
+  echo "❌ Failed to initialize Dirvana database for root '$abs_root_dir'"
   exit 1
 fi
 echo "✅ Dirvana database initialized successfully"
