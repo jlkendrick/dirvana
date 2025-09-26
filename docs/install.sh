@@ -4,11 +4,23 @@ set -e
 
 echo "Installing Dirvana..."
 
+# Detect if the script is being sourced to avoid exiting the user's shell
+DIRVANA_SCRIPT_SOURCED=0
+if [ -n "$ZSH_VERSION" ]; then
+  case $ZSH_EVAL_CONTEXT in
+    *:file) DIRVANA_SCRIPT_SOURCED=1 ;;
+  esac
+elif [ -n "$BASH_VERSION" ]; then
+  if [ "${BASH_SOURCE[0]}" != "$0" ]; then
+    DIRVANA_SCRIPT_SOURCED=1
+  fi
+fi
+
 # Determine the platform
 OS=$(uname -s)
 if [[ "$OS" != "Darwin" ]]; then
-	echo "Dirvana is only supported on macOS."
-	exit 1
+  echo "Dirvana is only supported on macOS."
+  if [ "$DIRVANA_SCRIPT_SOURCED" -eq 1 ]; then return 1; else exit 1; fi
 fi
 ARCH=$(uname -m)
 # Download the binary with backup handling
@@ -42,7 +54,7 @@ else
     mv "${BINARY_FILE}.backup" "$BINARY_FILE"
     echo "🔄 Restored previous binary from backup"
   fi
-  exit 1
+  if [ "$DIRVANA_SCRIPT_SOURCED" -eq 1 ]; then return 1; else exit 1; fi
 fi
 
 # Similar approach for tab completion script
@@ -156,7 +168,7 @@ echo "✅ Created necessary directories for Dirvana"
 
 # Run rebuild command to initialize the database
 echo "Please specify a root directory to initialize Dirvana from."
-read -p "Root directory (default: $HOME): " root_dir
+read -p "Root directory (default: $HOME): " root_dir < /dev/tty
 
 # If no directory is provided, default to the home directory
 if [ -z "$root_dir" ]; then
@@ -168,8 +180,8 @@ root_dir_expanded="${root_dir/#\~/$HOME}"
 
 # Check if directory exists and get absolute path
 if [ ! -d "$root_dir_expanded" ]; then
-    echo "Error: Directory '$root_dir_expanded' not found."
-    exit 1
+  echo "Error: Directory '$root_dir_expanded' not found."
+  if [ "$DIRVANA_SCRIPT_SOURCED" -eq 1 ]; then return 1; else exit 1; fi
 fi
 
 abs_root_dir=$(cd "$root_dir_expanded" && pwd)
@@ -177,9 +189,13 @@ abs_root_dir=$(cd "$root_dir_expanded" && pwd)
 echo "⏸️ Initializing Dirvana database from '$abs_root_dir'..."
 if ! $BINARY_FILE --enter dv build --root "$abs_root_dir" &> /dev/null; then
   echo "❌ Failed to initialize Dirvana database for root '$abs_root_dir'"
-  exit 1
+  if [ "$DIRVANA_SCRIPT_SOURCED" -eq 1 ]; then return 1; else exit 1; fi
 fi
 echo "✅ Dirvana database initialized successfully"
 
 echo "Installation complete! Please restart your terminal to apply the changes."
-exit 0
+if [ "$DIRVANA_SCRIPT_SOURCED" -eq 1 ]; then
+  return 0
+else
+  exit 0
+fi
