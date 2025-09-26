@@ -45,7 +45,7 @@ TEST_F(DatabaseTest, CreateDatabase) {
 TEST_F(DatabaseTest, BuildDatabase) {
 	// Test if the table is created successfully
 	EXPECT_NO_THROW(db = make_unique<Database>(*config));
-	EXPECT_NO_THROW(db->build());
+	EXPECT_NO_THROW(db->build(config->get_init_path()));
 }
 
 TEST(Database, RefreshDatabase) {
@@ -59,14 +59,14 @@ TEST(Database, RefreshDatabase) {
 	};
 	Config config(temp_config.path);
 	Database db(config);
-	EXPECT_NO_THROW(db.build());
+	EXPECT_NO_THROW(db.build(config.get_init_path()));
 
 	// Change the exclusion rules to include/exclude directories
 	config.set_exclusion_rules({
 		{ ExclusionType::Prefix, "." },
 		{ ExclusionType::Exact, config.get_init_path() + "/1/1/1/4" }
 	});
-	EXPECT_NO_THROW(db.refresh());
+	EXPECT_NO_THROW(db.refresh(config.get_init_path()));
 }
 
 TEST_F(DatabaseTest, QueryDatabase) {
@@ -74,19 +74,19 @@ TEST_F(DatabaseTest, QueryDatabase) {
 
 	// Exact check
 	EXPECT_NO_THROW(db = make_unique<Database>(*config));
-	EXPECT_NO_THROW(db->build());
+	EXPECT_NO_THROW(db->build(config->get_init_path()));
 	unordered_check(config->get_init_path(), db->query("1"), {"/1", "/1/1", "/1/1/1"});
 
 	config->set_exclusion_rules({});
 
 	// Prefix check
 	config->set_matching_type("prefix");
-	EXPECT_NO_THROW(db->build());
-	unordered_check(config->get_init_path(), db->query("."), {"/.1", "/custom_rule_check/.dot_check" }); 
+	EXPECT_NO_THROW(db->build(config->get_init_path()));
+	unordered_check(config->get_init_path(), db->query("."), {"/.1", "/custom_rule_check/.dot_check" });
 
 	// Suffix check
 	config->set_matching_type("suffix");
-	EXPECT_NO_THROW(db->build());
+	EXPECT_NO_THROW(db->build(config->get_init_path()));
 	unordered_check(config->get_init_path(), db->query("eck"), {
 		"/custom_rule_check",
 		"/custom_rule_check/.dot_check",
@@ -98,7 +98,7 @@ TEST_F(DatabaseTest, QueryDatabase) {
 
 	// Contains check
 	config->set_matching_type("contains");
-	EXPECT_NO_THROW(db->build());
+	EXPECT_NO_THROW(db->build(config->get_init_path()));
 	unordered_check(config->get_init_path(), db->query("fix"), {
 		"/custom_rule_check/prefix_check",
 		"/custom_rule_check/suffix_check"
@@ -110,7 +110,7 @@ TEST_F(DatabaseTest, AccessDatabase) {
 
 	// Recently accessed check
 	EXPECT_NO_THROW(db = make_unique<Database>(*config));
-	EXPECT_NO_THROW(db->build());
+	EXPECT_NO_THROW(db->build(config->get_init_path()));
 
 	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1/1"));
 	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1/1/1"));

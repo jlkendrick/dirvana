@@ -8,9 +8,8 @@ void write_log(const std::string& message) {
 	if (log_file.is_open()) {
 		log_file << message << std::endl;
 		log_file.close();
-	} else {
+	} else
 		std::cerr << "Unable to open log file" << std::endl;
-	}
 }
 
 int main(int argc, char* argv[]) {
@@ -32,7 +31,15 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	std::string call_type = argv[1];
+	auto [
+		valid,
+		call_type,
+		commands, 
+		flags
+	] = ArgParsing::process_args(argc, argv);
+	if (!valid)
+		// Error message already printed in process_args
+		return 1;
 	
 	// Handle tab completion
 	if (call_type == "--tab") {
@@ -64,44 +71,39 @@ int main(int argc, char* argv[]) {
 	
 	// Handle enter key press
 	else if (call_type == "--enter") {
-		// Need at least 3 arguments: program_name, -enter, dv
-		if (argc < 3 || std::string(argv[2]) != "dv") {
-			std::cerr << "Enter handler requires 'dv' as the first argument" << std::endl;
-			return 1;
-		}
-
-		// If -enter was called with no arguments, that is the eqivalent of "cd"
+		// If --enter was called with no arguments, that is the eqivalent of "cd"
 		// where we want to cd to home dir
-		if (argc == 3 ) {
+		if (commands.empty()) {
 			std::cout << "cd ~" << std::endl;
 			return 0;
 		}
 
-		// Check if a command was passed
-		std::string last_arg = argv[argc - 1];
-		std::string second_last_arg = (argc > 3) ? argv[argc - 2] : "";
-		// We use "--" as a delimiter to separate commands from paths
-		if (second_last_arg != "--") {
-			if (last_arg == "rebuild") {
-				db.build();
-				std::cout << "echo Rebuild complete" << std::endl;
-				return 0;
-			} else if (last_arg == "refresh") {
-				db.refresh();
-				std::cout << "echo Refresh complete" << std::endl;
-				return 0;
+		// Check if a subcommand was passed
+		// We only allow subcommands when there is only one argument after "dv"
+		if (commands.size() == 1) {
+			std::string subcommand = commands[0];
+
+			// Flag parsing
+			std::string init_path = ArgParsing::get_flag_value(flags, "root", config.get_init_path());
+			if (subcommand == "build" or subcommand == "rebuild") {
+				if (db.build(init_path)) {
+					std::cout << "echo Build from " << init_path << " complete" << std::endl;
+					return 0;
+				} else
+					return 1;
+			} else if (subcommand == "refresh") {
+				if (db.refresh(init_path)) {
+					std::cout << "echo Refresh from " << init_path << " complete" << std::endl;
+					return 0;
+				} else
+					return 1;
 			}
 		}
-
-		// At this point we know we need to handle a path, but are unsure if it needs
-		// to be completed or not
-		std::string path = last_arg;
-		std::string result;
-
+		
+		// Last argument is the path to complete
+		std::string path = commands.back();
 		// Check if path is full path or partial
-		if (path.find('/') != std::string::npos || path.find('~') == 0) {
-			result = path;
-		} else {
+		if (path.find('/') == std::string::npos and path.find('~') == std::string::npos and path.find('/') == std::string::npos) {
 			// Partial path, need to complete
 			std::vector<std::string> matches = db.query(path);
 			if (matches.empty()) {
@@ -110,33 +112,31 @@ int main(int argc, char* argv[]) {
 				return 0;
 			}
 			// Use the first match
-			result = matches[0];
+			path = matches[0];
 		}
 		
 		// Now we need to assemble the final command to output.
 		// Arguments look something like: dv-binary [call_type] dv [...] [path]
-		std::string command = "";
-		if (argc >= 4) {
-			// Build the command from all arguments except the last one (and any "--" delimiters)
-			for (int i = 3; i < argc - 1; i++) {
-				if (i > 3) command += " ";
-				command += std::string(argv[i]) == "--" ? "" : argv[i];
+		std::string prefix = "";
+		if (commands.size() > 1) {
+			// Build the prefix from all arguments except the last one (and any "--" delimiters)
+			for (size_t i = 0; i < commands.size() - 1; i++) {
+				if (i > 0) prefix += " ";
+				prefix += commands[i] != "--" ? commands[i] : "";
 			}
-		} else {
-			std::cerr << "No path specified" << std::endl;
-			return 1;
 		}
 
 		// Update the database with the accessed path
-		db.access(result);
+		db.access(path);
 			
-		// Decide how to output based on presence of command
-		if (command.empty())
-			// No command, just 'cd' to the path
-			std::cout << "cd " << result << std::endl;
+		// Decide what to output based on presence of prefix args and matches
+		// If no prefix args, just 'cd' to the matched path
+		if (prefix.empty())
+			// No output, just 'cd' to the path
+			std::cout << "cd " << path << std::endl;
 		else
-			// Execute the command with the path
-			std::cout << command << " " << result << std::endl;
+			// Execute the output with the path
+			std::cout << prefix << " " << path << std::endl;
 
 		return 0;
 	}

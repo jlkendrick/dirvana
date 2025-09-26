@@ -24,8 +24,54 @@ namespace TypeConversions {
 };
 
 namespace ArgParsing {
-	Flag build_flag(const std::vector<std::string>& flag_parts, const std::string& cmd);
-	std::pair<std::vector<std::string>, std::vector<Flag>> split_cmd_and_flags(int argc, char* argv[]);
+	static std::unordered_map<std::string, std::string> flag_aliases = {
+		{"h", "help"},
+		{"r", "root"},
+		{"e", "exact"},
+		{"p", "prefix"},
+		{"s", "suffix"},
+		{"c", "contains"},
+		{"ra", "recently_accessed"},
+		{"fb", "frequency_based"}
+	};
+	static std::vector<std::string> full_flag_names = {
+		"help",
+		"root",
+		"exact",
+		"prefix",
+		"suffix",
+		"contains",
+		"recently_accessed",
+		"frequency_based"
+	};
+	const std::unordered_map<std::string, std::vector<std::pair<std::string, bool>>> valid_flags = {
+		// To be implemented later
+		// {
+		// 		"[none]", {
+		// 			{"help", false}, {"h", false}
+		// 		}
+		// 	},
+		// {
+		// 		"[query]", {
+		// 			// One time matching type override flags
+		// 			{"exact", false}, {"e", false},
+		// 			{"prefix", false}, {"p", false},
+		// 			{"suffix", false}, {"s", false},
+		// 			{"contains", false}, {"c", false},
+		// 			// One time promotion strategy override flags
+		// 			{"recently_accessed", false}, {"ra", false},
+		// 			{"frequency_based", false}, {"fb", false}
+		// 		}
+		// 	},
+		// Build/rebuild/refresh command flags
+	{"build", {{"root", true}}},
+	{"rebuild", {{"root", true}}},
+	{"refresh", {{"root", true}}}
+	};
+	std::pair<bool, Flag> build_flag(const std::vector<std::string>& flag_parts, const std::string& cmd);
+	std::tuple<bool, std::string, std::vector<std::string>, std::vector<Flag>> process_args(int argc, char* argv[]);
+	bool validate_flag(const Flag& flag);
+	std::string get_flag_value(const std::vector<Flag>& flags, const std::string& flag_name, const std::string& default_value = "");
 }
 
 #endif // HELPERS_H

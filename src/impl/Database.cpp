@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <sqlite_modern_cpp.h>
+#include <string>
 #include <unordered_set>
 
 Database::Database(const Config& config) : db(config.get_db_path()), config(config) {
@@ -11,17 +12,23 @@ Database::Database(const Config& config) : db(config.get_db_path()), config(conf
 	create_table();
 }
 
-void Database::build() {
+bool Database::build(const std::string& init_path) {
 	// Drop the table and recreate it
 	drop_table();
 	create_table();
 
 	// Collect directories and insert them into the database
-	auto rows = collect_directories();
+	auto rows = collect_directories(init_path);
+	if (rows.empty()) {
+		std::cerr << "No directories found to index from path: " << init_path << std::endl;
+		return false;
+	}
+
 	bulk_insert(rows);
+	return true;
 }
 
-void Database::refresh() {
+bool Database::refresh(const std::string& init_path) {
 	// Fetch all existing directories and associated data from the database
 	std::unordered_set<std::string> old_dirs;
 	select_all_paths([&old_dirs](std::string path) {
@@ -30,7 +37,11 @@ void Database::refresh() {
 	std::vector<std::tuple<std::string, std::string>> new_rows;
 
 	// Collect directories and perform a diff with the old directories
-	auto rows = collect_directories();
+	auto rows = collect_directories(init_path);
+	if (rows.empty()) {
+		std::cerr << "No directories found to index from path: " << init_path << std::endl;
+		return false;
+	}
 	for (const auto& [path, dir_name] : rows) {
 		if (old_dirs.find(path) == old_dirs.end())
 			new_rows.push_back({ path, dir_name });
@@ -41,6 +52,7 @@ void Database::refresh() {
 	// Insert new directories into the database and delete old ones
 	bulk_insert(new_rows);
 	delete_paths(std::vector<std::string>(old_dirs.begin(), old_dirs.end()));
+	return true;
 }
 
 std::vector<std::string> Database::query(const std::string& input) const {
@@ -98,10 +110,10 @@ void Database::access(const std::string& path) {
 }
 
 
-std::vector<std::tuple<std::string, std::string>> Database::collect_directories() {
+std::vector<std::tuple<std::string, std::string>> Database::collect_directories(const std::string& init_path) {
 	std::vector<std::tuple<std::string, std::string>> rows;
 	try {
-		std::filesystem::recursive_directory_iterator it(config.get_init_path(), std::filesystem::directory_options::skip_permission_denied);
+		std::filesystem::recursive_directory_iterator it(init_path, std::filesystem::directory_options::skip_permission_denied);
 		std::filesystem::recursive_directory_iterator end;
 		
 		while (it != end) {
@@ -124,7 +136,7 @@ std::vector<std::tuple<std::string, std::string>> Database::collect_directories(
 		}
 		
 	} catch (const std::filesystem::filesystem_error& e) {
-		std::cerr << "Error scanning filesystem: " << e.what() << std::endl;
+		// std::cerr << "Error scanning filesystem: " << e.what() << std::endl;
 	}
 
 	return rows;

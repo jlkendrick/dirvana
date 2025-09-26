@@ -6,7 +6,7 @@ SOURCE="../../build/dv-binary"
 # SOURCE="../scripts/_dv"
 
 # Set the destination path in /usr/local/bin.
-DEST="$HOME/.local/bin/"
+DEST="$HOME/.local/bin"
 # DEST="/Users/jameskendrick/.local/bin/_dv"
 
 echo "Installing new binary from $SOURCE to $DEST..."

@@ -11,8 +11,8 @@ public:
 
 	Database(const Config& config);
 	
-	void build();
-	void refresh();
+	bool build(const std::string& init_path);
+	bool refresh(const std::string& init_path);
 	std::vector<std::string> query(const std::string& input) const;
 	void access(const std::string& path);
 
@@ -54,7 +54,7 @@ private:
 	void bulk_insert(const std::vector<std::tuple<std::string, std::string>>& rows);
 	void delete_paths(const std::vector<std::string>& paths);
 
-	std::vector<std::tuple<std::string, std::string>> collect_directories();
+	std::vector<std::tuple<std::string, std::string>> collect_directories(const std::string& init_path);
 	bool should_exclude(const std::string& dirname, const std::string& path) const;
 	std::string get_query_pattern(const std::string& dir_name, const std::string& matching_type_override = "") const {
 		switch (matching_type_override.empty() ? config.get_matching_type() : TypeConversions::s_to_matching_type(matching_type_override)) {
@@ -75,7 +75,7 @@ private:
 		auto micros_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(duration_since_epoch);
 
 		return micros_since_epoch.count();
-	}
+	};
 };
 
 #endif // DATABASE_H
