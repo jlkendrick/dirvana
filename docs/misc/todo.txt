@@ -14,20 +14,21 @@
 	 - For Recently Accessed, store a sort of history in the JSON cache which will enumerate results and sort the results based on indices.
 	 - For Frequency Based, simply sort by access count. Will need alternative or modification to Cache.get_paths() because it extracts the 
 	 	 path from the Entry but the frequency count is a member of the Entry.
-7. (done) Not sure if this is currently implemented but if no match is found, just try to 'cd' into the passed dirname
+7. (done) Stop being stubborn and migrate to SQLMate.
+8. (done) Not sure if this is currently implemented but if no match is found, just try to 'cd' into the passed dirname
 	- This will allow 'dv' to replace part of 'cd'
-8. (done) Priotitize exact matches in the rankings for non-exact directory matches
+9. (done) Priotitize exact matches in the rankings for non-exact directory matches
 	- Ex. Calling 'dv util' should not come back with 'cd 'something/utils' over 'something/else/util' even if
 		'something/utils' ranks higher overall
 	- Maybe consider making this a configuration option in case this is not a universally desired behavior
-9. (?) If 'dv' is used with a directory name that is an immediate child of the current working directory, just 'cd' into it
+10. (done) Support argument to refresh that starts the recursive filesystem search from a specified directory
+	- This can, and should, support the native 'dv' autocomplete
+11. Now that 10 is done, we would like to update the init_path in the config file based on the root dir that was used during installation
+12. (?) If 'dv' is used with a directory name that is an immediate child of the current working directory, just 'cd' into it
 	- Ex. If we are in '/Code/Projects' and we call 'dv dirvana', then we should not even try to autocomplete and possibly jump
 		to a different directory. Instead, we assume that the user intention is to simply 'cd' into 'Code/Projects/dirvana'
 	- Not sure if we should do this one, maybe just rely on 'cd' for this
-10. Support argument to refresh that starts the recursive filesystem search from a specified directory
-	- This can, and should, support the native 'dv' autocomplete
-11. Refactor command handling to have completions be default, and commands requiring a flag (-f).
-12. Provide flags that can be provided in the command line to override the current configurations for only that command.
+13. Provide flags that can be provided in the command line to override the current configurations for only that command.
 
 --------------------------------------------------------- NOTES ------------------------------------------------------
 Arguments that can be passed to the program:

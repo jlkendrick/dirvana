@@ -25,6 +25,7 @@ namespace TypeConversions {
 
 namespace ArgParsing {
 	static std::unordered_map<std::string, std::string> flag_aliases = {
+		{"v", "version"},
 		{"h", "help"},
 		{"r", "root"},
 		{"e", "exact"},
@@ -35,6 +36,7 @@ namespace ArgParsing {
 		{"fb", "frequency_based"}
 	};
 	static std::vector<std::string> full_flag_names = {
+		"version",
 		"help",
 		"root",
 		"exact",
@@ -64,6 +66,7 @@ namespace ArgParsing {
 		// 		}
 		// 	},
 		// Build/rebuild/refresh command flags
+	{"", {{"version", false}}},
 	{"build", {{"root", true}}},
 	{"rebuild", {{"root", true}}},
 	{"refresh", {{"root", true}}}
@@ -72,6 +75,7 @@ namespace ArgParsing {
 	std::tuple<bool, std::string, std::vector<std::string>, std::vector<Flag>> process_args(int argc, char* argv[]);
 	bool validate_flag(const Flag& flag);
 	std::string get_flag_value(const std::vector<Flag>& flags, const std::string& flag_name, const std::string& default_value = "");
+	bool has_flag(const std::vector<Flag>& flags, const std::string& flag_name);
 }
 
 #endif // HELPERS_H

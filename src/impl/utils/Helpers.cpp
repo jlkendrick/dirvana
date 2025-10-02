@@ -237,3 +237,12 @@ std::string ArgParsing::get_flag_value(const std::vector<Flag>& flags, const std
 	}
 	return default_value;
 }
+
+bool ArgParsing::has_flag(const std::vector<Flag>& flags, const std::string& flag_name) {
+	for (const auto& flag : flags) {
+		if (flag.flag == flag_name) {
+			return true;
+		}
+	}
+	return false;
+}

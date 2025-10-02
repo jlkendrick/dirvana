@@ -1,4 +1,5 @@
 #include "Database.h"
+#include "Helpers.h"
 
 #include <fstream>
 
@@ -11,6 +12,8 @@ void write_log(const std::string& message) {
 	} else
 		std::cerr << "Unable to open log file" << std::endl;
 }
+
+static std::string version = "1.0.1";
 
 int main(int argc, char* argv[]) {
 	auto start = std::chrono::high_resolution_clock::now();
@@ -73,8 +76,14 @@ int main(int argc, char* argv[]) {
 	else if (call_type == "--enter") {
 		// If --enter was called with no arguments, that is the eqivalent of "cd"
 		// where we want to cd to home dir
-		if (commands.empty()) {
+		if (commands.empty() and flags.empty()) {
 			std::cout << "cd ~" << std::endl;
+			return 0;
+		}
+
+		// Check if a subcommand-less flag was passed (e.g. "--version" ("-v"))
+		if (ArgParsing::has_flag(flags, "version")) {
+			std::cout << "dirvana version " << version << std::endl;
 			return 0;
 		}
 
