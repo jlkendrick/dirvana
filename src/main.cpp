@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
 
 		// Check if a subcommand-less flag was passed (e.g. "--version" ("-v"))
 		if (ArgParsing::has_flag(flags, "version")) {
-			std::cout << "dirvana version " << version << std::endl;
+			std::cout << "echo Dirvana version " << version << std::endl;
 			return 0;
 		}
 
