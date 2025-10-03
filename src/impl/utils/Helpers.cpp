@@ -133,6 +133,11 @@ std::pair<bool, Flag> ArgParsing::build_flag(const std::vector<std::string>& fla
 			std::cerr << "Invalid flag '" << raw_flag << "'" << std::endl;
 			return {false, flag};
 		}
+
+		// Convert flags to their implied names
+		if (raw_flag_to_implied.find(raw_flag) != raw_flag_to_implied.end())
+			raw_flag = raw_flag_to_implied.at(raw_flag);
+
 		// Now we should have a flag starting with '--'
 		std::string trimmed_flag = raw_flag.substr(2);
 		if (std::find(full_flag_names.begin(), full_flag_names.end(), trimmed_flag) == full_flag_names.end()) {
@@ -162,6 +167,7 @@ std::tuple<bool, std::string, std::vector<std::string>, std::vector<Flag>> ArgPa
 
 		// Condition that indicates the start of a flag
 		if (arg.starts_with("-") and arg.size() > 1) {
+
 			// If we were already building a flag, save it
 			if (found_flag and !curr_flag_parts.empty()) {
 				std::string cmd = cmd_parts.empty() ? "" : cmd_parts.back(); // We associate the flag with the last command part
@@ -193,7 +199,6 @@ std::tuple<bool, std::string, std::vector<std::string>, std::vector<Flag>> ArgPa
 		else
 			// If the flag is invalid, we stop processing
 			return {false, "", {}, {}};
-		flags.push_back(flag);
 	}
 
 	return {true, call_type, cmd_parts, flags};

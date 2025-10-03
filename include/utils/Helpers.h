@@ -24,7 +24,7 @@ namespace TypeConversions {
 };
 
 namespace ArgParsing {
-	static std::unordered_map<std::string, std::string> flag_aliases = {
+	static const std::unordered_map<std::string, std::string> flag_aliases = {
 		{"v", "version"},
 		{"h", "help"},
 		{"r", "root"},
@@ -35,7 +35,7 @@ namespace ArgParsing {
 		{"ra", "recently_accessed"},
 		{"fb", "frequency_based"}
 	};
-	static std::vector<std::string> full_flag_names = {
+	static const std::vector<std::string> full_flag_names = {
 		"version",
 		"help",
 		"root",
@@ -44,32 +44,18 @@ namespace ArgParsing {
 		"suffix",
 		"contains",
 		"recently_accessed",
-		"frequency_based"
+		"frequency_based",
+		"[bypass]" // converted version of '--'
 	};
-	const std::unordered_map<std::string, std::vector<std::pair<std::string, bool>>> valid_flags = {
-		// To be implemented later
-		// {
-		// 		"[none]", {
-		// 			{"help", false}, {"h", false}
-		// 		}
-		// 	},
-		// {
-		// 		"[query]", {
-		// 			// One time matching type override flags
-		// 			{"exact", false}, {"e", false},
-		// 			{"prefix", false}, {"p", false},
-		// 			{"suffix", false}, {"s", false},
-		// 			{"contains", false}, {"c", false},
-		// 			// One time promotion strategy override flags
-		// 			{"recently_accessed", false}, {"ra", false},
-		// 			{"frequency_based", false}, {"fb", false}
-		// 		}
-		// 	},
+	static const std::unordered_map<std::string, std::vector<std::pair<std::string, bool>>> valid_flags = {
 		// Build/rebuild/refresh command flags
-	{"", {{"version", false}}},
+	{"", {{"version", false}, {"[bypass]", true}}},
 	{"build", {{"root", true}}},
 	{"rebuild", {{"root", true}}},
 	{"refresh", {{"root", true}}}
+	};
+	static const std::unordered_map<std::string, std::string> raw_flag_to_implied = {
+		{"--", "--[bypass]"}
 	};
 	std::pair<bool, Flag> build_flag(const std::vector<std::string>& flag_parts, const std::string& cmd);
 	std::tuple<bool, std::string, std::vector<std::string>, std::vector<Flag>> process_args(int argc, char* argv[]);

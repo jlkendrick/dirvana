@@ -93,24 +93,42 @@ int main(int argc, char* argv[]) {
 			std::string subcommand = commands[0];
 
 			// Flag parsing
-			std::string init_path = ArgParsing::get_flag_value(flags, "root", config.get_init_path());
 			if (subcommand == "build" or subcommand == "rebuild") {
+				// Relevant flags for build/rebuild:
+				std::string init_path = ArgParsing::get_flag_value(flags, "root", config.get_init_path());
+
 				if (db.build(init_path)) {
 					std::cout << "echo Build from " << init_path << " complete" << std::endl;
 					return 0;
 				} else
 					return 1;
 			} else if (subcommand == "refresh") {
+				// Relevant flags for refresh:
+				std::string init_path = ArgParsing::get_flag_value(flags, "root", config.get_init_path());
+
 				if (db.refresh(init_path)) {
 					std::cout << "echo Refresh from " << init_path << " complete" << std::endl;
 					return 0;
 				} else
 					return 1;
+			} else if (subcommand == "update") {
+				// Relevant flags for update:
+				std::string version = ArgParsing::get_flag_value(flags, "version", "latest");
+				if (version == "latest")
+					version = "1.0.1"; // Placeholder for now, will implement call to GitHub API later
+				// Curl command to download and run the installation script
+				std::string curl_command = std::format(
+					"curl -fsSL https://raw.githubusercontent.com/jameskendrick/dirvana/{}/docs/install.sh | bash",
+					version.c_str()
+				);
+				std::cout << "echo Updating Dirvana to version " << version << "..." << std::endl;
+				std::cout << "echo Running: " << curl_command << std::endl;
+				// std::cout << curl_command << std::endl;
 			}
 		}
 		
-		// Last argument is the path to complete
-		std::string path = commands.back();
+		// Last argument (or arg passed to --) is the path to complete
+		std::string path = !commands.empty() ? commands.back() : ArgParsing::get_flag_value(flags, "[bypass]");
 		// Check if path is full path or partial
 		if (path.find('/') == std::string::npos and path.find('~') == std::string::npos and path.find('/') == std::string::npos) {
 			// Partial path, need to complete
@@ -150,7 +168,6 @@ int main(int argc, char* argv[]) {
 		return 0;
 	}
 	
-	// Invalid flag
 	else {
 		std::cerr << "Invalid flag: " << call_type << std::endl;
 		std::cerr << "Usage: " << argv[0] << " [-tab|-enter] dv [command] [path]" << std::endl;
