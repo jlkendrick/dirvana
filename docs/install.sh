@@ -2,7 +2,9 @@
 
 set -e
 
-echo "Installing Dirvana..."
+VERSION="1.0.1"
+
+echo "Installing Dirvana version $VERSION"
 
 # Determine the platform
 OS=$(uname -s)
@@ -13,7 +15,7 @@ fi
 ARCH=$(uname -m)
 # Download the binary with backup handling
 echo "⏸️ Downloading Dirvana binary..."
-BINARY_URL="https://raw.githubusercontent.com/jlkendrick/dirvana/main/docs/bin/dv-binary"
+BINARY_URL="https://raw.githubusercontent.com/jlkendrick/dirvana/$VERSION/docs/bin/dv-binary"
 BINARY_PATH="$HOME/.local/bin"
 BINARY_FILE="$BINARY_PATH/dv-binary"
 
@@ -47,7 +49,7 @@ fi
 
 # Similar approach for tab completion script
 echo "⏸️ Installing tab completion..."
-TAB_URL="https://raw.githubusercontent.com/jlkendrick/dirvana/main/docs/scripts/_dv"
+TAB_URL="https://raw.githubusercontent.com/jlkendrick/dirvana/$VERSION/docs/scripts/_dv"
 TAB_PATH="$HOME/.zsh/completions"
 TAB_FILE="$TAB_PATH/_dv"
 
