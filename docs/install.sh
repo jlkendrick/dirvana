@@ -49,7 +49,7 @@ fi
 
 # Similar approach for tab completion script
 echo "⏸️ Installing tab completion..."
-TAB_URL="https://raw.githubusercontent.com/jlkendrick/dirvana/$VERSION/docs/scripts/_dv"
+TAB_URL="https://raw.githubusercontent.com/jlkendrick/dirvana/main/docs/scripts/_dv"
 TAB_PATH="$HOME/.zsh/completions"
 TAB_FILE="$TAB_PATH/_dv"
 

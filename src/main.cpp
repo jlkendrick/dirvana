@@ -111,8 +111,8 @@ int main(int argc, char* argv[]) {
 					return 0;
 				} else
 					return 1;
-			} else if (subcommand == "update") {
-				// Relevant flags for update:
+			} else if (subcommand == "install") {
+				// Relevant flags for install:
 				std::string version = ArgParsing::get_flag_value(flags, "version", "latest");
 				if (version == "latest")
 					version = "1.0.1"; // Placeholder for now, will implement call to GitHub API later
@@ -124,6 +124,7 @@ int main(int argc, char* argv[]) {
 				std::cout << "echo Updating Dirvana to version " << version << "..." << std::endl;
 				std::cout << "echo Running: " << curl_command << std::endl;
 				// std::cout << curl_command << std::endl;
+				return 1;
 			}
 		}
 		
