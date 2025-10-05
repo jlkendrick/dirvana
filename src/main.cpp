@@ -34,6 +34,9 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
+	// Print out the arguments for debugging
+	
+
 	auto [
 		valid,
 		call_type,
@@ -96,7 +99,7 @@ int main(int argc, char* argv[]) {
 			if (subcommand == "build" or subcommand == "rebuild") {
 				// Relevant flags for build/rebuild:
 				std::string init_path = ArgParsing::get_flag_value(flags, "root", config.get_init_path());
-
+				
 				if (db.build(init_path)) {
 					std::cout << "echo Build from " << init_path << " complete" << std::endl;
 					return 0;
