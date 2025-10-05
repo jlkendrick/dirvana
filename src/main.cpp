@@ -33,8 +33,6 @@ int main(int argc, char* argv[]) {
 		std::cerr << "Usage: " << argv[0] << " [--tab|--enter] dv [command] [path]" << std::endl;
 		return 1;
 	}
-
-	// Print out the arguments for debugging
 	
 
 	auto [
