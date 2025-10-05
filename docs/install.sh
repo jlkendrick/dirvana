@@ -2,7 +2,7 @@
 
 set -e
 
-VERSION="1.0.1"
+VERSION="main"
 
 echo "Installing Dirvana version $VERSION"
 
