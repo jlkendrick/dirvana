@@ -152,9 +152,8 @@ if ! grep -q "# Add ~/.local/bin to PATH" "$HOME/.zshrc"; then
 fi
 
 # Preemptively create the necessary directories
-mkdir -p "$HOME/.cache/dirvana"
-mkdir -p "$HOME/.config/dirvana"
-echo "✅ Created necessary directories for Dirvana"
+mkdir -p "$HOME/Library/Application Support/dirvana"
+echo "✅ Created necessary directory for Dirvana"
 
 # Run rebuild command to initialize the database
 echo "Please specify a root directory to initialize Dirvana from."

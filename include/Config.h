@@ -46,12 +46,12 @@ public:
 
 	
 private:
-	std::string config_path = std::getenv("HOME") + std::string("/.config/dirvana/config.json");
+	std::string config_path = std::getenv("HOME") + std::string("/Library/Application Support/dirvana/config.json");
 	json config;
 	json default_config = {
 		{"paths", {
 			{"init", std::getenv("HOME") + std::string("/")},
-			{"db", std::getenv("HOME") + std::string("/.cache/dirvana/dirvana.db")}
+			{"db", std::getenv("HOME") + std::string("/Library/Application Support/dirvana/dirvana.db")}
 		}},
 		{"matching", {
 			{"max_results", 10},
