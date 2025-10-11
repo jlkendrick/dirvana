@@ -42,6 +42,24 @@ bool Database::refresh(const std::string& init_path) {
 		std::cerr << "No directories found to index from path: " << init_path << std::endl;
 		return false;
 	}
+	
+	// Check if we collected significantly fewer directories than expected
+	// This could indicate a filesystem scanning failure
+	if (rows.size() < old_dirs.size() / 10) {
+		std::cerr << "Warning: Collected only " << rows.size() << " directories vs " << old_dirs.size() 
+		          << " in database. This might indicate a filesystem scanning issue. "
+		          << "Skipping directory deletion to prevent data loss." << std::endl;
+		
+		// Only add new directories, don't delete existing ones
+		for (const auto& [path, dir_name] : rows) {
+			if (old_dirs.find(path) == old_dirs.end())
+				new_rows.push_back({ path, dir_name });
+		}
+		bulk_insert(new_rows);
+		return true;
+	}
+	
+	// Normal refresh logic when we have a reasonable number of directories
 	for (const auto& [path, dir_name] : rows) {
 		if (old_dirs.find(path) == old_dirs.end())
 			new_rows.push_back({ path, dir_name });
@@ -135,9 +153,8 @@ std::vector<std::tuple<std::string, std::string>> Database::collect_directories(
 			++it;
 		}
 		
-	} catch (const std::filesystem::filesystem_error& e) {
-		// std::cerr << "Error scanning filesystem: " << e.what() << std::endl;
-	}
+	} catch (const std::filesystem::filesystem_error& e)
+		std::cerr << "Error scanning filesystem: " << e.what() << std::endl;
 
 	return rows;
 }
