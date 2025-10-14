@@ -153,8 +153,9 @@ std::vector<std::tuple<std::string, std::string>> Database::collect_directories(
 			++it;
 		}
 		
-	} catch (const std::filesystem::filesystem_error& e)
+	} catch (const std::filesystem::filesystem_error& e) {
 		std::cerr << "Error scanning filesystem: " << e.what() << std::endl;
+	}
 
 	return rows;
 }
