@@ -63,7 +63,7 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 		// If we are here, need to handle a shortcut or a path. We prioritize shortcuts over paths
 
 		// Check if the path is a shortcut by checking for the :{dv-shortcut} suffix
-		std::vector<std::string> matches = db.query(first_token);
+		std::vector<std::string> matches = db.query(first_token, true);
 		if (!matches.empty()) {
 			for (const auto& match : matches) {
 				// Check if the match is a shortcut. If so, execute the shortcut.
@@ -195,6 +195,8 @@ int Handler::Subcommands::handle_add(Handler& handler, std::vector<std::string>&
 	std::string command = commands[2];
 	// Add the pair to the database
 	handler.db.add_shortcut(shortcut, command);
+
+	std::cout << "echo Shortcut " << shortcut << " added for command " << command << std::endl;
 
 	return 0;
 }

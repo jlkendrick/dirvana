@@ -13,7 +13,7 @@ public:
 	
 	bool build(const std::string& init_path);
 	bool refresh(const std::string& init_path);
-	std::vector<std::string> query(const std::string& input) const;
+	std::vector<std::string> query(const std::string& input, bool exact_match_only = false) const;
 	void access(const std::string& path);
 
 	void add_shortcut(const std::string& shortcut, const std::string& command);

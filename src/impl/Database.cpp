@@ -90,7 +90,7 @@ bool Database::refresh(const std::string& init_path) {
 	return true;
 }
 
-std::vector<std::string> Database::query(const std::string& input) const {
+std::vector<std::string> Database::query(const std::string& input, bool exact_match_only) const {
 	std::string dir_name = get_dir_name(input);
 	std::vector<std::string> path_rankings;
 	std::unordered_set<std::string> path_set; // To avoid duplicates
@@ -109,7 +109,8 @@ std::vector<std::string> Database::query(const std::string& input) const {
 		};
 
 		// If the matching type is not exact, we need to do a second query to rank the non-exact matches after the exact ones
-		if (config.get_matching_type() != MatchingType::Exact) {
+		// We skip this if we are only looking for exact matches (like in the case of shortcut completions)
+		if (config.get_matching_type() != MatchingType::Exact and not exact_match_only) {
 			std::string non_exact_query = std::format("SELECT path FROM paths WHERE dir_name {} {} ORDER BY {} DESC LIMIT {};",
 				config.get_matching_type() == MatchingType::Exact ? "=" : "LIKE",
 				get_query_pattern(dir_name),
