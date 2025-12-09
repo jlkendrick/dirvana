@@ -131,6 +131,7 @@ std::vector<std::string> Database::query(const std::string& input) const {
 	return path_rankings;
 }
 
+
 void Database::access(const std::string& path) {
 	long long last_accessed = get_current_time();
 	try {
@@ -144,6 +145,20 @@ void Database::access(const std::string& path) {
 	}
 }
 
+
+void Database::add_shortcut(const std::string& shortcut, const std::string& command) {
+	long long last_accessed = get_current_time();
+	try {
+		// We treat the shortcut as a path and the command as the dir_name
+		// This enables us to use the same query logic to get completions for shortcuts
+		db << "INSERT INTO paths (path, dir_name, last_accessed) VALUES (?, ?, ?);"
+			<< command + ":{dv-shortcut}"
+			<< shortcut
+			<< last_accessed;
+	} catch (const sqlite::sqlite_exception& e) {
+		std::cerr << "Error adding shortcut to database: " << e.what() << std::endl;
+	}
+}
 
 std::vector<std::tuple<std::string, std::string>> Database::collect_directories(const std::string& init_path) {
 	std::vector<std::tuple<std::string, std::string>> rows;

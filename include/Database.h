@@ -16,6 +16,10 @@ public:
 	std::vector<std::string> query(const std::string& input) const;
 	void access(const std::string& path);
 
+	void add_shortcut(const std::string& shortcut, const std::string& command);
+	
+	const Config& get_config() const { return config; }
+
 private:
 	mutable sqlite::database db;
 	const Config& config;
