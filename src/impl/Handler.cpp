@@ -10,6 +10,7 @@ int Handler::handle_tab(int argc, char* argv[]) {
 	}
 	
 	// Last argument is the partial path
+
 	std::string partial = argv[argc - 1];
 	
 	// Get matches for the partial path
@@ -44,16 +45,19 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 			return 0;
 		}
 
-		// Get the first token
-		std::string first_token = commands[0];
-		if (first_token == "build" or first_token == "rebuild") {
-			return Subcommands::handle_re_build(*this, commands, flags);
-		} else if (first_token == "refresh") {
-			return Subcommands::handle_refresh(*this, commands, flags);
-		} else if (first_token == "install") {
-			return Subcommands::handle_install(*this, commands, flags);
-		} else if (first_token == "add") {
-			return Subcommands::handle_add(*this, commands, flags);
+		bool bypass = ArgParsing::has_flag(flags, "[bypass]");
+		std::string first_token = bypass ? ArgParsing::get_flag_value(flags, "[bypass]") : (not commands.empty() ? commands[0] : "");
+
+		// Check if a subcommand was passed
+		if (not bypass) {
+			if (first_token == "build" or first_token == "rebuild")
+				return Subcommands::handle_re_build(*this, commands, flags);
+			else if (first_token == "refresh")
+				return Subcommands::handle_refresh(*this, commands, flags);
+			else if (first_token == "install")
+				return Subcommands::handle_install(*this, commands, flags);
+			else if (first_token == "add")
+				return Subcommands::handle_add(*this, commands, flags);
 		}
 
 		// If we are here, need to handle a shortcut or a path. We prioritize shortcuts over paths
@@ -68,8 +72,25 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 
 					// Build the arguments for the shortcut
 					std::string args = "";
-					for (size_t i = 1; i < commands.size(); i++)
+					for (size_t i = 1; i < commands.size() - 1; i++)
 						args += " " + commands[i];
+
+					// Try to complete the last command as a path
+					std::string last_token = commands.size() > 1 ? commands.back() : "";
+					if (not last_token.empty() and 
+							last_token.find('/') == std::string::npos and 
+							last_token.find('~') == std::string::npos) {
+						
+						// Partial path, need to complete
+						std::vector<std::string> matches = db.query(last_token);
+						if (!matches.empty())
+							last_token = matches[0];
+					}
+
+					// Add the last token to the arguments
+					args += " " + last_token;
+
+					// Execute the shortcut
 					std::cout << command << args << std::endl;
 
 					// Update the database with the accessed path
