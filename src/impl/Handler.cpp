@@ -44,21 +44,45 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 			return 0;
 		}
 
-		// Check if a subcommand was passed
-		// We treat the first (non-flag) argument as a potential subcommand
-		std::string subcommand = commands[0];
-		if (subcommand == "build" or subcommand == "rebuild") {
+		// Get the first token
+		std::string first_token = commands[0];
+		if (first_token == "build" or first_token == "rebuild") {
 			return Subcommands::handle_re_build(*this, commands, flags);
-		} else if (subcommand == "refresh") {
+		} else if (first_token == "refresh") {
 			return Subcommands::handle_refresh(*this, commands, flags);
-		} else if (subcommand == "install") {
+		} else if (first_token == "install") {
 			return Subcommands::handle_install(*this, commands, flags);
-		} else if (subcommand == "add") {
+		} else if (first_token == "add") {
 			return Subcommands::handle_add(*this, commands, flags);
 		}
+
+		// If we are here, need to handle a shortcut or a path. We prioritize shortcuts over paths
+
+		// Check if the path is a shortcut by checking for the :{dv-shortcut} suffix
+		std::vector<std::string> matches = db.query(first_token);
+		if (!matches.empty()) {
+			for (const auto& match : matches) {
+				// Check if the match is a shortcut. If so, execute the shortcut.
+				if (match.find(":{dv-shortcut}") != std::string::npos) {
+					std::string command = match.substr(0, match.find(":{dv-shortcut}"));
+
+					// Build the arguments for the shortcut
+					std::string args = "";
+					for (size_t i = 1; i < commands.size(); i++)
+						args += " " + commands[i];
+					std::cout << command << args << std::endl;
+
+					// Update the database with the accessed path
+					db.access(match);
+
+					return 0;
+				}
+			}
+		}
+
+		// If we are here, we need to handle a path
 		
-		// Normal case: a path was passed
-		// Last argument (or arg passed to --) is the path to complete
+		// Last token (or arg passed to --) is the path to complete
 		std::string path = !commands.empty() ? commands.back() : ArgParsing::get_flag_value(flags, "[bypass]");
 		// Check if path is full path or partial
 		if (path.find('/') == std::string::npos and path.find('~') == std::string::npos and path.find('/') == std::string::npos) {
@@ -72,9 +96,12 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 			// Use the first match
 			path = matches[0];
 		}
+
+		// Update the database with the accessed path
+		db.access(path);
 		
 		// Now we need to assemble the final command to output.
-		// Arguments look something like: dv-binary [call_type] dv [...] [path]
+		// Arguments look something like: dv-binary --enter dv [...] [path]
 		std::string prefix = "";
 		if (commands.size() > 1) {
 			// Build the prefix from all arguments except the last one (and any "--" delimiters)
@@ -82,16 +109,6 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 				if (i > 0) prefix += " ";
 				prefix += commands[i] != "--" ? commands[i] : "";
 			}
-		}
-
-		// Update the database with the accessed path
-		db.access(path);
-
-		// Check if the path is a shortcut by checking for the :{dv-shortcut} suffix
-		if (path.find(":{dv-shortcut}") != std::string::npos) {
-			std::string shortcut = path.substr(0, path.find(":{dv-shortcut}"));
-			std::cout << shortcut << std::endl;
-			return 0;
 		}
 			
 		// Decide what to output based on presence of prefix args and matches
