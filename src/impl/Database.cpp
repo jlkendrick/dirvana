@@ -13,12 +13,29 @@ Database::Database(const Config& config) : db(config.get_db_path()), config(conf
 }
 
 bool Database::build(const std::string& init_path) {
-	// Drop the table and recreate it
-	drop_table();
-	create_table();
+	// Get count of existing directories before dropping the table
+	size_t old_dirs_count = count_existing_directories();
 
 	// Collect directories and insert them into the database
 	auto rows = collect_directories(init_path);
+	
+	// Check if we collected significantly fewer directories than expected
+	// This could indicate a filesystem scanning failure
+	// Only perform this check if we had an existing table with directories
+	if (old_dirs_count > 0 && rows.size() < old_dirs_count / 10) {
+		std::cerr << "Warning: Collected only " << rows.size() << " directories vs " << old_dirs_count 
+		          << " in database. This might indicate a filesystem scanning issue. "
+		          << "Skipping directory deletion to prevent data loss." << std::endl;
+		return false;
+		
+	} else {
+		// Drop the table and recreate it
+		drop_table();
+		create_table();
+		bulk_insert(rows);
+		return true;
+	}
+	
 	if (rows.empty()) {
 		std::cerr << "No directories found to index from path: " << init_path << std::endl;
 		return false;

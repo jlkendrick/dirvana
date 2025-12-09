@@ -51,6 +51,17 @@ private:
 			std::cerr << "Error selecting all paths: " << e.what() << std::endl;
 		}
 	};
+	
+	size_t count_existing_directories() {
+		try {
+			size_t count = 0;
+			db << "SELECT COUNT(*) FROM paths;" >> count;
+			return count;
+		} catch (const sqlite::sqlite_exception& e) {
+			// If table doesn't exist or any error occurs, return 0
+			return 0;
+		}
+	};
 	void bulk_insert(const std::vector<std::tuple<std::string, std::string>>& rows);
 	void delete_paths(const std::vector<std::string>& paths);
 

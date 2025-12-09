@@ -56,7 +56,7 @@ private:
 		{"matching", {
 			{"max_results", 10},
 			{"max_history_size", 100},
-			{"type", "exact"},
+			{"type", "contains"},
 			{"promotion_strategy", "recently_accessed"},
 			{"exclusions", {
 				{"prefix", {"."}},
