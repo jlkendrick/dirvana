@@ -20,6 +20,8 @@ public:
 	
 	const Config& get_config() const { return config; }
 
+	void operator<<(const std::string& sql) { db << sql; }
+
 private:
 	mutable sqlite::database db;
 	const Config& config;
