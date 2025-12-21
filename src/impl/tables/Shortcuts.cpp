@@ -1,4 +1,6 @@
 #include "tables/Shortcuts.h"
+#include "Database.h"
+
 
 void ShortcutsTable::create_table() const {
 	try {
@@ -22,7 +24,15 @@ void ShortcutsTable::create_table() const {
 	}
 }
 
+
 void ShortcutsTable::drop_table() const {
 	db << "DROP TABLE IF EXISTS shortcuts;";
 }
+
+
+std::vector<std::string> ShortcutsTable::query(const std::string& input) const {
+
+	return std::vector<std::string>();
+}
+
 

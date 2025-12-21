@@ -14,7 +14,7 @@ int Handler::handle_tab(int argc, char* argv[]) {
 	std::string partial = argv[argc - 1];
 	
 	// Get matches for the partial path
-	std::vector<std::string> matches = db.query(partial);
+	std::vector<std::string> matches = db.get_paths_table().query(partial);
 	
 	// Check if there are commands/inputs between "dv" and the partial path
 	std::string prefix = "";
@@ -63,7 +63,7 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 		// If we are here, need to handle a shortcut or a path. We prioritize shortcuts over paths
 
 		// Check if the path is a shortcut by checking for the :{dv-shortcut} suffix
-		std::vector<std::string> matches = db.query(first_token, true);
+		std::vector<std::string> matches = db.get_shortcuts_table().query(first_token);
 		if (!matches.empty()) {
 			for (const auto& match : matches) {
 				// Check if the match is a shortcut. If so, execute the shortcut.
@@ -82,7 +82,7 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 							last_token.find('~') == std::string::npos) {
 						
 						// Partial path, need to complete
-						std::vector<std::string> matches = db.query(last_token);
+						std::vector<std::string> matches = db.get_paths_table().query(last_token);
 						if (!matches.empty())
 							last_token = matches[0];
 					}
@@ -108,7 +108,7 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 		// Check if path is full path or partial
 		if (path.find('/') == std::string::npos and path.find('~') == std::string::npos and path.find('/') == std::string::npos) {
 			// Partial path, need to complete
-			std::vector<std::string> matches = db.query(path);
+			std::vector<std::string> matches = db.get_paths_table().query(path);
 			if (matches.empty()) {
 				// 'cd' to the path if no matches found for entries like "~", "..", etc.
 				std::cout << "cd " << path << std::endl;

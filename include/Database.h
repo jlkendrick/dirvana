@@ -23,6 +23,9 @@ public:
 
 	auto operator<<(const std::string& sql) { return db << sql; }
 
+	const PathsTable& get_paths_table() const { return paths_table; }
+	const ShortcutsTable& get_shortcuts_table() const { return shortcuts_table; }
+
 private:
 	mutable sqlite::database db;
 	const Config& config;

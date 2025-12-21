@@ -75,19 +75,19 @@ TEST_F(DatabaseTest, QueryDatabase) {
 	// Exact check
 	EXPECT_NO_THROW(db = make_unique<Database>(*config));
 	EXPECT_NO_THROW(db->build(config->get_init_path()));
-	unordered_check(config->get_init_path(), db->query("1"), {"/1", "/1/1", "/1/1/1"});
+	unordered_check(config->get_init_path(), db->get_paths_table().query("1"), {"/1", "/1/1", "/1/1/1"});
 
 	config->set_exclusion_rules({});
 
 	// Prefix check
 	config->set_matching_type("prefix");
 	EXPECT_NO_THROW(db->build(config->get_init_path()));
-	unordered_check(config->get_init_path(), db->query("."), {"/.1", "/custom_rule_check/.dot_check" });
+	unordered_check(config->get_init_path(), db->get_paths_table().query("."), {"/.1", "/custom_rule_check/.dot_check" });
 
 	// Suffix check
 	config->set_matching_type("suffix");
 	EXPECT_NO_THROW(db->build(config->get_init_path()));
-	unordered_check(config->get_init_path(), db->query("eck"), {
+	unordered_check(config->get_init_path(), db->get_paths_table().query("eck"), {
 		"/custom_rule_check",
 		"/custom_rule_check/.dot_check",
 		"/custom_rule_check/contains_check",
@@ -99,7 +99,7 @@ TEST_F(DatabaseTest, QueryDatabase) {
 	// Contains check
 	config->set_matching_type("contains");
 	EXPECT_NO_THROW(db->build(config->get_init_path()));
-	unordered_check(config->get_init_path(), db->query("fix"), {
+	unordered_check(config->get_init_path(), db->get_paths_table().query("fix"), {
 		"/custom_rule_check/prefix_check",
 		"/custom_rule_check/suffix_check"
 	});
@@ -114,11 +114,11 @@ TEST_F(DatabaseTest, AccessDatabase) {
 
 	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1/1"));
 	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1/1/1"));
-	ordered_check(config->get_init_path(), db->query("1"), {"/1/1/1", "/1/1", "/1"});
+	ordered_check(config->get_init_path(), db->get_paths_table().query("1"), {"/1/1/1", "/1/1", "/1"});
 
 	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1/1"));
-	ordered_check(config->get_init_path(), db->query("1"), {"/1/1", "/1/1/1", "/1"});
+	ordered_check(config->get_init_path(), db->get_paths_table().query("1"), {"/1/1", "/1/1/1", "/1"});
 
 	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1"));
-	ordered_check(config->get_init_path(), db->query("1"), {"/1", "/1/1", "/1/1/1"});
+	ordered_check(config->get_init_path(), db->get_paths_table().query("1"), {"/1", "/1/1", "/1/1/1"});
 }
