@@ -64,6 +64,7 @@ set(DIRVANA_SOURCES
 	src/impl/Config.cpp
 	src/impl/Database.cpp
 	src/impl/Handler.cpp
+	src/impl/tables/Table.cpp
 	src/impl/utils/Helpers.cpp
  	src/impl/utils/Types.cpp
 )

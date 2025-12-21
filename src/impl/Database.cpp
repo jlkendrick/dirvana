@@ -1,20 +1,17 @@
 #include "Database.h"
 #include "Helpers.h"
-#include "Types.h"
 
-#include <filesystem>
-#include <sqlite_modern_cpp.h>
-#include <string>
 #include <unordered_set>
 
-Database::Database(const Config& config) : db(config.get_db_path()), config(config) {
+Database::Database(const Config& config) : db(config.get_db_path()), config(config), paths_table(*this), shortcuts_table(*this) {
 	// Create the necessary table if it doesn't exist
-	create_table();
+	paths_table.create_table();
+	shortcuts_table.create_table();
 }
 
 bool Database::build(const std::string& init_path) {
 	// Get count of existing directories before dropping the table
-	size_t old_dirs_count = count_existing_directories();
+	size_t old_dirs_count = paths_table.count_existing_directories();
 
 	// Collect directories and insert them into the database
 	auto rows = collect_directories(init_path);
@@ -30,9 +27,9 @@ bool Database::build(const std::string& init_path) {
 		
 	} else {
 		// Drop the table and recreate it
-		drop_table();
-		create_table();
-		bulk_insert(rows);
+		paths_table.drop_table();
+		paths_table.create_table();
+		paths_table.bulk_insert(rows);
 		return true;
 	}
 	
@@ -41,14 +38,14 @@ bool Database::build(const std::string& init_path) {
 		return false;
 	}
 
-	bulk_insert(rows);
+	paths_table.bulk_insert(rows);
 	return true;
 }
 
 bool Database::refresh(const std::string& init_path) {
 	// Fetch all existing directories and associated data from the database
 	std::unordered_set<std::string> old_dirs;
-	select_all_paths([&old_dirs](std::string path) {
+	paths_table.select_all_paths([&old_dirs](std::string path) {
 		old_dirs.insert(path);
 	});
 	std::vector<std::tuple<std::string, std::string>> new_rows;
@@ -72,7 +69,7 @@ bool Database::refresh(const std::string& init_path) {
 			if (old_dirs.find(path) == old_dirs.end())
 				new_rows.push_back({ path, dir_name });
 		}
-		bulk_insert(new_rows);
+		paths_table.bulk_insert(new_rows);
 		return true;
 	}
 	
@@ -85,56 +82,14 @@ bool Database::refresh(const std::string& init_path) {
 	}
 
 	// Insert new directories into the database and delete old ones
-	bulk_insert(new_rows);
-	delete_paths(std::vector<std::string>(old_dirs.begin(), old_dirs.end()));
+	paths_table.bulk_insert(new_rows);
+	paths_table.delete_paths(std::vector<std::string>(old_dirs.begin(), old_dirs.end()));
 	return true;
-}
-
-std::vector<std::string> Database::query(const std::string& input, bool exact_match_only) const {
-	std::string dir_name = get_dir_name(input);
-	std::vector<std::string> path_rankings;
-	std::unordered_set<std::string> path_set; // To avoid duplicates
-	
-	try {
-		// First, regardless of the matching type, check for exact matches
-		std::string exact_query = std::format("SELECT path FROM paths WHERE dir_name {} {} ORDER BY {} DESC LIMIT {};",
-			"=",
-			get_query_pattern(dir_name, "exact"),
-			config.get_promotion_strategy() == PromotionStrategy::RECENTLY_ACCESSED ? "last_accessed" : "access_count",
-			config.get_max_results());
-		// On the first insert, we can just insert directly without checking for duplicates
-		db << exact_query >> [&](std::string path) {
-			path_rankings.push_back(path);
-			path_set.insert(path);
-		};
-
-		// If the matching type is not exact, we need to do a second query to rank the non-exact matches after the exact ones
-		// We skip this if we are only looking for exact matches (like in the case of shortcut completions)
-		if (config.get_matching_type() != MatchingType::Exact and not exact_match_only) {
-			std::string non_exact_query = std::format("SELECT path FROM paths WHERE dir_name {} {} ORDER BY {} DESC LIMIT {};",
-				config.get_matching_type() == MatchingType::Exact ? "=" : "LIKE",
-				get_query_pattern(dir_name),
-				config.get_promotion_strategy() == PromotionStrategy::RECENTLY_ACCESSED ? "last_accessed" : "access_count",
-				config.get_max_results());
-			// For non-exact matches, we need to check for duplicates
-			db << non_exact_query >> [&](std::string path) {
-				if (path_set.find(path) == path_set.end()) {
-					path_rankings.push_back(path);
-					path_set.insert(path);
-				}
-			};
-		}
-
-	} catch (const sqlite::sqlite_exception& e) {
-		std::cerr << "Error querying database: " << e.what() << std::endl;
-	}
-	
-	return path_rankings;
 }
 
 
 void Database::access(const std::string& path) {
-	long long last_accessed = get_current_time();
+	long long last_accessed = Time::now();
 	try {
 		
 		db << "UPDATE paths SET last_accessed = ?, access_count = access_count + 1 WHERE path = ?;"
@@ -148,7 +103,7 @@ void Database::access(const std::string& path) {
 
 
 void Database::add_shortcut(const std::string& shortcut, const std::string& command) {
-	long long last_accessed = get_current_time();
+	long long last_accessed = Time::now();
 	try {
 		// We treat the shortcut as a path and the command as the dir_name
 		// This enables us to use the same query logic to get completions for shortcuts
@@ -160,6 +115,7 @@ void Database::add_shortcut(const std::string& shortcut, const std::string& comm
 		std::cerr << "Error adding shortcut to database: " << e.what() << std::endl;
 	}
 }
+
 
 std::vector<std::tuple<std::string, std::string>> Database::collect_directories(const std::string& init_path) {
 	std::vector<std::tuple<std::string, std::string>> rows;
@@ -175,7 +131,7 @@ std::vector<std::tuple<std::string, std::string>> Database::collect_directories(
 
 			// If the entry is a directory and it's not in the exclude list, add it to the PathMap
 			if (std::filesystem::is_directory(entry)) {
-				if (not dir_name.empty() and not should_exclude(dir_name, entry.path().string()))
+				if (not dir_name.empty() and not paths_table.should_exclude(dir_name, entry.path().string()))
 					rows.push_back({entry.path().string(), dir_name});
 				
 				// Otherwise, don't add it to the PathMap and disable recursion into it's children
@@ -191,87 +147,4 @@ std::vector<std::tuple<std::string, std::string>> Database::collect_directories(
 	}
 
 	return rows;
-}
-
-bool Database::should_exclude(const std::string& dirname, const std::string& path) const {
-	// Check if the directory should be excluded based on the exclusion rules
-	std::vector<ExclusionRule> exclusion_rules = config.get_exclusion_rules();
-	for (const auto& rule : exclusion_rules) {
-		switch (rule.type) {
-		case ExclusionType::Exact:
-			if (dirname == rule.pattern or path == rule.pattern)
-				return true;
-				break;
-
-		case ExclusionType::Prefix:
-			if (dirname.size() >= rule.pattern.size() and
-				dirname.compare(0, rule.pattern.size(), rule.pattern) == 0)
-				return true;
-			break;
-			
-		case ExclusionType::Suffix:
-			if (dirname.size() >= rule.pattern.size() and
-				dirname.compare(dirname.size() - rule.pattern.size(), rule.pattern.size(), rule.pattern) == 0)
-				return true;
-			break;
-        
-		case ExclusionType::Contains:
-			if (dirname.find(rule.pattern) != std::string::npos)
-				return true;
-			break;
-				
-		}
-	}
-
-	return false;
-}
-
-void Database::bulk_insert(const std::vector<std::tuple<std::string, std::string>>& rows) {
-	if (rows.empty())
-		return;
-	
-	long long last_accessed = get_current_time();
-
-	try {
-		db << "BEGIN TRANSACTION;";
-		
-		
-		auto stmt = db << "INSERT INTO paths (path, dir_name, last_accessed) VALUES (?, ?, ?);";
-		for (const auto& [path, dir_name] : rows) {
-			stmt << path << dir_name << last_accessed;
-			stmt++;
-		}
-		
-		db << "COMMIT;";
-	} catch (const sqlite::sqlite_exception& e) {
-		db << "ROLLBACK;";
-		std::cerr << "Error inserting data into database: " << e.what() << std::endl;
-	}
-}
-
-void Database::delete_paths(const std::vector<std::string>& paths) {
-	if (paths.empty())
-		return;
-
-	try {
-		db << "BEGIN TRANSACTION;";
-		std::string sql = "DELETE FROM paths WHERE path IN (";
-		for (size_t i = 0; i < paths.size(); ++i) {
-			sql += "?";
-			if (i < paths.size() - 1)
-				sql += ", ";
-		}
-		sql += ");";
-		
-		auto stmt = db << sql;
-		for (const auto& path : paths) {
-			stmt << path;
-			stmt++;
-		}
-
-		db << "COMMIT;";
-	} catch (const sqlite::sqlite_exception& e) {
-		db << "ROLLBACK;";
-		std::cerr << "Error deleting data from database: " << e.what() << std::endl;
-	}
 }

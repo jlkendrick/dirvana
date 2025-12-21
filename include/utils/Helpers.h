@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <chrono>
 
 using json = nlohmann::json;
 
@@ -62,6 +63,16 @@ namespace ArgParsing {
 	bool validate_flag(const Flag& flag);
 	std::string get_flag_value(const std::vector<Flag>& flags, const std::string& flag_name, const std::string& default_value = "");
 	bool has_flag(const std::vector<Flag>& flags, const std::string& flag_name);
+}
+
+namespace Time {
+	inline long long now() {
+		auto now = std::chrono::system_clock::now();
+		auto duration_since_epoch = now.time_since_epoch();
+		auto micros_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(duration_since_epoch);
+
+		return micros_since_epoch.count();
+	};
 }
 
 #endif // HELPERS_H
