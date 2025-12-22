@@ -62,3 +62,13 @@ void ShortcutsTable::add_shortcut(const std::string& shortcut, const std::string
 		std::cerr << "Error adding shortcut to database: " << e.what() << std::endl;
 	}
 }
+
+
+void ShortcutsTable::delete_shortcut(const std::string& shortcut) {
+	try {
+		db << "DELETE FROM shortcuts WHERE shortcut = ?;"
+			<< shortcut;
+	} catch (const sqlite::sqlite_exception& e) {
+		std::cerr << "Error deleting shortcut from database: " << e.what() << std::endl;
+	}
+}

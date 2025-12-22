@@ -58,6 +58,8 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 				return Subcommands::handle_install(*this, commands, flags);
 			else if (first_token == "add")
 				return Subcommands::handle_add(*this, commands, flags);
+			else if (first_token == "delete")
+				return Subcommands::handle_delete(*this, commands, flags);
 		}
 
 		// If we are here, need to handle a shortcut or a path. We prioritize shortcuts over paths
@@ -196,4 +198,25 @@ int Handler::Subcommands::handle_add(Handler& handler, std::vector<std::string>&
 
 const std::string Handler::get_init_path() const {
 	return db.get_config().get_init_path();
+}
+
+
+int Handler::Subcommands::handle_delete(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags) {
+	// Relevant flags for delete:
+	// None for now
+
+	if (commands.size() != 2) {
+		std::cerr << "Usage dv delete [shortcut]" << std::endl;
+		return 1;
+	}
+
+	// Validate the arguments passed to delete
+	std::string shortcut = commands[1];
+
+	// Delete the shortcut from the database
+	handler.db.get_shortcuts_table().delete_shortcut(commands[1]);
+
+	std::cout << "echo Shortcut " << shortcut << " deleted" << std::endl;
+
+	return 0;
 }
