@@ -75,6 +75,51 @@ std::vector<std::string> PathsTable::query(const std::string& input) const {
 }
 
 
+void PathsTable::access(const std::string& path) {
+	long long time_now = Time::now();
+	try {
+		db << "UPDATE paths SET last_accessed = ?, access_count = access_count + 1 WHERE path = ?;"
+			<< time_now
+			<< path;
+	} catch (const sqlite::sqlite_exception& e) {
+		std::cerr << "Error updating database: " << e.what() << std::endl;
+	}
+}
+
+
+std::vector<std::tuple<std::string, std::string>> PathsTable::collect_directories(const std::string& init_path) {
+	std::vector<std::tuple<std::string, std::string>> rows;
+	try {
+		std::filesystem::recursive_directory_iterator it(init_path, std::filesystem::directory_options::skip_permission_denied);
+		std::filesystem::recursive_directory_iterator end;
+		
+		while (it != end) {
+			const auto& entry = *it;
+
+			// Get the deepest directory name
+			std::string dir_name = get_dir_name(entry.path().string());
+
+			// If the entry is a directory and it's not in the exclude list, add it to the PathMap
+			if (std::filesystem::is_directory(entry)) {
+				if (not dir_name.empty() and not should_exclude(dir_name, entry.path().string()))
+					rows.push_back({entry.path().string(), dir_name});
+				
+				// Otherwise, don't add it to the PathMap and disable recursion into it's children
+				else
+					it.disable_recursion_pending();
+			}
+
+			++it;
+		}
+		
+	} catch (const std::filesystem::filesystem_error& e) {
+		std::cerr << "Error scanning filesystem: " << e.what() << std::endl;
+	}
+
+	return rows;
+}
+
+
 size_t PathsTable::count_existing_directories() const {
 	try {
 		size_t count = 0;

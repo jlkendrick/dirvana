@@ -15,25 +15,19 @@ public:
 	
 	bool build(const std::string& init_path);
 	bool refresh(const std::string& init_path);
-	void access(const std::string& path);
 
-	void add_shortcut(const std::string& shortcut, const std::string& command);
-	
 	const Config& get_config() const { return config; }
+	PathsTable& get_paths_table() { return paths_table; }
+	ShortcutsTable& get_shortcuts_table() { return shortcuts_table; }
 
 	auto operator<<(const std::string& sql) { return db << sql; }
 
-	const PathsTable& get_paths_table() const { return paths_table; }
-	const ShortcutsTable& get_shortcuts_table() const { return shortcuts_table; }
-
 private:
 	mutable sqlite::database db;
+	
 	const Config& config;
-
 	PathsTable paths_table;
 	ShortcutsTable shortcuts_table;
-
-	std::vector<std::tuple<std::string, std::string>> collect_directories(const std::string& init_path);
 };
 
 #endif // DATABASE_H

@@ -1,7 +1,7 @@
 #include "Database.h"
-#include "Helpers.h"
 
 #include <unordered_set>
+
 
 Database::Database(const Config& config) : db(config.get_db_path()), config(config), paths_table(*this), shortcuts_table(*this) {
 	// Create the necessary table if it doesn't exist
@@ -9,12 +9,13 @@ Database::Database(const Config& config) : db(config.get_db_path()), config(conf
 	shortcuts_table.create_table();
 }
 
+
 bool Database::build(const std::string& init_path) {
 	// Get count of existing directories before dropping the table
 	size_t old_dirs_count = paths_table.count_existing_directories();
 
 	// Collect directories and insert them into the database
-	auto rows = collect_directories(init_path);
+	auto rows = paths_table.collect_directories(init_path);
 	
 	// Check if we collected significantly fewer directories than expected
 	// This could indicate a filesystem scanning failure
@@ -42,6 +43,7 @@ bool Database::build(const std::string& init_path) {
 	return true;
 }
 
+
 bool Database::refresh(const std::string& init_path) {
 	// Fetch all existing directories and associated data from the database
 	std::unordered_set<std::string> old_dirs;
@@ -51,7 +53,7 @@ bool Database::refresh(const std::string& init_path) {
 	std::vector<std::tuple<std::string, std::string>> new_rows;
 
 	// Collect directories and perform a diff with the old directories
-	auto rows = collect_directories(init_path);
+	auto rows = paths_table.collect_directories(init_path);
 	if (rows.empty()) {
 		std::cerr << "No directories found to index from path: " << init_path << std::endl;
 		return false;
@@ -85,66 +87,4 @@ bool Database::refresh(const std::string& init_path) {
 	paths_table.bulk_insert(new_rows);
 	paths_table.delete_paths(std::vector<std::string>(old_dirs.begin(), old_dirs.end()));
 	return true;
-}
-
-
-void Database::access(const std::string& path) {
-	long long last_accessed = Time::now();
-	try {
-		
-		db << "UPDATE paths SET last_accessed = ?, access_count = access_count + 1 WHERE path = ?;"
-			<< last_accessed
-			<< path;
-
-	} catch (const sqlite::sqlite_exception& e) {
-		std::cerr << "Error updating database: " << e.what() << std::endl;
-	}
-}
-
-
-void Database::add_shortcut(const std::string& shortcut, const std::string& command) {
-	long long last_accessed = Time::now();
-	try {
-		// We treat the shortcut as a path and the command as the dir_name
-		// This enables us to use the same query logic to get completions for shortcuts
-		db << "INSERT INTO paths (path, dir_name, last_accessed) VALUES (?, ?, ?);"
-			<< command + ":{dv-shortcut}"
-			<< shortcut
-			<< last_accessed;
-	} catch (const sqlite::sqlite_exception& e) {
-		std::cerr << "Error adding shortcut to database: " << e.what() << std::endl;
-	}
-}
-
-
-std::vector<std::tuple<std::string, std::string>> Database::collect_directories(const std::string& init_path) {
-	std::vector<std::tuple<std::string, std::string>> rows;
-	try {
-		std::filesystem::recursive_directory_iterator it(init_path, std::filesystem::directory_options::skip_permission_denied);
-		std::filesystem::recursive_directory_iterator end;
-		
-		while (it != end) {
-			const auto& entry = *it;
-
-			// Get the deepest directory name
-			std::string dir_name = get_dir_name(entry.path().string());
-
-			// If the entry is a directory and it's not in the exclude list, add it to the PathMap
-			if (std::filesystem::is_directory(entry)) {
-				if (not dir_name.empty() and not paths_table.should_exclude(dir_name, entry.path().string()))
-					rows.push_back({entry.path().string(), dir_name});
-				
-				// Otherwise, don't add it to the PathMap and disable recursion into it's children
-				else
-					it.disable_recursion_pending();
-			}
-
-			++it;
-		}
-		
-	} catch (const std::filesystem::filesystem_error& e) {
-		std::cerr << "Error scanning filesystem: " << e.what() << std::endl;
-	}
-
-	return rows;
 }

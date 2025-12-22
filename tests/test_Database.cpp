@@ -112,13 +112,13 @@ TEST_F(DatabaseTest, AccessDatabase) {
 	EXPECT_NO_THROW(db = make_unique<Database>(*config));
 	EXPECT_NO_THROW(db->build(config->get_init_path()));
 
-	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1/1"));
-	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1/1/1"));
+	EXPECT_NO_THROW(db->get_paths_table().access(config->get_init_path() + "/1/1"));
+	EXPECT_NO_THROW(db->get_paths_table().access(config->get_init_path() + "/1/1/1"));
 	ordered_check(config->get_init_path(), db->get_paths_table().query("1"), {"/1/1/1", "/1/1", "/1"});
 
-	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1/1"));
+	EXPECT_NO_THROW(db->get_paths_table().access(config->get_init_path() + "/1/1"));
 	ordered_check(config->get_init_path(), db->get_paths_table().query("1"), {"/1/1", "/1/1/1", "/1"});
 
-	EXPECT_NO_THROW(db->access(config->get_init_path() + "/1"));
+	EXPECT_NO_THROW(db->get_paths_table().access(config->get_init_path() + "/1"));
 	ordered_check(config->get_init_path(), db->get_paths_table().query("1"), {"/1", "/1/1", "/1/1/1"});
 }

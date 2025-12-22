@@ -62,43 +62,36 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 
 		// If we are here, need to handle a shortcut or a path. We prioritize shortcuts over paths
 
-		// Check if the path is a shortcut by checking for the :{dv-shortcut} suffix
 		std::vector<std::string> matches = db.get_shortcuts_table().query(first_token);
-		if (!matches.empty()) {
-			for (const auto& match : matches) {
-				// Check if the match is a shortcut. If so, execute the shortcut.
-				if (match.find(":{dv-shortcut}") != std::string::npos) {
-					std::string command = match.substr(0, match.find(":{dv-shortcut}"));
+		std::string command = matches.empty() ? "" : matches[0];
+		if (not command.empty()) {
+			// Build the arguments for the shortcut
+			std::string args = "";
+			for (size_t i = 1; i < commands.size() - 1; i++)
+				args += " " + commands[i];
 
-					// Build the arguments for the shortcut
-					std::string args = "";
-					for (size_t i = 1; i < commands.size() - 1; i++)
-						args += " " + commands[i];
-
-					// Try to complete the last command as a path
-					std::string last_token = commands.size() > 1 ? commands.back() : "";
-					if (not last_token.empty() and 
-							last_token.find('/') == std::string::npos and 
-							last_token.find('~') == std::string::npos) {
-						
-						// Partial path, need to complete
-						std::vector<std::string> matches = db.get_paths_table().query(last_token);
-						if (!matches.empty())
-							last_token = matches[0];
-					}
-
-					// Add the last token to the arguments
-					args += " " + last_token;
-
-					// Execute the shortcut
-					std::cout << command << args << std::endl;
-
-					// Update the database with the accessed path
-					db.access(match);
-
-					return 0;
-				}
+			// Try to complete the last command as a path
+			std::string last_token = commands.size() > 1 ? commands.back() : "";
+			if (not last_token.empty() and 
+					last_token.find('/') == std::string::npos and 
+					last_token.find('~') == std::string::npos) {
+				
+				// Partial path, need to complete
+				std::vector<std::string> matches = db.get_paths_table().query(last_token);
+				if (!matches.empty())
+					last_token = matches[0];
 			}
+
+			// Add the last token to the arguments
+			args += " " + last_token;
+
+			// Execute the shortcut
+			std::cout << command << args << std::endl;
+
+			// Update the database with the accessed path
+			db.get_shortcuts_table().access(command);
+
+			return 0;
 		}
 
 		// If we are here, we need to handle a path
@@ -119,7 +112,7 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 		}
 
 		// Update the database with the accessed path
-		db.access(path);
+		db.get_paths_table().access(path);
 		
 		// Now we need to assemble the final command to output.
 		// Arguments look something like: dv-binary --enter dv [...] [path]
@@ -194,7 +187,7 @@ int Handler::Subcommands::handle_add(Handler& handler, std::vector<std::string>&
 	std::string shortcut = commands[1];
 	std::string command = commands[2];
 	// Add the pair to the database
-	handler.db.add_shortcut(shortcut, command);
+	handler.db.get_shortcuts_table().add_shortcut(shortcut, command);
 
 	std::cout << "echo Shortcut " << shortcut << " added for command " << command << std::endl;
 

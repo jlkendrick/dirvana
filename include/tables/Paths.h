@@ -10,6 +10,9 @@ public:
 		void create_table() const override;
 		void drop_table() const override;
 		std::vector<std::string> query(const std::string& input) const override;
+		void access(const std::string& input) override;
+
+		std::vector<std::tuple<std::string, std::string>> collect_directories(const std::string& init_path);
 
 		size_t count_existing_directories() const;
 		void bulk_insert(const std::vector<std::tuple<std::string, std::string>>& rows);
