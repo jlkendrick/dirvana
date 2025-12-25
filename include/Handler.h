@@ -17,6 +17,9 @@ public:
 		static int handle_install(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
 		static int handle_add(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
 		static int handle_delete(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
+		static int handle_list(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
+		static int handle_show(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
+		static int handle_update(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
 	};
 
 	

@@ -72,3 +72,31 @@ void ShortcutsTable::delete_shortcut(const std::string& shortcut) {
 		std::cerr << "Error deleting shortcut from database: " << e.what() << std::endl;
 	}
 }
+
+
+std::vector<std::string> ShortcutsTable::select_all_shortcuts() const {
+	std::vector<std::string> shortcuts;
+	try {
+		db << "SELECT shortcut FROM shortcuts;" >> [&](std::string shortcut) {
+			shortcuts.push_back(shortcut);
+		};
+	} catch (const sqlite::sqlite_exception& e) {
+		std::cerr << "Error listing shortcuts from database: " << e.what() << std::endl;
+	}
+	return shortcuts;
+}
+
+
+std::string ShortcutsTable::select_shortcut_command(const std::string& shortcut) const {
+	std::string command = "";
+	try {
+		db << "SELECT command FROM shortcuts WHERE shortcut = ? LIMIT 1;"
+			<< shortcut >> [&](std::string cmd) {
+			command = cmd;
+		};
+	} catch (const sqlite::sqlite_exception& e) {
+		std::cerr << "Error selecting shortcut command from database: " << e.what() << std::endl;
+	}
+
+	return command;
+}

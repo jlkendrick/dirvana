@@ -60,6 +60,12 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 				return Subcommands::handle_add(*this, commands, flags);
 			else if (first_token == "delete")
 				return Subcommands::handle_delete(*this, commands, flags);
+			else if (first_token == "list")
+				return Subcommands::handle_list(*this, commands, flags);
+			else if (first_token == "show")
+				return Subcommands::handle_show(*this, commands, flags);
+			else if (first_token == "update")
+				return Subcommands::handle_update(*this, commands, flags);
 		}
 
 		// If we are here, need to handle a shortcut or a path. We prioritize shortcuts over paths
@@ -181,13 +187,17 @@ int Handler::Subcommands::handle_add(Handler& handler, std::vector<std::string>&
 	// None for now
 
 	// Validate the arguments passed to add
-	if (commands.size() < 3 or commands.size() > 4) {
+	if (commands.size() < 3) {
 		std::cerr << "Usage dv add [shortcut] [command]" << std::endl;
 		return 1;
 	}
 
 	std::string shortcut = commands[1];
-	std::string command = commands[2];
+	std::string command = "";
+	for (size_t i = 2; i < commands.size(); i++) {
+		if (i > 2) command += " ";
+		command += commands[i];
+	}
 	// Add the pair to the database
 	handler.db.get_shortcuts_table().add_shortcut(shortcut, command);
 
@@ -220,3 +230,36 @@ int Handler::Subcommands::handle_delete(Handler& handler, std::vector<std::strin
 
 	return 0;
 }
+
+
+int Handler::Subcommands::handle_list(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags) {
+	// Relevant flags for list:
+	// None for now
+
+	// List all shortcuts in the database
+	std::vector<std::string> shortcuts = handler.db.get_shortcuts_table().select_all_shortcuts();
+	for (const auto& shortcut : shortcuts)
+		std::cout << shortcut << std::endl;
+
+	return 0;
+}
+
+
+int Handler::Subcommands::handle_show(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags) {
+	// Relevant flags for show:
+	std::string shortcut = commands[1];
+
+	// Show the shortcut from the database
+	std::string command = handler.db.get_shortcuts_table().select_shortcut_command(shortcut);
+	if (not command.empty())
+		std::cout << "echo Shortcut " << shortcut << " command: " << command << std::endl;
+	else {
+		std::cerr << "Shortcut " << shortcut << " not found" << std::endl;
+		return 1;
+	}
+
+	return 0;
+}
+
+
+int Handler::Subcommands::handle_update(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags) {
