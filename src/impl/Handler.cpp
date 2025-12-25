@@ -191,15 +191,16 @@ int Handler::Subcommands::handle_add(Handler& handler, std::vector<std::string>&
 	}
 
 	std::string shortcut = commands[1];
-	std::string command = "";
-	for (size_t i = 2; i < commands.size(); i++) {
-		if (i > 2) command += " ";
-		command += commands[i];
-	}
+	std::string command = commands[2];
+	// std::string command = "";
+	// for (size_t i = 2; i < commands.size(); i++) {
+	// 	if (i > 2) command += " ";
+	// 	command += commands[i];
+	// }
 	// Add the pair to the database
 	handler.db.get_shortcuts_table().add_shortcut(shortcut, command);
 
-	std::cout << "echo Shortcut " << shortcut << " added for command " << command << std::endl;
+	std::cout << "echo Shortcut \"" << shortcut << "\" added for command \"" << command << "\"" << std::endl;
 
 	return 0;
 }
@@ -236,8 +237,10 @@ int Handler::Subcommands::handle_list(Handler& handler, std::vector<std::string>
 
 	// List all shortcuts in the database
 	std::vector<std::string> shortcuts = handler.db.get_shortcuts_table().select_all_shortcuts();
+	std::string output = "Shortcuts:";
 	for (const auto& shortcut : shortcuts)
-		std::cout << shortcut << std::endl;
+		output += "\n" + shortcut;
+	std::cout << "echo \"" << output << "\"" << std::endl;
 
 	return 0;
 }
@@ -250,7 +253,7 @@ int Handler::Subcommands::handle_show(Handler& handler, std::vector<std::string>
 	// Show the shortcut from the database
 	std::string command = handler.db.get_shortcuts_table().select_shortcut_command(shortcut);
 	if (not command.empty())
-		std::cout << "echo Shortcut: " << shortcut << "| Command: \"" << command << "\"" << std::endl;
+		std::cout << "echo \"Shortcut: " << shortcut << " | Command: " << command << "\"" << std::endl;
 	else {
 		std::cerr << "Shortcut " << shortcut << " not found" << std::endl;
 		return 1;
