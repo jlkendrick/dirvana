@@ -64,8 +64,6 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 				return Subcommands::handle_list(*this, commands, flags);
 			else if (first_token == "show")
 				return Subcommands::handle_show(*this, commands, flags);
-			else if (first_token == "update")
-				return Subcommands::handle_update(*this, commands, flags);
 		}
 
 		// If we are here, need to handle a shortcut or a path. We prioritize shortcuts over paths
@@ -252,7 +250,7 @@ int Handler::Subcommands::handle_show(Handler& handler, std::vector<std::string>
 	// Show the shortcut from the database
 	std::string command = handler.db.get_shortcuts_table().select_shortcut_command(shortcut);
 	if (not command.empty())
-		std::cout << "echo Shortcut " << shortcut << " command: " << command << std::endl;
+		std::cout << "echo Shortcut: " << shortcut << "| Command: \"" << command << "\"" << std::endl;
 	else {
 		std::cerr << "Shortcut " << shortcut << " not found" << std::endl;
 		return 1;
@@ -260,6 +258,3 @@ int Handler::Subcommands::handle_show(Handler& handler, std::vector<std::string>
 
 	return 0;
 }
-
-
-int Handler::Subcommands::handle_update(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags) {

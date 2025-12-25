@@ -16,9 +16,6 @@ public:
 		void delete_shortcut(const std::string& shortcut);
 		std::vector<std::string> select_all_shortcuts() const;
 		std::string select_shortcut_command(const std::string& shortcut) const;
-		void update_shortcut(const std::string& shortcut, const std::string& command);
-		
-		void select_shortcut_command(const std::string& shortcut, std::function<void(std::string)> callback) const;
 };
 
 #endif // SHORTCUTS_TABLE_H
