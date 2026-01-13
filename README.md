@@ -1,61 +1,92 @@
 # Dirvana
-**An intelligent directory navigation and command augmentation tool built for Zsh.**  
 
-Dirvana (`dv`) is designed to streamline working with directories in the terminal by providing autocompletion for directory paths. By default, `dv` wraps the `cd` command but can also provide completions when prefixed before another directory command (e.g., `ls`, `rm`, `mv`, etc.), allowing for quick navigation and command execution. The quick-nav feature instantly executes the current command with the current best match. See [Usage](#usage) for more details.
+**An intelligent directory navigation and command augmentation tool for Zsh**
+
+Dirvana (`dv`) streamlines terminal workflow by providing smart directory navigation with fuzzy matching, intelligent autocompletion, and customizable shortcuts. Navigate to deeply nested directories instantly, execute commands with path completion, and create shortcuts for your most-used commands.
+
+## ✨ Key Features
+
+- **🚀 Smart Navigation** - Jump to any directory with partial matching (exact, prefix, suffix, or contains)
+- **⚡ Quick-Nav** - Instantly navigate to the best match by pressing Enter
+- **🎯 Tab Completion** - Interactive menu-based path completion integrated with Zsh
+- **🔗 Custom Shortcuts** - Create command aliases that work with path completion
+- **🧠 Learning Algorithm** - Adapts to your usage patterns with frequency-based and recency-based ranking
+- **⚙️ Highly Configurable** - Customize matching behavior, exclusions, and result limits
+- **💾 Persistent History** - SQLite-backed database remembers your navigation patterns
+- **🔄 Auto-Refresh** - Keeps your directory database up-to-date automatically
 
 ---
 
-## Installation
+## 📦 Installation
 
-### Automatic Installation (recommended)
-To install Dirvana, run the following command in your terminal:
+### Automatic Installation (Recommended)
+
+Install Dirvana with a single command:
 
 ```sh
 curl -fsSL https://jlkendrick.github.io/dirvana/docs/install.sh | bash
 ```
 
-<center>---- or ----</center>
+The installer will:
+- Download the latest binary to `~/.local/bin`
+- Set up Zsh completion scripts
+- Configure your `.zshrc` automatically
+- Initialize the directory database
 
-\
-If you prefer to install Dirvana manually, follow these steps:
+**Note:** Currently supports macOS only. Linux support coming soon.
+
+---
+
 ### Manual Installation
-#### **1️⃣ Install the Binary**
-Dirvana requires its compiled binary (`dv-binary`, which can be found in the `build/` directory of this repo). Download it or build the project and move it to a directory in your `PATH`, such as `/usr/local/bin`:
+
+If you prefer manual installation or need more control:
+
+#### 1️⃣ Download the Binary
+
+Download or build the `dv-binary` executable and move it to a directory in your `PATH`:
 
 ```sh
-# Example: Move to /usr/local/bin (adjust if needed)
-sudo mv dv-binary /usr/local/bin
-chmod +x /usr/local/bin/dv-binary
-# or, use the script provided at 'scripts/move_binary.sh' (make sure to adjust the path if needed)
-source scripts/move_binary.sh
+# Download from the repository
+curl -fsSL -o ~/.local/bin/dv-binary https://raw.githubusercontent.com/jlkendrick/dirvana/main/docs/bin/dv-binary
+
+# Make it executable
+chmod +x ~/.local/bin/dv-binary
+
+# Ensure ~/.local/bin is in your PATH
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-#### **2️⃣ Copy the Zsh Completion Script**
-Dirvana also requires a Zsh completion script (`_dv` which can be found in the `scripts/` directory of this repo) to enable autocompletion. To enable it, copy the script to your Zsh completion directory:
+#### 2️⃣ Install Zsh Completion Script
+
+Create the completion directory and download the completion script:
 
 ```sh
-# Example: Copy to ~/.zsh/completions (adjust if needed)
+# Create completions directory
 mkdir -p ~/.zsh/completions
-cp _dv ~/.zsh/completions
+
+# Download completion script
+curl -fsSL -o ~/.zsh/completions/_dv https://raw.githubusercontent.com/jlkendrick/dirvana/main/docs/scripts/_dv
 ```
 
-or, manually copy the following function into the file you created (~/.zsh/completions/_dv)
+Or manually create `~/.zsh/completions/_dv` with the following content:
 
 ```sh
 #compdef dv
+
 _dv() {
   local completions
-  completions=("${(@f)$(dv-binary -tab "${words[@]}")}")
-  
-  compadd -U -V 'Available Options' -- "${completions[@]}"
+  completions=("${(@f)$(dv-binary --tab "${words[@]}")}")
+
+  compadd -Q -U -V 'Available Options' -- "${completions[@]}"
 }
 ```
 
-#### **3️⃣ Enable the Completion Script**
-Add the completion script to your Zsh configuration file (e.g., `~/.zshrc`) along with the following configuration options:
+#### 3️⃣ Configure Zsh
+
+Add the following to your `~/.zshrc`:
 
 ```sh
-# Use the path where you copied the completion script
+# Dirvana Zsh completion configuration
 fpath=(~/.zsh/completions $fpath)
 
 zstyle ':completion:*' list-grouped yes
@@ -65,16 +96,12 @@ zstyle ':completion:*' matcher-list '' 'r:|=*'
 setopt menucomplete
 setopt autolist
 
-autoload -Uz compinit && compinit
-```
+autoload -Uz compinit && compinit -u
 
-#### **4️⃣ Add the Command Handler**
-Add the following function to your Zsh configuration file (e.g., `~/.zshrc`):
-
-```sh
+# Dirvana command handler
 dv() {
   local cmd
-  cmd=$(dv-binary -enter dv "$@")
+  cmd=$(dv-binary --enter dv "$@")
 
   if [[ -n "$cmd" ]]; then
     eval "$cmd"
@@ -83,87 +110,346 @@ dv() {
   fi
 }
 
-dv-binary -enter dv refresh &> /dev/null & disown
+# Auto-refresh database on terminal start
+dv-binary --enter dv refresh &> /dev/null & disown
 ```
-Note: to see a sample Zsh configuration file, refer to the `scripts/sample.zshrc` file in this repo.
 
-#### **5️⃣ Reload Zsh Configuration**
-Reload your Zsh configuration to apply the changes:
+#### 4️⃣ Initialize Database
+
+Reload your shell configuration and build the initial database:
 
 ```sh
 source ~/.zshrc
+dv build --root ~
 ```
+
 ---
 
-## Usage
+## 🚀 Usage
 
-You now have access to the `dv` command, here are some examples of how to use it:
+### Basic Navigation
 
-Note: The examples below show results assuming the matching type is set to `exact`, but you can change it to the options seen in the [Configuration](#configuration) section.
+Navigate to directories using partial path matching:
+
 ```sh
-# --------- Navigating to a directory ---------
-dv project + 'Tab' = dv path/to/project # Autocompletes to top match and displays a menu of other matches. Consecutive 'Tab' presses cycle through matches.
-# After getting the desired directory, press 'Enter' to navigate to it.
-dv another/path/to/project + 'Enter' = # Navigates to 'another/path/to/project' (executes 'cd another/path/to/project').
-#            -- or (quick-nav) --
-dv project + 'Enter' = # Finds the first match and navigates to it (in this case will 'cd' into 'path/to/project').
+# Tab for completion menu
+dv project<Tab>          # Shows all matches for "project"
+dv path/to/project       # Navigate to specific path
+dv project<Enter>        # Quick-nav to best match
 
-# ----------- Running a command ---------
-# You can also run commands with 'dv' (e.g., 'ls', 'rm', 'mv', etc.)
-dv code project + 'Tab' = dv code path/to/project # Autocompletes to top match and displays a menu of other matches. Consecutive 'Tab' presses cycle through matches.
-# After getting the desired directory, press 'Enter' to run the command.
-dv code another/path/to/project + 'Enter' = # Runs 'code path/to/project' (opens the directory in VSCode).
-#            -- or (quick-nav) --
-dv code project + 'Enter' = # Finds the first match and runs the command on it (in this case will open up 'path/to/project' in VSCode).
+# Navigate with partial matches
+dv docs<Enter>           # Jumps to first match containing "docs"
+dv proj<Enter>           # Jumps to first match containing "proj"
 
-# Also try chaining commands:
-dv cp -r to_copy + 'Tab' = dv cp -r path/to/dir/to_copy # Use this as an intermediate step to then do
-dv cp -r path/to/dir/to_copy target_dir + 'Tab' = dv cp -r path/to/dir/to_copy path/to/target_dir # This can then be run with 'Enter' to copy the directory.
-
-# --------- Other utility commands ---------
-# If you wish, you can rebuild the database from scratch with 'dv rebuild', however, this will reset all your previous history.
-dv rebuild + 'Enter' = # Rebuilds the database
-
-# To refresh the database to account for new/deleted directories, use 'dv refresh'. This will not reset your history.
-dv refresh + 'Enter' = # Refreshes the database
-
-# If needed, you can also bypass commands by using '--'. Below is one example but you can use it with any command.
-dv -- rebuild + 'Enter' = # Will try to cd into 'rebuild' (if it exists) or find the first match and run the command on it (in this case will 'cd' into 'rebuild').
+# No arguments returns to home
+dv<Enter>                # cd ~
 ```
 
-Dirvana will remember the directories you visit and use this information to provide better autocompletion suggestions in the case of similarly named directories.
+### Command Execution
+
+Prefix any command with `dv` to get path completion:
+
+```sh
+# Open directory in VS Code
+dv code project<Tab>     # Autocomplete project path
+dv code project<Enter>   # Quick-nav and open
+
+# List directory contents
+dv ls documents<Enter>   # ls /path/to/documents
+
+# Copy directories
+dv cp -r source<Tab>     # Autocomplete source
+dv cp -r /path/to/source dest<Tab>  # Then autocomplete destination
+```
+
+### Shortcuts System
+
+Create custom shortcuts that integrate with path completion:
+
+#### Add a Shortcut
+
+```sh
+dv add <shortcut> <command>
+
+# Examples
+dv add code "code"       # Open in VS Code
+dv add idea "idea"       # Open in IntelliJ IDEA
+dv add term "open -a Terminal"  # Open in new Terminal window
+```
+
+#### Use a Shortcut
+
+Shortcuts work with path completion:
+
+```sh
+dv code project<Enter>   # Expands to: code /path/to/project
+dv idea backend<Enter>   # Expands to: idea /path/to/backend
+dv term logs<Tab>        # Autocomplete then open in new terminal
+```
+
+#### List All Shortcuts
+
+```sh
+dv list
+# Output:
+# Shortcuts:
+# code | code
+# idea | idea
+# term | open -a Terminal
+```
+
+#### Show Specific Shortcut
+
+```sh
+dv show code
+# Output: Shortcut: code | Command: code
+```
+
+#### Delete a Shortcut
+
+```sh
+dv delete code
+# Output: Shortcut code deleted
+```
+
+### Database Management
+
+#### Build Database
+
+Scans directories and creates a fresh database (resets history):
+
+```sh
+dv build                 # Build from configured root
+dv build --root ~/Code   # Build from specific directory
+```
+
+#### Refresh Database
+
+Updates the database with new/deleted directories (preserves history):
+
+```sh
+dv refresh               # Refresh from configured root
+dv refresh --root ~/Code # Refresh from specific directory
+```
+
+**Note:** A refresh runs automatically when you start a new terminal session.
+
+#### Update Dirvana
+
+Install the latest version:
+
+```sh
+dv install               # Install latest version
+```
+
+### Utility Features
+
+#### Check Version
+
+```sh
+dv --version
+dv -v
+# Output: Dirvana version 1.0.1
+```
+
+#### Bypass Dirvana Commands
+
+Use `--` to bypass Dirvana's command interpretation:
+
+```sh
+dv -- build              # Navigate to a directory named "build"
+dv -- refresh            # Navigate to a directory named "refresh"
+```
 
 ---
-## Configuration
-Dirvana can be configured to suit your needs through the configuration JSON file. The configuration file is located at `~/.config/dirvana/config.json`. Here are the available options:
 
-```ts
+## ⚙️ Configuration
+
+Dirvana's configuration file is located at:
+- **macOS:** `~/Library/Application Support/dirvana/config.json`
+
+### Configuration Options
+
+```json
 {
   "paths": {
-    "init": "/some/path", // Dirvana will have knowledge of all the directories that branch off of this path. 
-                          // Keep in mind that this path will be used to build the database, so it should be a 
-                          // directory that contains all the directories you want to track, but not too many to 
-                          // avoid performance issues.
+    "init": "/Users/you",
+    "db": "/Users/you/Library/Application Support/dirvana/dirvana.db"
   },
   "matching": {
-    "max_results": 10, // The maximum number of results to display when using the 'Tab' key for autocompletion.
-    "promotion_strategy": "strategy_name", // Controls how Dirvana adjusts the order of the results based on your 
-                                           // usage patterns. Available strategies include:
-                                           // 1. "recently_accessed" - Promotes the directory you most recently 
-                                           // accessed to the top of the list.
-                                           // 2. "frequency_based" - Sorts the results based on how frequently you
-                                           // have accessed each directory.
-    "type": "type_name", // Controls how Dirvana matches the results. Available types include:
-                         // 1. "exact" - Only matches directories whose names exactly match the search term.
-                         // 2. "prefix" - Matches directories whose names start with the search term.
-                         // 3. "suffix" - Matches directories whose names end with the search term.
-                         // 4. "contains" - Matches directories whose names contain the search term (substring matching).
-    "exclusions": { // Lists of directories to exclude from the database along with the patterns to match them.
-                    // will not track these directories or their subdirectories.
-      "exact": ["/path/to/exclude1", "/path/to/exclude2"], // Will exclude these exact directories and their subdirectories.
-      "prefix": ["/path/to/prefix_exclude1", "/path/to/prefix_exclude2"], // Will exclude direcotories that start with these prefixes and their subdirectories.
-      "suffix": ["/path/to/suffix_exclude1", "/path/to/suffix_exclude2"], // Will exclude directories that end with these suffixes and their subdirectories.
-      "contains": ["/path/to/contains_exclude1", "/path/to/contains_exclude2"] // Will exclude directories that contain these substrings and their subdirectories.
+    "max_results": 10,
+    "max_history_size": 100,
+    "type": "contains",
+    "promotion_strategy": "recently_accessed",
+    "exclusions": {
+      "exact": ["node_modules", "dist", "target", ".git"],
+      "prefix": ["."],
+      "suffix": ["sdk", "Library"],
+      "contains": ["release"]
     }
+  }
 }
 ```
+
+### Configuration Reference
+
+#### Paths
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `init` | Root directory for database scanning | `~/` |
+| `db` | SQLite database location | `~/Library/Application Support/dirvana/dirvana.db` |
+
+#### Matching
+
+| Option | Type | Description | Options/Default |
+|--------|------|-------------|-----------------|
+| `max_results` | integer | Maximum completions to show | Default: `10` |
+| `max_history_size` | integer | Maximum history entries to track | Default: `100` |
+| `type` | string | How to match directory names | `exact`, `prefix`, `suffix`, `contains` (default) |
+| `promotion_strategy` | string | How to rank results | `recently_accessed` (default), `frequency_based` |
+
+#### Matching Types
+
+- **`exact`** - Only matches directories with the exact name
+- **`prefix`** - Matches directories starting with the query
+- **`suffix`** - Matches directories ending with the query
+- **`contains`** - Matches directories containing the query (substring match)
+
+#### Promotion Strategies
+
+- **`recently_accessed`** - Prioritizes recently visited directories
+- **`frequency_based`** - Prioritizes frequently visited directories
+
+#### Exclusions
+
+Specify directories to exclude from the database. Supports four matching patterns:
+
+```json
+{
+  "exclusions": {
+    "exact": ["node_modules", "dist"],        // Exact name match
+    "prefix": [".", "tmp_"],                   // Starts with
+    "suffix": ["_backup", ".cache"],          // Ends with
+    "contains": ["deprecated", "old"]         // Contains substring
+  }
+}
+```
+
+**Default exclusions:** `.git`, `node_modules`, `browser_components`, `dist`, `out`, `target`, `tmp`, `temp`, `cache`, `venv`, `env`, `obj`, `pkg`, `bin`, and directories starting with `.`
+
+---
+
+## 💡 Tips & Best Practices
+
+### Optimal Root Directory
+
+Choose a root directory that:
+- Contains all directories you want to navigate to
+- Isn't too broad (avoid scanning entire filesystem)
+- Excludes system directories
+
+```sh
+# Good choices
+dv build --root ~/Code
+dv build --root ~/Documents
+
+# Less optimal
+dv build --root /  # Too many directories, slow performance
+```
+
+### Matching Type Selection
+
+- **`contains`** (default) - Most flexible, finds directories anywhere in the tree
+- **`prefix`** - Faster, better for consistent naming schemes
+- **`exact`** - Most precise, use when you know exact directory names
+- **`suffix`** - Useful for projects with naming patterns (e.g., `-api`, `-web`)
+
+### Effective Shortcuts
+
+Create shortcuts for frequently used commands:
+
+```sh
+dv add code "code"
+dv add open "open"
+dv add cd "cd"  # Use shortcuts even for navigation
+dv add rm "rm -rf"
+dv add mv "mv"
+dv add cp "cp -r"
+```
+
+### Performance
+
+- Use exclusions to prevent scanning large irrelevant directories
+- Run `dv refresh` periodically or let it auto-refresh on terminal start
+- Adjust `max_results` based on your screen size
+- Set appropriate `max_history_size` (larger = better predictions, more storage)
+
+---
+
+## 🏗️ Building from Source
+
+Requirements:
+- CMake 3.16+
+- Clang compiler
+- C++20 support
+
+```sh
+# Clone the repository
+git clone https://github.com/jlkendrick/dirvana.git
+cd dirvana
+
+# Build
+mkdir build && cd build
+cmake ..
+make
+
+# Binary will be at build/dv-binary
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+---
+
+## 📝 License
+
+This project is open source and available under the MIT License.
+
+---
+
+## 🔧 Troubleshooting
+
+### Completion not working
+
+1. Ensure `~/.local/bin` is in your `PATH`
+2. Verify `fpath` includes `~/.zsh/completions`
+3. Run `compinit` to rebuild completion cache
+4. Check that `dv-binary` is executable: `chmod +x ~/.local/bin/dv-binary`
+
+### Database not updating
+
+1. Run `dv refresh` manually
+2. Check root directory in config: `cat ~/Library/Application\ Support/dirvana/config.json`
+3. Rebuild database: `dv build --root ~/your/root/path`
+
+### Permission errors
+
+1. Ensure proper permissions on config directory:
+   ```sh
+   chmod 755 ~/Library/Application\ Support/dirvana
+   chmod 644 ~/Library/Application\ Support/dirvana/config.json
+   ```
+
+### Command not found
+
+1. Verify binary location: `which dv-binary`
+2. Add to PATH in `.zshrc`: `export PATH="$HOME/.local/bin:$PATH"`
+3. Reload shell: `source ~/.zshrc`
+
+---
+
+**Built with ❤️ for faster terminal navigation**
