@@ -13,7 +13,7 @@ public:
 
 	Database(const Config& config);
 	
-	bool build(const std::string& init_path);
+	bool build(const std::string& init_path, bool force = false);
 	bool refresh(const std::string& init_path);
 
 	const Config& get_config() const { return config; }

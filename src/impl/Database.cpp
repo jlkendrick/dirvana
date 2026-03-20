@@ -10,7 +10,7 @@ Database::Database(const Config& config) : db(config.get_db_path()), config(conf
 }
 
 
-bool Database::build(const std::string& init_path) {
+bool Database::build(const std::string& init_path, bool force) {
 	// Get count of existing directories before dropping the table
 	size_t old_dirs_count = paths_table.count_existing_directories();
 
@@ -20,7 +20,7 @@ bool Database::build(const std::string& init_path) {
 	// Check if we collected significantly fewer directories than expected
 	// This could indicate a filesystem scanning failure
 	// Only perform this check if we had an existing table with directories
-	if (old_dirs_count > 0 && rows.size() < old_dirs_count / 10) {
+	if (old_dirs_count > 0 && rows.size() < old_dirs_count / 10 && !force) {
 		std::cerr << "Warning: Collected only " << rows.size() << " directories vs " << old_dirs_count 
 		          << " in database. This might indicate a filesystem scanning issue. "
 		          << "Skipping directory deletion to prevent data loss." << std::endl;

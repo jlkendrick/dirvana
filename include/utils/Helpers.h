@@ -29,6 +29,7 @@ namespace ArgParsing {
 		{"v", "version"},
 		{"h", "help"},
 		{"r", "root"},
+		{"f", "force"},
 		{"e", "exact"},
 		{"p", "prefix"},
 		{"s", "suffix"},
@@ -40,6 +41,7 @@ namespace ArgParsing {
 		"version",
 		"help",
 		"root",
+		"force",
 		"exact",
 		"prefix",
 		"suffix",
@@ -50,9 +52,10 @@ namespace ArgParsing {
 	};
 	static const std::unordered_map<std::string, std::vector<std::pair<std::string, bool>>> valid_flags = {
 		// Build/rebuild/refresh command flags
+		// (flag, requires value)
 	{"", {{"version", false}, {"[bypass]", true}}},
-	{"build", {{"root", true}}},
-	{"rebuild", {{"root", true}}},
+	{"build", {{"root", true}, {"force", false}}},
+	{"rebuild", {{"root", true}, {"force", false}}},
 	{"refresh", {{"root", true}}}
 	};
 	static const std::unordered_map<std::string, std::string> raw_flag_to_implied = {

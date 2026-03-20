@@ -155,8 +155,9 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 int Handler::Subcommands::handle_re_build(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags) {
 	// Relevant flags for build/rebuild:
 	std::string init_path = ArgParsing::get_flag_value(flags, "root", handler.get_init_path());
+	bool force = ArgParsing::has_flag(flags, "force");
 				
-	if (handler.db.build(init_path)) {
+	if (handler.db.build(init_path, force)) {
 		std::cout << "echo Build from " << init_path << " complete" << std::endl;
 		return 0;
 	} else

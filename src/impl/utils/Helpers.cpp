@@ -167,7 +167,6 @@ std::tuple<bool, std::string, std::vector<std::string>, std::vector<Flag>> ArgPa
 
 		// Condition that indicates the start of a flag
 		if (arg.starts_with("-") and arg.size() > 1) {
-
 			// If we were already building a flag, save it
 			if (found_flag and !curr_flag_parts.empty()) {
 				std::string cmd = cmd_parts.empty() ? "" : cmd_parts.back(); // We associate the flag with the last command part
