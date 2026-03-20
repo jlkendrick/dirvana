@@ -33,114 +33,121 @@ int Handler::handle_tab(int argc, char* argv[]) {
 
 int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>& flags) {
 	// If --enter was called with no arguments, that is the eqivalent of "cd"
-		// where we want to cd to home dir
-		if (commands.empty() and flags.empty()) {
-			std::cout << "cd ~" << std::endl;
-			return 0;
-		}
+	// where we want to cd to home dir
+	if (commands.empty() and flags.empty()) {
+		std::cout << "cd ~" << std::endl;
+		return 0;
+	}
 
-		// Check if a subcommand-less flag was passed (e.g. "--version" ("-v"))
-		if (ArgParsing::has_flag(flags, "version")) {
-			std::cout << "echo Dirvana version " << version << std::endl;
-			return 0;
-		}
+	// Check if a subcommand-less flag was passed (e.g. "--version" ("-v"))
+	if (ArgParsing::has_flag(flags, "version")) {
+		std::cout << "echo Dirvana version " << version << std::endl;
+		return 0;
+	}
 
-		bool bypass = ArgParsing::has_flag(flags, "[bypass]");
-		std::string first_token = bypass ? ArgParsing::get_flag_value(flags, "[bypass]") : (not commands.empty() ? commands[0] : "");
+	bool bypass = ArgParsing::has_flag(flags, "[bypass]");
+	std::string first_token = bypass ? ArgParsing::get_flag_value(flags, "[bypass]") : (not commands.empty() ? commands[0] : "");
 
-		// Check if a subcommand was passed
-		if (not bypass) {
-			if (first_token == "build" or first_token == "rebuild")
-				return Subcommands::handle_re_build(*this, commands, flags);
-			else if (first_token == "refresh")
-				return Subcommands::handle_refresh(*this, commands, flags);
-			else if (first_token == "install")
-				return Subcommands::handle_install(*this, commands, flags);
-			else if (first_token == "add")
-				return Subcommands::handle_add(*this, commands, flags);
-			else if (first_token == "delete")
-				return Subcommands::handle_delete(*this, commands, flags);
-			else if (first_token == "list")
-				return Subcommands::handle_list(*this, commands, flags);
-			else if (first_token == "show")
-				return Subcommands::handle_show(*this, commands, flags);
-		}
+	// Check if a subcommand was passed
+	if (not bypass) {
+		if (first_token == "build" or first_token == "rebuild")
+			return Subcommands::handle_re_build(*this, commands, flags);
+		else if (first_token == "refresh")
+			return Subcommands::handle_refresh(*this, commands, flags);
+		else if (first_token == "install")
+			return Subcommands::handle_install(*this, commands, flags);
+		else if (first_token == "add")
+			return Subcommands::handle_add(*this, commands, flags);
+		else if (first_token == "delete")
+			return Subcommands::handle_delete(*this, commands, flags);
+		else if (first_token == "list")
+			return Subcommands::handle_list(*this, commands, flags);
+		else if (first_token == "show")
+			return Subcommands::handle_show(*this, commands, flags);
+	}
 
-		// If we are here, need to handle a shortcut or a path. We prioritize shortcuts over paths
+	// If we are here, need to handle a shortcut or a path. We prioritize shortcuts over paths
 
-		std::vector<std::string> matches = db.get_shortcuts_table().query(first_token);
-		std::string command = matches.empty() ? "" : matches[0];
-		if (not command.empty()) {
-			// Build the arguments for the shortcut
-			std::string args = "";
-			for (size_t i = 1; i < commands.size() - 1; i++)
-				args += " " + commands[i];
+	std::vector<std::string> matches = db.get_shortcuts_table().query(first_token);
+	std::string command = matches.empty() ? "" : matches[0];
+	if (not command.empty()) {
+		// Build the arguments for the shortcut
+		std::string args = "";
+		for (size_t i = 1; i < commands.size() - 1; i++)
+			args += " " + commands[i];
 
-			// Try to complete the last command as a path
-			std::string last_token = commands.size() > 1 ? commands.back() : "";
-			if (not last_token.empty() and 
-					last_token.find('/') == std::string::npos and 
-					last_token.find('~') == std::string::npos) {
-				
-				// Partial path, need to complete
-				std::vector<std::string> matches = db.get_paths_table().query(last_token);
-				if (!matches.empty())
-					last_token = matches[0];
-			}
-
-			// Add the last token to the arguments
-			args += " " + last_token;
-
-			// Execute the shortcut
-			std::cout << command << args << std::endl;
-
-			// Update the database with the accessed path
-			db.get_shortcuts_table().access(command);
-
-			return 0;
-		}
-
-		// If we are here, we need to handle a path
-		
-		// Last token (or arg passed to --) is the path to complete
-		std::string path = !commands.empty() ? commands.back() : ArgParsing::get_flag_value(flags, "[bypass]");
-		// Check if path is full path or partial
-		if (path.find('/') == std::string::npos and path.find('~') == std::string::npos and path.find('/') == std::string::npos) {
+		// Try to complete the last command as a path
+		std::string last_token = commands.size() > 1 ? commands.back() : "";
+		if (not last_token.empty() and 
+				last_token.find('/') == std::string::npos and 
+				last_token.find('~') == std::string::npos) {
+			
 			// Partial path, need to complete
-			std::vector<std::string> matches = db.get_paths_table().query(path);
-			if (matches.empty()) {
-				// 'cd' to the path if no matches found for entries like "~", "..", etc.
-				std::cout << "cd " << path << std::endl;
-				return 0;
-			}
-			// Use the first match
-			path = matches[0];
+			std::vector<std::string> matches = db.get_paths_table().query(last_token);
+			if (!matches.empty())
+				last_token = matches[0];
 		}
+
+		// Check if the completion needs to be embedded in the command
+		// We use {} to embed the completion in the command
+		const size_t start = command.find("{}");
+		if (start != std::string::npos)
+			// Replace the {} with the last token
+			command = command.replace(start, 2, last_token);
+		else
+			// Add the last token to the command
+			command += " " + last_token;
+
+		// Execute the shortcut
+		std::cout << command << std::endl;
 
 		// Update the database with the accessed path
-		db.get_paths_table().access(path);
-		
-		// Now we need to assemble the final command to output.
-		// Arguments look something like: dv-binary --enter dv [...] [path]
-		std::string prefix = "";
-		if (commands.size() > 1) {
-			// Build the prefix from all arguments except the last one (and any "--" delimiters)
-			for (size_t i = 0; i < commands.size() - 1; i++) {
-				if (i > 0) prefix += " ";
-				prefix += commands[i] != "--" ? commands[i] : "";
-			}
-		}
-			
-		// Decide what to output based on presence of prefix args and matches
-		// If no prefix args, just 'cd' to the matched path
-		if (prefix.empty())
-			// No output, just 'cd' to the path
-			std::cout << "cd " << path << std::endl;
-		else
-			// Execute the output with the path
-			std::cout << prefix << " " << path << std::endl;
+		db.get_shortcuts_table().access(command);
 
 		return 0;
+	}
+
+	// If we are here, we need to handle a path
+	
+	// Last token (or arg passed to --) is the path to complete
+	std::string path = !commands.empty() ? commands.back() : ArgParsing::get_flag_value(flags, "[bypass]");
+	// Check if path is full path or partial
+	if (path.find('/') == std::string::npos and path.find('~') == std::string::npos and path.find('/') == std::string::npos) {
+		// Partial path, need to complete
+		std::vector<std::string> matches = db.get_paths_table().query(path);
+		if (matches.empty()) {
+			// 'cd' to the path if no matches found for entries like "~", "..", etc.
+			std::cout << "cd " << path << std::endl;
+			return 0;
+		}
+		// Use the first match
+		path = matches[0];
+	}
+
+	// Update the database with the accessed path
+	db.get_paths_table().access(path);
+	
+	// Now we need to assemble the final command to output.
+	// Arguments look something like: dv-binary --enter dv [...] [path]
+	std::string prefix = "";
+	if (commands.size() > 1) {
+		// Build the prefix from all arguments except the last one (and any "--" delimiters)
+		for (size_t i = 0; i < commands.size() - 1; i++) {
+			if (i > 0) prefix += " ";
+			prefix += commands[i] != "--" ? commands[i] : "";
+		}
+	}
+		
+	// Decide what to output based on presence of prefix args and matches
+	// If no prefix args, just 'cd' to the matched path
+	if (prefix.empty())
+		// No output, just 'cd' to the path
+		std::cout << "cd " << path << std::endl;
+	else
+		// Execute the output with the path
+		std::cout << prefix << " " << path << std::endl;
+
+	return 0;
 }
 
 int Handler::Subcommands::handle_re_build(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags) {

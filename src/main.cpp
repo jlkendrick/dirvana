@@ -15,6 +15,7 @@ void write_log(const std::string& message) {
 }
 
 int main(int argc, char* argv[]) {
+
 	// Initialize the database
 	Config config;
 	Database db(config);
@@ -29,7 +30,7 @@ int main(int argc, char* argv[]) {
 	auto [
 		valid,
 		call_type,
-		commands, 
+		commands,
 		flags
 	] = ArgParsing::process_args(argc, argv);
 	if (!valid)
