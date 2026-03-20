@@ -112,7 +112,9 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 	// Last token (or arg passed to --) is the path to complete
 	std::string path = !commands.empty() ? commands.back() : ArgParsing::get_flag_value(flags, "[bypass]");
 	// Check if path is full path or partial
-	if (path.find('/') == std::string::npos and path.find('~') == std::string::npos and path.find('/') == std::string::npos) {
+	if (path.find('/') == std::string::npos and 
+		path.find('~') == std::string::npos and 
+		path.find('.') == std::string::npos) {
 		// Partial path, need to complete
 		std::vector<std::string> matches = db.get_paths_table().query(path);
 		if (matches.empty()) {
