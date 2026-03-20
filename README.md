@@ -187,6 +187,25 @@ dv idea backend<Enter>   # Expands to: idea /path/to/backend
 dv term logs<Tab>        # Autocomplete then open in new terminal
 ```
 
+#### Path Placeholder `{}`
+
+Use `{}` in a shortcut command to control exactly where the resolved path is inserted. When a shortcut contains `{}`, Dirvana resolves the argument that follows the shortcut name and substitutes it in place of `{}`.
+
+```sh
+dv add <shortcut> <command with {}>
+
+# Examples
+dv add cc "cd {} && claude"
+dv add gitlog "git -C {} log --oneline -10"
+```
+
+```sh
+dv cc dirv<Enter>        # Expands to: cd /path/to/dirvana && claude
+dv gitlog backend<Enter> # Expands to: git -C /path/to/backend log --oneline -10
+```
+
+Without `{}`, the resolved path is appended to the end of the command. With `{}`, you have full control over placement — including using it multiple times in a single command.
+
 #### List All Shortcuts
 
 ```sh
@@ -376,6 +395,14 @@ dv add cd "cd"  # Use shortcuts even for navigation
 dv add rm "rm -rf"
 dv add mv "mv"
 dv add cp "cp -r"
+```
+
+Use `{}` when you need the resolved path in a specific position:
+
+```sh
+dv add gitlog "git -C {} log --oneline"   # Run git log inside a directory
+dv add ls "ls -la {}"                      # List with flags before the path
+dv add mkcd "mkdir -p {} && cd {}"        # Create and enter a new directory
 ```
 
 ### Performance
