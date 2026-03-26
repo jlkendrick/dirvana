@@ -389,12 +389,10 @@ dv build --root /  # Too many directories, slow performance
 Create shortcuts for frequently used commands:
 
 ```sh
-dv add code "code"
-dv add open "open"
-dv add cd "cd"  # Use shortcuts even for navigation
-dv add rm "rm -rf"
-dv add mv "mv"
-dv add cp "cp -r"
+dv add c "cursor"
+dv add penv "source .venv/bin/activate && source .env && clear"
+dv add rmdir "rm -rf"
+dv add claude "cd {} && claude"
 ```
 
 Use `{}` when you need the resolved path in a specific position:
