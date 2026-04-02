@@ -10,7 +10,6 @@ int Handler::handle_tab(int argc, char* argv[]) {
 	}
 	
 	// Last argument is the partial path
-
 	std::string partial = argv[argc - 1];
 	
 	// Get matches for the partial path
@@ -22,7 +21,7 @@ int Handler::handle_tab(int argc, char* argv[]) {
 		if (i > 3) prefix += " ";
 		prefix += argv[i];
 	}
-	
+
 	// Print the matches with appropriate prefixes for zsh completion
 	for (const auto& match : matches)
 		std::cout << match << std::endl;

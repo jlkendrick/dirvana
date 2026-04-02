@@ -27,20 +27,22 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
+	std::string call_type = argc > 1 ? argv[1] : "";
+	
+	// Handle tab completion
+	if (call_type == "--tab") {
+		return handler.handle_tab(argc, argv);
+	}
+	
 	auto [
 		valid,
-		call_type,
+		_, // call_type
 		commands,
 		flags
 	] = ArgParsing::process_args(argc, argv);
 	if (!valid)
 		// Error message already printed in process_args
 		return 1;
-	
-	// Handle tab completion
-	if (call_type == "--tab") {
-		return handler.handle_tab(argc, argv);
-	}
 
 	// Handle enter key press
 	else if (call_type == "--enter") {
