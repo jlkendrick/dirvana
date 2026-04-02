@@ -36,7 +36,6 @@ int main(int argc, char* argv[]) {
 	
 	auto [
 		valid,
-		_, // call_type
 		commands,
 		flags
 	] = ArgParsing::process_args(argc, argv);

@@ -154,12 +154,21 @@ std::pair<bool, Flag> ArgParsing::build_flag(const std::vector<std::string>& fla
 	return {true, flag};
 }
 
-std::tuple<bool, std::string, std::vector<std::string>, std::vector<Flag>> ArgParsing::process_args(int argc, char* argv[]) {
-	std::string call_type = argc > 1 ? argv[1] : ""; // --enter or --tab
+std::tuple<bool, std::vector<std::string>, std::vector<Flag>> ArgParsing::process_args(int argc, char* argv[]) {
 	std::vector<std::string> cmd_parts;
 	std::vector<Flag> flags;
 	std::vector<std::string> curr_flag_parts;
 	bool found_flag = false;
+
+	// Known shell/system binary: pass argv through so flags like cp -r are not parsed as Dirvana flags
+	const std::string first_arg = argc > 3 ? argv[3] : "";
+	if (!first_arg.empty() && ArgParsing::system_shell_commands.count(first_arg)) {
+		for (int i = 3; i < argc; i++)
+			cmd_parts.push_back(argv[i]);
+		return {true, cmd_parts, flags};
+	}
+
+
 
 	// Start from index 3 to skip the program name, call type (--enter or --tab), and "dv"
 	for (int i = 3; i < argc; i++) {
@@ -176,7 +185,7 @@ std::tuple<bool, std::string, std::vector<std::string>, std::vector<Flag>> ArgPa
 					flags.push_back(flag);
 				else
 					// If the flag is invalid, we stop processing further
-					return {false, "", {}, {}};
+					return {false, {}, {}};
 				curr_flag_parts.clear();
 			} else {
 				found_flag = true;
@@ -197,10 +206,10 @@ std::tuple<bool, std::string, std::vector<std::string>, std::vector<Flag>> ArgPa
 			flags.push_back(flag);
 		else
 			// If the flag is invalid, we stop processing
-			return {false, "", {}, {}};
+			return {false, {}, {}};
 	}
 
-	return {true, call_type, cmd_parts, flags};
+	return {true, cmd_parts, flags};
 }
 
 bool ArgParsing::validate_flag(const Flag& flag) {

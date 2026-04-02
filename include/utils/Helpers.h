@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <unordered_set>
 
 using json = nlohmann::json;
 
@@ -61,8 +62,21 @@ namespace ArgParsing {
 	static const std::unordered_map<std::string, std::string> raw_flag_to_implied = {
 		{"--", "--[bypass]"}
 	};
+	// First token after "dv": if it matches here, argv is passed through without Dirvana flag parsing
+	// (e.g. cp -r, rm -rf). Omit Dirvana subcommands: build, rebuild, refresh, install, add, delete, list, show.
+	static const std::unordered_set<std::string> system_shell_commands = {
+		"awk", "bash", "brew", "bun", "bunx", "cat", "cd", "chflags", "chmod", "chown", "cp", "curl", "cut",
+		"date", "dd", "diff", "dig", "dirname", "diskutil", "docker", "du", "ed", "env", "ex", "false", "fd",
+		"ffmpeg", "fgrep", "file", "find", "fish", "g++", "gcc", "gem", "gh", "git", "gmake", "grep", "gunzip",
+		"gzip", "head", "hg", "htop", "id", "jq", "kill", "killall", "less", "ln", "ls", "lsof", "make", "man",
+		"md5", "md5sum", "mkdir", "mv", "nano", "nice", "node", "npm", "npx", "open", "openssl", "perl", "pgrep",
+		"ping", "pnpm", "pod", "python", "python3", "readlink", "realpath", "rg", "rm", "rmdir", "rsync", "ruby",
+		"say", "scp", "sed", "seq", "sh", "sort", "ssh", "stat", "sudo", "svn", "swift", "tail", "tar", "tee",
+		"terraform", "test", "time", "top", "touch", "tr", "true", "uname", "unzip", "vim", "vi", "wc", "wget",
+		"which", "whoami", "xargs", "xattr", "yarn", "yes", "zip", "zsh"
+	};
 	std::pair<bool, Flag> build_flag(const std::vector<std::string>& flag_parts, const std::string& cmd);
-	std::tuple<bool, std::string, std::vector<std::string>, std::vector<Flag>> process_args(int argc, char* argv[]);
+	std::tuple<bool, std::vector<std::string>, std::vector<Flag>> process_args(int argc, char* argv[]);
 	bool validate_flag(const Flag& flag);
 	std::string get_flag_value(const std::vector<Flag>& flags, const std::string& flag_name, const std::string& default_value = "");
 	bool has_flag(const std::vector<Flag>& flags, const std::string& flag_name);
