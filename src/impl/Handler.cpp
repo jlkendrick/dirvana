@@ -8,9 +8,21 @@ int Handler::handle_tab(int argc, char* argv[]) {
 		std::cerr << "Tab completion requires at least a partial path" << std::endl;
 		return 1;
 	}
+
+	
 	
 	// Last argument is the partial path
 	std::string partial = argv[argc - 1];
+
+	// Check if we need to do lazy, in-memory file completion
+	// Our heurisitc is if the last char in the partial path is a '/'
+	if (partial.back() == '/') {
+		// Lazy, in-memory file completion
+		std::vector<std::string> matches = db.get_paths_table().collect_files(partial);
+		for (const auto& match : matches)
+			std::cout << match << std::endl;
+		return 0;
+	}
 	
 	// Get matches for the partial path
 	std::vector<std::string> matches = db.get_paths_table().query(partial);

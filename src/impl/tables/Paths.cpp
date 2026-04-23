@@ -120,6 +120,17 @@ std::vector<std::tuple<std::string, std::string>> PathsTable::collect_directorie
 }
 
 
+// Collect all files that are direct children of the init path
+std::vector<std::string> PathsTable::collect_files(const std::string& init_path) const {
+	std::vector<std::string> files;
+	std::filesystem::directory_iterator it(init_path);
+	for (const auto& entry : it) {
+		if (std::filesystem::is_regular_file(entry))
+			files.push_back(entry.path().string());
+	}
+	return files;
+}
+
 size_t PathsTable::count_existing_directories() const {
 	try {
 		size_t count = 0;
