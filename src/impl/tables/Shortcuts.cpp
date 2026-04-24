@@ -31,15 +31,15 @@ void ShortcutsTable::drop_table() const {
 
 
 std::vector<std::string> ShortcutsTable::query(const std::string& input) const {
-	std::vector<std::string> results;
-	
 	// We only do exact matches for shortcuts (might change this in the future)
-	std::string exact_query = std::format("SELECT command FROM shortcuts WHERE shortcut = '{}' LIMIT 1;", input);
-	db << exact_query >> [&](std::string command) {
-		results.push_back(command);
-	};
-
-	
+	std::vector<std::string> results;
+	try {
+		db << "SELECT command FROM shortcuts WHERE shortcut = ? LIMIT 1;" << input >> [&](std::string command) {
+			results.push_back(command);
+		};
+	} catch (const sqlite::sqlite_exception& e) {
+		std::cerr << "Error querying shortcuts: " << e.what() << std::endl;
+	}
 	return results;
 }
 

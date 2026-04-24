@@ -10,6 +10,12 @@ Config::Config(const std::string& config_path) {
 	if (not config_path.empty())
 		this->config_path = config_path;
 
+	// Check if HOME environment variable is set
+	if (std::getenv("HOME") == nullptr) {
+		std::cerr << "HOME environment variable is not set. Please set it and try again." << std::endl;
+		return;
+	}
+
 	// If we haven't created a config file yet, or the user has deleted it, or they are pointing to a non-existent file, create a new config file
 	if (!std::filesystem::exists(this->config_path)) {
 		this->config = default_config;

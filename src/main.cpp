@@ -31,7 +31,12 @@ int main(int argc, char* argv[]) {
 	
 	// Handle tab completion
 	if (call_type == "--tab") {
-		return handler.handle_tab(argc, argv);
+		// auto start_time = std::chrono::high_resolution_clock::now();
+		int result = handler.handle_tab(argc, argv);
+		// auto end_time = std::chrono::high_resolution_clock::now();
+		// auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
+		// write_log("Tab completion time: " + std::to_string(duration.count() / 1000000.0) + " milliseconds");
+		return result;
 	}
 	
 	auto [

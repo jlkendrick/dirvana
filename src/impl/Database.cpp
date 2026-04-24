@@ -17,6 +17,11 @@ bool Database::build(const std::string& init_path, bool force) {
 	// Collect directories and insert them into the database
 	auto rows = paths_table.collect_directories(init_path);
 	
+	if (rows.empty()) {
+		std::cerr << "No directories found to index from path: " << init_path << std::endl;
+		return false;
+	}
+
 	// Check if we collected significantly fewer directories than expected
 	// This could indicate a filesystem scanning failure
 	// Only perform this check if we had an existing table with directories
@@ -26,20 +31,13 @@ bool Database::build(const std::string& init_path, bool force) {
 		          << "Skipping directory deletion to prevent data loss." << std::endl;
 		return false;
 		
-	} else {
-		// Drop the table and recreate it
-		paths_table.drop_table();
-		paths_table.create_table();
-		paths_table.bulk_insert(rows);
-		return true;
-	}
-	
-	if (rows.empty()) {
-		std::cerr << "No directories found to index from path: " << init_path << std::endl;
-		return false;
 	}
 
+	// Drop the table and recreate it
+	paths_table.drop_table();
+	paths_table.create_table();
 	paths_table.bulk_insert(rows);
+	
 	return true;
 }
 

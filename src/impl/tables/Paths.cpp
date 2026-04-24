@@ -2,9 +2,6 @@
 #include "Database.h"
 #include "utils/Helpers.h"
 
-#include <unordered_set>
-
-
 void PathsTable::create_table() const {
 	try {
 		db << "BEGIN TRANSACTION;";
@@ -36,41 +33,28 @@ void PathsTable::drop_table() const {
 std::vector<std::string> PathsTable::query(const std::string& input) const {
 	std::string dir_name = get_dir_name(input);
 	std::vector<std::string> path_rankings;
-	std::unordered_set<std::string> path_set; // To avoid duplicates
-	
+	const std::string sort_col = db.get_config().get_promotion_strategy() == PromotionStrategy::RECENTLY_ACCESSED
+		? "last_accessed" : "access_count";
+	const int max_results = db.get_config().get_max_results();
+
 	try {
-		// First, regardless of the matching type, check for exact matches
-		std::string exact_query = std::format("SELECT path FROM paths WHERE dir_name {} {} ORDER BY {} DESC LIMIT {};",
-			"=",
-			get_query_pattern(dir_name, "exact"),
-			db.get_config().get_promotion_strategy() == PromotionStrategy::RECENTLY_ACCESSED ? "last_accessed" : "access_count",
-			db.get_config().get_max_results());
-		// On the first insert, we can just insert directly without checking for duplicates
-		db << exact_query >> [&](std::string path) {
-			path_rankings.push_back(path);
-			path_set.insert(path);
-		};
-
-		// If the matching type is not exact, we need to do a second query to rank the non-exact matches after the exact ones
-		if (db.get_config().get_matching_type() != MatchingType::Exact) {
-			std::string non_exact_query = std::format("SELECT path FROM paths WHERE dir_name {} {} ORDER BY {} DESC LIMIT {};",
-				db.get_config().get_matching_type() == MatchingType::Exact ? "=" : "LIKE",
-				get_query_pattern(dir_name),
-				db.get_config().get_promotion_strategy() == PromotionStrategy::RECENTLY_ACCESSED ? "last_accessed" : "access_count",
-				db.get_config().get_max_results());
-			// For non-exact matches, we need to check for duplicates
-			db << non_exact_query >> [&](std::string path) {
-				if (path_set.find(path) == path_set.end()) {
-					path_rankings.push_back(path);
-					path_set.insert(path);
-				}
-			};
+		if (db.get_config().get_matching_type() == MatchingType::Exact) {
+			db << "SELECT path FROM paths WHERE dir_name = ? ORDER BY " + sort_col + " DESC LIMIT ?;"
+			   << dir_name << max_results
+			   >> [&](std::string path) { path_rankings.push_back(path); };
+		} else {
+			// Single query: exact matches sort first (rank 0), fuzzy matches second (rank 1).
+			// Each path row appears at most once, so no dedup set is needed.
+			std::string like_pattern = get_query_pattern(dir_name);
+			db << "SELECT path FROM paths WHERE dir_name = ? OR dir_name LIKE ? "
+			      "ORDER BY CASE WHEN dir_name = ? THEN 0 ELSE 1 END ASC, " + sort_col + " DESC LIMIT ?;"
+			   << dir_name << like_pattern << dir_name << max_results
+			   >> [&](std::string path) { path_rankings.push_back(path); };
 		}
-
 	} catch (const sqlite::sqlite_exception& e) {
 		std::cerr << "Error querying database: " << e.what() << std::endl;
 	}
-	
+
 	return path_rankings;
 }
 

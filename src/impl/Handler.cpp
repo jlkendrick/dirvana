@@ -268,7 +268,13 @@ int Handler::Subcommands::handle_list(Handler& handler, std::vector<std::string>
 
 
 int Handler::Subcommands::handle_show(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags) {
-	// Relevant flags for show:
+	// Relevant flags for show: none for now
+	
+	if (commands.size() != 2) {
+		std::cerr << "Usage dv show [shortcut]" << std::endl;
+		return 1;
+	}
+
 	std::string shortcut = commands[1];
 
 	// Show the shortcut from the database
