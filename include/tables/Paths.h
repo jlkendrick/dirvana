@@ -11,11 +11,12 @@ public:
 		void drop_table() const override;
 		std::vector<std::string> query(const std::string& input) const override;
 		void access(const std::string& input) override;
-
+		
 		std::vector<std::tuple<std::string, std::string>> collect_directories(const std::string& init_path);
 		std::vector<std::string> collect_files(const std::string& init_path) const;
-
+		
 		size_t count_existing_directories() const;
+		void create_temp_table() const;
 		void bulk_insert(const std::vector<std::tuple<std::string, std::string>>& rows);
 		void delete_paths(const std::vector<std::string>& paths);
 		bool should_exclude(const std::string& dir_name, const std::string& path) const;
