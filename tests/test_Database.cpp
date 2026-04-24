@@ -105,6 +105,30 @@ TEST_F(DatabaseTest, QueryDatabase) {
 	});
 }
 
+TEST(Database, FrequencyBasedPromotion) {
+	TempConfigFile temp_config{
+		ConfigArgs{
+			.match_type = "exact",
+			.promotion_strategy = "frequency_based",
+			.exclusions = { { ExclusionType::Prefix, "." }, { ExclusionType::Exact, "custom_rule_check" } }
+		}
+	};
+	Config config(temp_config.path);
+	Database db(config);
+	db.build(config.get_init_path());
+
+	// Access /1 once, /1/1 three times — frequency should drive ranking
+	db.get_paths_table().access(config.get_init_path() + "/1");
+	db.get_paths_table().access(config.get_init_path() + "/1/1");
+	db.get_paths_table().access(config.get_init_path() + "/1/1");
+	db.get_paths_table().access(config.get_init_path() + "/1/1");
+
+	auto results = db.get_paths_table().query("1");
+	ASSERT_GE(results.size(), 2u);
+	EXPECT_EQ(results[0], config.get_init_path() + "/1/1");
+	EXPECT_EQ(results[1], config.get_init_path() + "/1");
+}
+
 TEST_F(DatabaseTest, AccessDatabase) {
 	// Test if the database can be accessed and updated successfully
 
