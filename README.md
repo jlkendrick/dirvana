@@ -145,6 +145,19 @@ dv proj<Enter>           # Jumps to first match containing "proj"
 dv<Enter>                # cd ~
 ```
 
+#### Filesystem File Completion
+
+Append a `/` to any path to browse its contents directly from the filesystem, bypassing the database entirely. This is useful when you already know the parent directory and want to drill into it.
+
+```sh
+dv ~/Code/<Tab>          # Lists all entries inside ~/Code/
+dv /path/to/dir/<Tab>    # Lists all entries inside that directory
+dv proj<Tab>             # Database match for "proj" ...
+dv /full/path/to/proj/<Tab>  # ... then drill in with /
+```
+
+Any path — absolute, relative, or `~`-prefixed — works as long as it ends with `/`.
+
 ### Command Execution
 
 Prefix any command with `dv` to get path completion:
