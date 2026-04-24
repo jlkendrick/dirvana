@@ -2,6 +2,7 @@
 #define PATHS_TABLE_H
 
 #include "Table.h"
+#include "utils/Types.h"
 
 class PathsTable : public Table {
 public:
@@ -19,7 +20,7 @@ public:
 		void create_temp_table() const;
 		void bulk_insert(const std::vector<std::tuple<std::string, std::string>>& rows);
 		void delete_paths(const std::vector<std::string>& paths);
-		bool should_exclude(const std::string& dir_name, const std::string& path) const;
+		bool should_exclude(const std::string& dir_name, const std::string& path, const std::vector<ExclusionRule>& rules) const;
 		void select_all_paths(std::function<void(std::string)> callback) const;
 };
 

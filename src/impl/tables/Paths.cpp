@@ -73,10 +73,11 @@ void PathsTable::access(const std::string& path) {
 
 std::vector<std::tuple<std::string, std::string>> PathsTable::collect_directories(const std::string& init_path) {
 	std::vector<std::tuple<std::string, std::string>> rows;
+	const std::vector<ExclusionRule> exclusion_rules = db.get_config().get_exclusion_rules();
 	try {
 		std::filesystem::recursive_directory_iterator it(init_path, std::filesystem::directory_options::skip_permission_denied);
 		std::filesystem::recursive_directory_iterator end;
-		
+
 		while (it != end) {
 			const auto& entry = *it;
 
@@ -85,7 +86,7 @@ std::vector<std::tuple<std::string, std::string>> PathsTable::collect_directorie
 
 			// If the entry is a directory and it's not in the exclude list, add it to the PathMap
 			if (std::filesystem::is_directory(entry)) {
-				if (not dir_name.empty() and not should_exclude(dir_name, entry.path().string()))
+				if (not dir_name.empty() and not should_exclude(dir_name, entry.path().string(), exclusion_rules))
 					rows.push_back({entry.path().string(), dir_name});
 				
 				// Otherwise, don't add it to the PathMap and disable recursion into it's children
@@ -178,9 +179,7 @@ void PathsTable::delete_paths(const std::vector<std::string>& paths) {
 	}
 }
 
-bool PathsTable::should_exclude(const std::string& dir_name, const std::string& path) const {
-	// Check if the directory should be excluded based on the exclusion rules
-	std::vector<ExclusionRule> exclusion_rules = db.get_config().get_exclusion_rules();
+bool PathsTable::should_exclude(const std::string& dir_name, const std::string& path, const std::vector<ExclusionRule>& exclusion_rules) const {
 	for (const auto& rule : exclusion_rules) {
 		switch (rule.type) {
 		case ExclusionType::Exact:
