@@ -2,6 +2,8 @@
 #include "Database.h"
 #include "utils/Helpers.h"
 
+#include <future>
+
 void PathsTable::create_table() const {
 	try {
 		db << "BEGIN TRANSACTION;";
@@ -72,33 +74,53 @@ void PathsTable::access(const std::string& path) {
 
 
 std::vector<std::tuple<std::string, std::string>> PathsTable::collect_directories(const std::string& init_path) {
-	std::vector<std::tuple<std::string, std::string>> rows;
 	const std::vector<ExclusionRule> exclusion_rules = db.get_config().get_exclusion_rules();
-	try {
-		std::filesystem::recursive_directory_iterator it(init_path, std::filesystem::directory_options::skip_permission_denied);
-		std::filesystem::recursive_directory_iterator end;
 
-		while (it != end) {
-			const auto& entry = *it;
-
-			// Get the deepest directory name
-			std::string dir_name = get_dir_name(entry.path().string());
-
-			// If the entry is a directory and it's not in the exclude list, add it to the PathMap
-			if (std::filesystem::is_directory(entry)) {
-				if (not dir_name.empty() and not should_exclude(dir_name, entry.path().string(), exclusion_rules))
-					rows.push_back({entry.path().string(), dir_name});
-				
-				// Otherwise, don't add it to the PathMap and disable recursion into it's children
-				else
-					it.disable_recursion_pending();
+	// Scans the subtree rooted at `root`, returning all non-excluded directories within it.
+	// Captures exclusion_rules by ref (const, read-only) and this for should_exclude (no shared state after our refactor).
+	auto scan_subtree = [&](const std::string& root) {
+		std::vector<std::tuple<std::string, std::string>> local_rows;
+		try {
+			std::filesystem::recursive_directory_iterator it(root, std::filesystem::directory_options::skip_permission_denied);
+			std::filesystem::recursive_directory_iterator end;
+			while (it != end) {
+				const auto& entry = *it;
+				std::string dir_name = get_dir_name(entry.path().string());
+				if (std::filesystem::is_directory(entry)) {
+					if (not dir_name.empty() and not should_exclude(dir_name, entry.path().string(), exclusion_rules))
+						local_rows.push_back({entry.path().string(), dir_name});
+					else
+						it.disable_recursion_pending();
+				}
+				++it;
 			}
-
-			++it;
+		} catch (const std::filesystem::filesystem_error& e) {
+			std::cerr << "Error scanning " << root << ": " << e.what() << std::endl;
 		}
-		
+		return local_rows;
+	};
+
+	// One async task per non-excluded top-level subdirectory of init_path.
+	std::vector<std::future<std::vector<std::tuple<std::string, std::string>>>> futures;
+	std::vector<std::tuple<std::string, std::string>> rows;
+
+	try {
+		for (const auto& entry : std::filesystem::directory_iterator(init_path, std::filesystem::directory_options::skip_permission_denied)) {
+			if (not std::filesystem::is_directory(entry))
+				continue;
+			std::string dir_name = get_dir_name(entry.path().string());
+			if (dir_name.empty() or should_exclude(dir_name, entry.path().string(), exclusion_rules))
+				continue;
+			rows.push_back({entry.path().string(), dir_name});
+			futures.push_back(std::async(std::launch::async, scan_subtree, entry.path().string()));
+		}
 	} catch (const std::filesystem::filesystem_error& e) {
-		std::cerr << "Error scanning filesystem: " << e.what() << std::endl;
+		std::cerr << "Error scanning " << init_path << ": " << e.what() << std::endl;
+	}
+
+	for (auto& fut : futures) {
+		auto subtree = fut.get();
+		rows.insert(rows.end(), std::make_move_iterator(subtree.begin()), std::make_move_iterator(subtree.end()));
 	}
 
 	return rows;
