@@ -1,6 +1,8 @@
 #include "Handler.h"
 
 #include <fstream>
+#include <filesystem>
+#include <mach-o/dyld.h>
 
 Handler::Handler(Database& db, const std::string& version) : db(db), version(version) {}
 
@@ -205,33 +207,98 @@ int Handler::Subcommands::handle_install(Handler& handler, std::vector<std::stri
 	return 0;
 }
 
+static std::string get_executable_path() {
+	char buffer[4096];
+	uint32_t size = sizeof(buffer);
+	if (_NSGetExecutablePath(buffer, &size) != 0)
+		return "";
+	std::error_code ec;
+	auto canonical = std::filesystem::canonical(buffer, ec);
+	if (ec) return buffer;
+	return canonical.string();
+}
+
 int Handler::Subcommands::handle_init(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags) {
-	const char* home = std::getenv("HOME");
-	if (!home) {
+	const char* home_env = std::getenv("HOME");
+	if (!home_env) {
 		std::cerr << "HOME environment variable not set" << std::endl;
 		return 1;
 	}
+	std::string home = home_env;
+	std::string zshrc_path = home + "/.zshrc";
+	std::string init_path = ArgParsing::get_flag_value(flags, "root", home);
 
-	std::string zshrc_path = std::string(home) + "/.zshrc";
-	std::string init_path = ArgParsing::get_flag_value(flags, "root", std::string(home));
+	// Detect installation method from where the binary actually lives
+	std::string exe_path = get_executable_path();
+	bool is_homebrew = exe_path.find("/opt/homebrew/") != std::string::npos ||
+	                   exe_path.find("/usr/local/Cellar/") != std::string::npos;
+	bool is_local_bin = exe_path.find(home + "/.local/bin/") != std::string::npos;
 
-	// Check if shell integration is already present
-	bool already_configured = false;
+	// Read existing .zshrc to avoid duplicating any block
+	std::string zshrc_content;
 	{
 		std::ifstream in(zshrc_path);
-		if (in.is_open()) {
-			std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-			already_configured = content.find("dv-binary --enter dv") != std::string::npos;
+		if (in.is_open())
+			zshrc_content = std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+	}
+
+	// Homebrew installs _dv into its own zsh site-functions and manages fpath, so skip these for brew
+	std::string completion_block;
+	if (!is_homebrew) {
+		std::string completions_dir = home + "/.zsh/completions";
+		std::error_code ec;
+		std::filesystem::create_directories(completions_dir, ec);
+
+		std::string completion_file = completions_dir + "/_dv";
+		if (!std::filesystem::exists(completion_file)) {
+			std::ofstream out(completion_file);
+			out << R"(#compdef dv
+
+_dv() {
+  local completions
+  completions=("${(@f)$(dv-binary --tab "${words[@]}")}")
+
+  compadd -S '' -Q -U -V 'Available Options' -- "${completions[@]}"
+}
+)";
+		}
+
+		if (zshrc_content.find("# Begin Dirvana Zsh completion configuration") == std::string::npos) {
+			completion_block = "# Begin Dirvana Zsh completion configuration\n"
+				"fpath=(" + completions_dir + " $fpath)\n"
+				"\n"
+				"zstyle ':completion:*' list-grouped yes\n"
+				"zstyle ':completion:*' menu select\n"
+				"zstyle ':completion:*' matcher-list '' 'r:|=*'\n"
+				"\n"
+				"setopt menucomplete\n"
+				"setopt autolist\n"
+				"\n"
+				"autoload -Uz compinit && compinit -u\n"
+				"# End Dirvana Zsh completion configuration\n\n";
 		}
 	}
 
-	if (!already_configured) {
-		std::ofstream out(zshrc_path, std::ios::app);
+	// Prepend the completion block so compinit runs before any later completion config
+	if (!completion_block.empty()) {
+		std::ofstream out(zshrc_path);
 		if (!out.is_open()) {
 			std::cerr << "Failed to open " << zshrc_path << std::endl;
 			return 1;
 		}
-		out << R"(
+		out << completion_block << zshrc_content;
+		zshrc_content = completion_block + zshrc_content;
+	}
+
+	// Append PATH export only if the binary lives in ~/.local/bin and PATH isn't already set
+	std::string append_block;
+	if (is_local_bin && zshrc_content.find("# Add ~/.local/bin to PATH") == std::string::npos) {
+		append_block += "\n# Add ~/.local/bin to PATH\nexport PATH=\"$HOME/.local/bin:$PATH\"\n";
+	}
+
+	// Append the dv() function and auto-refresh if not already present
+	if (zshrc_content.find("dv-binary --enter dv") == std::string::npos) {
+		append_block += R"(
 # Dirvana
 dv() {
   local cmd
@@ -244,10 +311,18 @@ dv() {
 }
 dv-binary --enter dv refresh &> /dev/null & disown
 )";
-		std::cout << "echo Shell integration added to " << zshrc_path << std::endl;
-	} else {
-		std::cout << "echo Shell integration already present in " << zshrc_path << std::endl;
 	}
+
+	if (!append_block.empty()) {
+		std::ofstream out(zshrc_path, std::ios::app);
+		if (!out.is_open()) {
+			std::cerr << "Failed to open " << zshrc_path << std::endl;
+			return 1;
+		}
+		out << append_block;
+	}
+
+	std::cout << "echo Shell configuration written to " << zshrc_path << std::endl;
 
 	if (!handler.db.build(init_path)) {
 		std::cerr << "Failed to build database from " << init_path << std::endl;
