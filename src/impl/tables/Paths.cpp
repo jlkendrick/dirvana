@@ -207,7 +207,7 @@ bool PathsTable::should_exclude(const std::string& dir_name, const std::string& 
 		case ExclusionType::Exact:
 			if (dir_name == rule.pattern or path == rule.pattern)
 				return true;
-				break;
+			break;
 
 		case ExclusionType::Prefix:
 			if (dir_name.size() >= rule.pattern.size() and
@@ -225,7 +225,10 @@ bool PathsTable::should_exclude(const std::string& dir_name, const std::string& 
 			if (dir_name.find(rule.pattern) != std::string::npos)
 				return true;
 			break;
-				
+		
+		default:
+			std::cerr << "Unknown exclusion type: " << static_cast<int>(rule.type) << std::endl;
+			return false;
 		}
 	}
 
