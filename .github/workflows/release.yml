@@ -60,16 +60,31 @@ jobs:
               etc.install "docs/scripts/dirvana.zsh"
             end
 
+            def post_install
+              # Add source line to ~/.zshrc if not already present
+              zshrc = File.expand_path("~/.zshrc")
+              source_line = "source \\"#{etc}/dirvana.zsh\\""
+              if File.exist?(zshrc)
+                unless File.read(zshrc).include?("dirvana.zsh")
+                  File.open(zshrc, "a") { |f| f.puts "\\n# Dirvana\\n#{source_line}" }
+                end
+              else
+                File.write(zshrc, "# Dirvana\\n#{source_line}\\n")
+              end
+
+              # Initialize the database from the user's home directory
+              system "#{bin}/dv-binary", "--enter", "dv", "build", "--root", ENV["HOME"]
+            end
+
             def caveats
               <<~EOS
-                Add the following line to your ~/.zshrc to enable the \`dv\` command:
-
-                  source "\#{etc}/dirvana.zsh"
-
-                Then reload your shell and initialize the database:
+                Dirvana has been configured automatically. Reload your shell to activate it:
 
                   source ~/.zshrc
-                  dv build --root ~
+
+                To rebuild the database from a different root:
+
+                  dv build --root ~/Code
               EOS
             end
 
