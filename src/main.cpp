@@ -2,24 +2,16 @@
 #include "Handler.h"
 #include "Helpers.h"
 
-#include <fstream>
-
-
-void write_log(const std::string& message) {
-	std::ofstream log_file("/Users/jameskendrick/Code/Projects/dirvana/build/logs.txt", std::ios::app);
-	if (log_file.is_open()) {
-		log_file << message << std::endl;
-		log_file.close();
-	} else
-		std::cerr << "Unable to open log file" << std::endl;
-}
+#ifndef DIRVANA_VERSION
+#define DIRVANA_VERSION "dev"
+#endif
 
 int main(int argc, char* argv[]) {
 
 	// Initialize the database
 	Config config;
 	Database db(config);
-	Handler handler(db, "1.0.1");
+	Handler handler(db, DIRVANA_VERSION);
 
 	// Need at least 2 arguments: program name and a flag
 	if (argc < 2) {

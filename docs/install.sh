@@ -2,10 +2,6 @@
 
 set -e
 
-VERSION="main"
-
-echo "Installing Dirvana version $VERSION"
-
 # Determine the platform
 OS=$(uname -s)
 if [[ "$OS" != "Darwin" ]]; then
@@ -13,9 +9,26 @@ if [[ "$OS" != "Darwin" ]]; then
   exit 1
 fi
 ARCH=$(uname -m)
+
+# Resolve the latest release version
+VERSION=$(curl -fsSL https://api.github.com/repos/jlkendrick/dirvana/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+if [[ -z "$VERSION" ]]; then
+  echo "❌ Could not determine latest release version."
+  exit 1
+fi
+
+echo "Installing Dirvana $VERSION"
+
+# Map uname -m to CI asset name
+if [[ "$ARCH" == "arm64" ]]; then
+  BINARY_ASSET="dv-binary-arm64"
+else
+  BINARY_ASSET="dv-binary-x86_64"
+fi
+
 # Download the binary with backup handling
 echo "⏸️ Downloading Dirvana binary..."
-BINARY_URL="https://raw.githubusercontent.com/jlkendrick/dirvana/$VERSION/docs/bin/dv-binary"
+BINARY_URL="https://github.com/jlkendrick/dirvana/releases/download/${VERSION}/${BINARY_ASSET}"
 BINARY_PATH="$HOME/.local/bin"
 BINARY_FILE="$BINARY_PATH/dv-binary"
 

@@ -88,8 +88,13 @@ target_include_directories(sqlite3_lib PUBLIC
 target_link_libraries(dirvana_lib sqlite3_lib)
 
 # ======== Application Binary Configuration ========
+if(NOT DEFINED DIRVANA_VERSION)
+    set(DIRVANA_VERSION "dev")
+endif()
+
 add_executable(dv-binary src/main.cpp)
 target_link_libraries(dv-binary dirvana_lib)
+target_compile_definitions(dv-binary PRIVATE "DIRVANA_VERSION=\"${DIRVANA_VERSION}\"")
 
 # Additional size optimizations for the main binary
 target_compile_options(dv-binary PRIVATE ${SIZE_COMPILE_FLAGS})

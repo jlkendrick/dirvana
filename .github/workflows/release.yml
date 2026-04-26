@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest   # arm64 (Apple Silicon)
+            arch: arm64
+          - os: macos-13       # x86_64 (Intel)
+            arch: x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install CMake
+        run: brew install cmake
+
+      - name: Build
+        run: |
+          VERSION_CLEAN="${GITHUB_REF_NAME#v}"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDIRVANA_VERSION="${VERSION_CLEAN}"
+          cmake --build build --target dv-binary
+
+      - name: Stage binary
+        run: mv build/dv-binary dv-binary-${{ matrix.arch }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dv-binary-${{ matrix.arch }}
+          path: dv-binary-${{ matrix.arch }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Create GitHub release
+        run: |
+          gh release create ${{ github.ref_name }} \
+            dv-binary-arm64 \
+            dv-binary-x86_64 \
+            --generate-notes \
+            --title "Dirvana ${{ github.ref_name }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  homebrew:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Homebrew tap
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          VERSION=${{ github.ref_name }}
+          SHA=$(curl -sL "https://github.com/jlkendrick/dirvana/archive/refs/tags/${VERSION}.tar.gz" | shasum -a 256 | awk '{print $1}')
+
+          git clone https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/jlkendrick/homebrew-tap.git tap
+          mkdir -p tap/Formula
+
+          cat > tap/Formula/dirvana.rb << FORMULA
+class Dirvana < Formula
+  desc "Intelligent directory navigation and command augmentation tool for Zsh"
+  homepage "https://github.com/jlkendrick/dirvana"
+  url "https://github.com/jlkendrick/dirvana/archive/refs/tags/${VERSION}.tar.gz"
+  sha256 "${SHA}"
+  license "MIT"
+
+  depends_on "cmake" => :build
+  depends_on :macos
+
+  def install
+    system "cmake", "-S", ".", "-B", "build",
+           "-DCMAKE_BUILD_TYPE=Release",
+           "-DDIRVANA_VERSION=#{version}",
+           *std_cmake_args
+    system "cmake", "--build", "build", "--target", "dv-binary"
+    bin.install "build/dv-binary"
+    zsh_completion.install "docs/scripts/_dv"
+    etc.install "docs/scripts/dirvana.zsh"
+  end
+
+  def caveats
+    <<~EOS
+      Add the following line to your ~/.zshrc to enable the \`dv\` command:
+
+        source "#{etc}/dirvana.zsh"
+
+      Then reload your shell and initialize the database:
+
+        source ~/.zshrc
+        dv build --root ~
+    EOS
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/dv-binary --version")
+  end
+end
+FORMULA
+
+          cd tap
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add Formula/dirvana.rb
+          git diff --staged --quiet && echo "Formula already up to date" && exit 0
+          git commit -m "dirvana ${VERSION}"
+          git push
