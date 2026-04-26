@@ -15,6 +15,7 @@ public:
 		static int handle_re_build(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
 		static int handle_refresh(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
 		static int handle_install(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
+		static int handle_init(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
 		static int handle_add(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
 		static int handle_delete(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);
 		static int handle_list(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags);

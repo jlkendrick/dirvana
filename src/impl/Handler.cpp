@@ -1,5 +1,7 @@
 #include "Handler.h"
 
+#include <fstream>
+
 Handler::Handler(Database& db, const std::string& version) : db(db), version(version) {}
 
 int Handler::handle_tab(int argc, char* argv[]) {
@@ -67,6 +69,8 @@ int Handler::handle_enter(std::vector<std::string>& commands, std::vector<Flag>&
 			return Subcommands::handle_refresh(*this, commands, flags);
 		else if (first_token == "install")
 			return Subcommands::handle_install(*this, commands, flags);
+		else if (first_token == "init")
+			return Subcommands::handle_init(*this, commands, flags);
 		else if (first_token == "add")
 			return Subcommands::handle_add(*this, commands, flags);
 		else if (first_token == "delete")
@@ -198,6 +202,60 @@ int Handler::Subcommands::handle_install(Handler& handler, std::vector<std::stri
 	);
 	std::cout << "echo Updating Dirvana to version " << version << "..." << std::endl;
 	std::cout << "echo Running: " << curl_command << std::endl;
+	return 0;
+}
+
+int Handler::Subcommands::handle_init(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags) {
+	const char* home = std::getenv("HOME");
+	if (!home) {
+		std::cerr << "HOME environment variable not set" << std::endl;
+		return 1;
+	}
+
+	std::string zshrc_path = std::string(home) + "/.zshrc";
+	std::string init_path = ArgParsing::get_flag_value(flags, "root", std::string(home));
+
+	// Check if shell integration is already present
+	bool already_configured = false;
+	{
+		std::ifstream in(zshrc_path);
+		if (in.is_open()) {
+			std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+			already_configured = content.find("dv-binary --enter dv") != std::string::npos;
+		}
+	}
+
+	if (!already_configured) {
+		std::ofstream out(zshrc_path, std::ios::app);
+		if (!out.is_open()) {
+			std::cerr << "Failed to open " << zshrc_path << std::endl;
+			return 1;
+		}
+		out << R"(
+# Dirvana
+dv() {
+  local cmd
+  cmd=$(dv-binary --enter dv "$@")
+  if [[ -n "$cmd" ]]; then
+    eval "$cmd"
+  else
+    echo "dv-error: No command found for '$*'"
+  fi
+}
+dv-binary --enter dv refresh &> /dev/null & disown
+)";
+		std::cout << "echo Shell integration added to " << zshrc_path << std::endl;
+	} else {
+		std::cout << "echo Shell integration already present in " << zshrc_path << std::endl;
+	}
+
+	if (!handler.db.build(init_path)) {
+		std::cerr << "Failed to build database from " << init_path << std::endl;
+		return 1;
+	}
+
+	std::cout << "echo Database initialized from " << init_path << std::endl;
+	std::cout << "echo Run: source ~/.zshrc" << std::endl;
 	return 0;
 }
 

@@ -9,16 +9,44 @@ permissions:
   contents: write
 
 jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install CMake
+        run: brew install cmake
+
+      - name: Build
+        run: |
+          VERSION_CLEAN="${GITHUB_REF_NAME#v}"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDIRVANA_VERSION="${VERSION_CLEAN}"
+          cmake --build build --target dv-binary
+
+      - name: Stage binary
+        run: mv build/dv-binary dv-binary-arm64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dv-binary-arm64
+          path: dv-binary-arm64
+
   release:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
       - name: Create GitHub release
         run: |
           gh release create ${{ github.ref_name }} \
+            dv-binary-arm64 \
             --generate-notes \
             --title "Dirvana ${{ github.ref_name }}"
         env:
@@ -52,7 +80,7 @@ jobs:
             def install
               system "cmake", "-S", ".", "-B", "build",
                      "-DCMAKE_BUILD_TYPE=Release",
-                     "-DDIRVANA_VERSION=\#{version}",
+                     "-DDIRVANA_VERSION=#{version}",
                      *std_cmake_args
               system "cmake", "--build", "build", "--target", "dv-binary"
               bin.install "build/dv-binary"
@@ -60,36 +88,20 @@ jobs:
               etc.install "docs/scripts/dirvana.zsh"
             end
 
-            def post_install
-              # Add source line to ~/.zshrc if not already present
-              zshrc = File.expand_path("~/.zshrc")
-              source_line = "source \\"#{etc}/dirvana.zsh\\""
-              if File.exist?(zshrc)
-                unless File.read(zshrc).include?("dirvana.zsh")
-                  File.open(zshrc, "a") { |f| f.puts "\\n# Dirvana\\n#{source_line}" }
-                end
-              else
-                File.write(zshrc, "# Dirvana\\n#{source_line}\\n")
-              end
-
-              # Initialize the database from the user's home directory
-              system "#{bin}/dv-binary", "--enter", "dv", "build", "--root", ENV["HOME"]
-            end
-
             def caveats
               <<~EOS
-                Dirvana has been configured automatically. Reload your shell to activate it:
+                Run the following to finish setup:
+
+                  dv init
+
+                Then reload your shell:
 
                   source ~/.zshrc
-
-                To rebuild the database from a different root:
-
-                  dv build --root ~/Code
               EOS
             end
 
             test do
-              assert_match version.to_s, shell_output("\#{bin}/dv-binary --version")
+              assert_match version.to_s, shell_output("#{bin}/dv-binary --version")
             end
           end
           FORMULA

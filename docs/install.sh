@@ -9,6 +9,10 @@ if [[ "$OS" != "Darwin" ]]; then
   exit 1
 fi
 ARCH=$(uname -m)
+if [[ "$ARCH" != "arm64" ]]; then
+  echo "Dirvana only supports Apple Silicon (arm64). Intel Macs are not supported."
+  exit 1
+fi
 
 # Resolve the latest release version
 VERSION=$(curl -fsSL https://api.github.com/repos/jlkendrick/dirvana/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
@@ -19,16 +23,9 @@ fi
 
 echo "Installing Dirvana $VERSION"
 
-# Map uname -m to CI asset name
-if [[ "$ARCH" == "arm64" ]]; then
-  BINARY_ASSET="dv-binary-arm64"
-else
-  BINARY_ASSET="dv-binary-x86_64"
-fi
-
 # Download the binary with backup handling
 echo "⏸️ Downloading Dirvana binary..."
-BINARY_URL="https://github.com/jlkendrick/dirvana/releases/download/${VERSION}/${BINARY_ASSET}"
+BINARY_URL="https://github.com/jlkendrick/dirvana/releases/download/${VERSION}/dv-binary-arm64"
 BINARY_PATH="$HOME/.local/bin"
 BINARY_FILE="$BINARY_PATH/dv-binary"
 
