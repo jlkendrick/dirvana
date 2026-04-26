@@ -3,6 +3,7 @@
 #include <fstream>
 #include <filesystem>
 #include <mach-o/dyld.h>
+#include <unistd.h>
 
 Handler::Handler(Database& db, const std::string& version) : db(db), version(version) {}
 
@@ -218,6 +219,26 @@ static std::string get_executable_path() {
 	return canonical.string();
 }
 
+static std::string find_first_on_path(const std::string& name) {
+	const char* path_env = std::getenv("PATH");
+	if (!path_env) return "";
+	std::string path_str = path_env;
+	size_t start = 0;
+	while (start <= path_str.size()) {
+		size_t end = path_str.find(':', start);
+		std::string dir = path_str.substr(start, end == std::string::npos ? std::string::npos : end - start);
+		start = (end == std::string::npos) ? path_str.size() + 1 : end + 1;
+		if (dir.empty()) continue;
+		std::string candidate = dir + "/" + name;
+		if (access(candidate.c_str(), X_OK) == 0) {
+			std::error_code ec;
+			auto canonical = std::filesystem::canonical(candidate, ec);
+			return ec ? candidate : canonical.string();
+		}
+	}
+	return "";
+}
+
 int Handler::Subcommands::handle_init(Handler& handler, std::vector<std::string>& commands, std::vector<Flag>& flags) {
 	const char* home_env = std::getenv("HOME");
 	if (!home_env) {
@@ -231,6 +252,16 @@ int Handler::Subcommands::handle_init(Handler& handler, std::vector<std::string>
 	// Detect installation method from where the binary actually lives
 	std::string exe_path = get_executable_path();
 	bool is_local_bin = exe_path.find(home + "/.local/bin/") != std::string::npos;
+
+	// Warn if another dv-binary earlier on PATH will shadow this one — common when
+	// switching between the curl|bash installer (~/.local/bin) and Homebrew.
+	std::string first_on_path = find_first_on_path("dv-binary");
+	if (!first_on_path.empty() && !exe_path.empty() && first_on_path != exe_path) {
+		std::cerr << "Warning: another dv-binary is earlier on your PATH and will be used instead of this one." << std::endl;
+		std::cerr << "  Running:    " << exe_path << std::endl;
+		std::cerr << "  Shadowed by: " << first_on_path << std::endl;
+		std::cerr << "Remove the shadowing binary (e.g. `rm " << first_on_path << " && hash -r`) so `dv-binary` resolves to this install." << std::endl;
+	}
 
 	// Read existing .zshrc to avoid duplicating any block
 	std::string zshrc_content;
