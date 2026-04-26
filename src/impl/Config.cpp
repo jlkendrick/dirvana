@@ -92,7 +92,7 @@ bool Config::validate_config(json& user_config) const {
 			modified = true;
 		}
 
-		if (!user_config["paths"].contains("db") or (!std::filesystem::exists(user_config["paths"]["db"].get<std::string>()))) {
+		if (!user_config["paths"].contains("db") or user_config["paths"]["db"].get<std::string>().empty()) {
 			user_config["paths"]["db"] = default_config["paths"]["db"];
 			modified = true;
 		}
