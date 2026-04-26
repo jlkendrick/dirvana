@@ -17,6 +17,6 @@ jobs:
 
       - name: Build and test
         run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
           cmake --build build --target test
           ./build/test

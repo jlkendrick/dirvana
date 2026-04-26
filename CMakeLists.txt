@@ -104,14 +104,17 @@ set_target_properties(dv-binary PROPERTIES
 )
 
 # ======== Tests Configuration ========
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
-set(TEST_SOURCES
-    tests/test_Database.cpp
-    tests/test_Shortcuts.cpp
-    tests/test_Handler.cpp
-    tests/test_Helpers.cpp
-)
-add_executable(test ${TEST_SOURCES})
-target_link_libraries(test dirvana_lib GTest::GTest GTest::Main pthread)
-target_compile_definitions(test PRIVATE "TEST_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}/tests\"")
+option(BUILD_TESTS "Build test suite" OFF)
+if(BUILD_TESTS)
+    find_package(GTest REQUIRED)
+    include_directories(${GTEST_INCLUDE_DIRS})
+    set(TEST_SOURCES
+        tests/test_Database.cpp
+        tests/test_Shortcuts.cpp
+        tests/test_Handler.cpp
+        tests/test_Helpers.cpp
+    )
+    add_executable(test ${TEST_SOURCES})
+    target_link_libraries(test dirvana_lib GTest::GTest GTest::Main pthread)
+    target_compile_definitions(test PRIVATE "TEST_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}/tests\"")
+endif()
