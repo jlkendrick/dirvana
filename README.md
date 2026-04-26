@@ -37,6 +37,32 @@ The installer will:
 
 ---
 
+### Homebrew
+
+Install via the [`jlkendrick/tap`](https://github.com/jlkendrick/homebrew-tap) Homebrew tap:
+
+```sh
+brew tap jlkendrick/tap
+brew install dirvana
+```
+
+Or install in a single command:
+
+```sh
+brew install jlkendrick/tap/dirvana
+```
+
+Then finish setup by configuring your shell and building the initial database:
+
+```sh
+dv-binary init
+source ~/.zshrc
+```
+
+`dv-binary init` adds the Dirvana completion block and `dv()` function to your `~/.zshrc` and builds the directory database from your home directory. This step is also mentioned in the formula caveats.
+
+---
+
 ### Manual Installation
 
 If you prefer manual installation or need more control:
@@ -56,7 +82,22 @@ chmod +x ~/.local/bin/dv-binary
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-#### 2️⃣ Install Zsh Completion Script
+#### 2️⃣ Finish Setup
+
+You have two options for the rest of the setup:
+
+**Option A — Semi-automatic (recommended):** Let `dv-binary` configure your shell and build the database for you:
+
+```sh
+dv-binary init
+source ~/.zshrc
+```
+
+This installs the Zsh completion script to `~/.zsh/completions/_dv`, adds the completion block, `dv()` function, and PATH export to your `~/.zshrc`, and builds the initial database from your home directory. Skip to the [Usage](#-usage) section once it finishes.
+
+**Option B — Fully manual:** Continue with the steps below if you want full control over every file.
+
+#### 3️⃣ Install Zsh Completion Script
 
 Create the completion directory and download the completion script:
 
@@ -81,7 +122,7 @@ _dv() {
 }
 ```
 
-#### 3️⃣ Configure Zsh
+#### 4️⃣ Configure Zsh
 
 Add the following to your `~/.zshrc`:
 
@@ -114,7 +155,7 @@ dv() {
 dv-binary --enter dv refresh &> /dev/null & disown
 ```
 
-#### 4️⃣ Initialize Database
+#### 5️⃣ Initialize Database
 
 Reload your shell configuration and build the initial database:
 
