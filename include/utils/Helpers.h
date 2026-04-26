@@ -67,7 +67,7 @@ namespace ArgParsing {
 	static const std::unordered_set<std::string> system_shell_commands = {
 		"awk", "bash", "brew", "bun", "bunx", "cat", "cd", "chflags", "chmod", "chown", "cp", "curl", "cut",
 		"date", "dd", "diff", "dig", "dirname", "diskutil", "docker", "du", "ed", "env", "ex", "false", "fd",
-		"ffmpeg", "fgrep", "file", "find", "fish", "g++", "gcc", "gem", "gh", "git", "gmake", "grep", "gunzip",
+		"ffmpeg", "fgrep", "file", "find", "fish", "grimoire", "g++", "gcc", "gem", "gh", "git", "gmake", "grep", "gunzip",
 		"gzip", "head", "hg", "htop", "id", "jq", "kill", "killall", "less", "ln", "ls", "lsof", "make", "man",
 		"md5", "md5sum", "mkdir", "mv", "nano", "nice", "node", "npm", "npx", "open", "openssl", "perl", "pgrep",
 		"ping", "pnpm", "pod", "python", "python3", "readlink", "realpath", "rg", "rm", "rmdir", "rsync", "ruby",
