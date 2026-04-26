@@ -13,7 +13,7 @@ class HandlerTest : public ::testing::Test {
 protected:
 	void SetUp() override {
 		ConfigArgs args;
-		args.db_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/handler_test.db";
+		args.db_path = (filesystem::temp_directory_path() / "dirvana_handler_test.db").string();
 		filesystem::remove(args.db_path);
 		temp_config = make_unique<TempConfigFile>(args);
 		config = make_unique<Config>(temp_config->get_path());

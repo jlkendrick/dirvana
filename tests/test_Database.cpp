@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <filesystem>
+
 #include "Database.h"
 #include "utils/TempConfigFile.hpp"
 
@@ -23,14 +25,17 @@ void unordered_check(const string& root, const vector<string>& completions, cons
 class DatabaseTest : public ::testing::Test {
 	protected:
 		void SetUp() override {
-			// Create a temporary config file for testing
 			ConfigArgs args;
+			filesystem::remove(args.db_path);
 			temp_config_file = make_unique<TempConfigFile>(args);
 			config = make_unique<Config>(temp_config_file->get_path());
 		}
 		void TearDown() override {
-			// Clean up the temporary config file
+			string db_path = config->get_db_path();
+			db.reset();
+			config.reset();
 			temp_config_file.reset();
+			filesystem::remove(db_path);
 		}
 		unique_ptr<TempConfigFile> temp_config_file;
 		unique_ptr<Config> config;

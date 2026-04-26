@@ -114,3 +114,4 @@ set(TEST_SOURCES
 )
 add_executable(test ${TEST_SOURCES})
 target_link_libraries(test dirvana_lib GTest::GTest GTest::Main pthread)
+target_compile_definitions(test PRIVATE "TEST_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}/tests\"")

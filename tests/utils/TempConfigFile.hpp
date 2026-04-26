@@ -13,10 +13,14 @@
 
 using json = nlohmann::json;
 
+#ifndef TEST_SOURCE_DIR
+#define TEST_SOURCE_DIR "."
+#endif
+
 struct TempConfigFile {
 	struct Args {
-		std::string db_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/test.db";
-		std::string init_path = "/Users/jameskendrick/Code/Projects/dirvana/tests/mockfs";
+		std::string db_path = (std::filesystem::temp_directory_path() / "dirvana_test.db").string();
+		std::string init_path = std::string(TEST_SOURCE_DIR) + "/mockfs";
 		int max_results = 10;
 		int max_history_size = 100;
 		std::string match_type = "exact";
@@ -62,7 +66,7 @@ struct TempConfigFile {
 	std::string get_path() const {
 		return path;
 	};
-	std::string path = "/Users/jameskendrick/Code/Projects/dirvana/tests/configs/temp-config.json";
+	std::string path = (std::filesystem::temp_directory_path() / "dirvana_temp_config.json").string();
 };
 
 #endif // TEMPCONFIGFILE_H
