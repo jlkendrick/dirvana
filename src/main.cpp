@@ -20,34 +20,32 @@ int main(int argc, char* argv[]) {
 	}
 
 	std::string call_type = argc > 1 ? argv[1] : "";
-	
+
 	// Handle tab completion
 	if (call_type == "--tab") {
-		// auto start_time = std::chrono::high_resolution_clock::now();
-		int result = handler.handle_tab(argc, argv);
-		// auto end_time = std::chrono::high_resolution_clock::now();
-		// auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
-		// write_log("Tab completion time: " + std::to_string(duration.count() / 1000000.0) + " milliseconds");
-		return result;
+		return handler.handle_tab(argc, argv);
 	}
-	
-	auto [
-		valid,
-		commands,
-		flags
-	] = ArgParsing::process_args(argc, argv);
+
+	// Direct subcommand invocation (e.g. `dv-binary init`) — used before the dv() shell function
+	// is available. Synthesize the `--enter dv` prefix so process_args sees the expected structure.
+	std::vector<std::string> wrapped_storage;
+	std::vector<char*> wrapped_argv;
+	int effective_argc = argc;
+	char** effective_argv = argv;
+	if (call_type != "--enter") {
+		wrapped_storage.reserve(argc + 2);
+		wrapped_storage.push_back(argv[0]);
+		wrapped_storage.push_back("--enter");
+		wrapped_storage.push_back("dv");
+		for (int i = 1; i < argc; i++) wrapped_storage.push_back(argv[i]);
+		for (auto& s : wrapped_storage) wrapped_argv.push_back(s.data());
+		effective_argc = wrapped_argv.size();
+		effective_argv = wrapped_argv.data();
+	}
+
+	auto [valid, commands, flags] = ArgParsing::process_args(effective_argc, effective_argv);
 	if (!valid)
-		// Error message already printed in process_args
 		return 1;
 
-	// Handle enter key press
-	else if (call_type == "--enter") {
-		return handler.handle_enter(commands, flags);
-	}
-	
-	else {
-		std::cerr << "Invalid flag: " << call_type << std::endl;
-		std::cerr << "Usage: " << argv[0] << " [-tab|-enter] dv [command] [path]" << std::endl;
-		return 1;
-	}
+	return handler.handle_enter(commands, flags);
 }

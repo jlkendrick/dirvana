@@ -92,7 +92,7 @@ jobs:
               <<~EOS
                 Run the following to finish setup:
 
-                  dv init
+                  dv-binary init
 
                 Then reload your shell:
 

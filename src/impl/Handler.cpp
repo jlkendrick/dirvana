@@ -322,15 +322,18 @@ dv-binary --enter dv refresh &> /dev/null & disown
 		out << append_block;
 	}
 
-	std::cout << "echo Shell configuration written to " << zshrc_path << std::endl;
+	std::cerr << "Shell configuration written to " << zshrc_path << std::endl;
 
 	if (!handler.db.build(init_path)) {
 		std::cerr << "Failed to build database from " << init_path << std::endl;
 		return 1;
 	}
 
-	std::cout << "echo Database initialized from " << init_path << std::endl;
-	std::cout << "echo Run: source ~/.zshrc" << std::endl;
+	std::cerr << "Database initialized from " << init_path << std::endl;
+	std::cerr << "Run: source ~/.zshrc" << std::endl;
+
+	// Emit a no-op on stdout so the dv() shell wrapper's eval succeeds silently
+	std::cout << ":" << std::endl;
 	return 0;
 }
 
