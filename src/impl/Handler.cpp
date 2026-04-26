@@ -230,8 +230,6 @@ int Handler::Subcommands::handle_init(Handler& handler, std::vector<std::string>
 
 	// Detect installation method from where the binary actually lives
 	std::string exe_path = get_executable_path();
-	bool is_homebrew = exe_path.find("/opt/homebrew/") != std::string::npos ||
-	                   exe_path.find("/usr/local/Cellar/") != std::string::npos;
 	bool is_local_bin = exe_path.find(home + "/.local/bin/") != std::string::npos;
 
 	// Read existing .zshrc to avoid duplicating any block
@@ -242,17 +240,17 @@ int Handler::Subcommands::handle_init(Handler& handler, std::vector<std::string>
 			zshrc_content = std::string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 	}
 
-	// Homebrew installs _dv into its own zsh site-functions and manages fpath, so skip these for brew
-	std::string completion_block;
-	if (!is_homebrew) {
-		std::string completions_dir = home + "/.zsh/completions";
-		std::error_code ec;
-		std::filesystem::create_directories(completions_dir, ec);
+	// Always install _dv and add the completion block — Homebrew adds its own _dv too but
+	// compinit picks the first match in fpath, so duplication is harmless. Skipping this on
+	// Homebrew was a mistake: Homebrew adds to fpath but doesn't run compinit.
+	std::string completions_dir = home + "/.zsh/completions";
+	std::error_code ec;
+	std::filesystem::create_directories(completions_dir, ec);
 
-		std::string completion_file = completions_dir + "/_dv";
-		if (!std::filesystem::exists(completion_file)) {
-			std::ofstream out(completion_file);
-			out << R"(#compdef dv
+	std::string completion_file = completions_dir + "/_dv";
+	if (!std::filesystem::exists(completion_file)) {
+		std::ofstream out(completion_file);
+		out << R"(#compdef dv
 
 _dv() {
   local completions
@@ -261,22 +259,22 @@ _dv() {
   compadd -S '' -Q -U -V 'Available Options' -- "${completions[@]}"
 }
 )";
-		}
+	}
 
-		if (zshrc_content.find("# Begin Dirvana Zsh completion configuration") == std::string::npos) {
-			completion_block = "# Begin Dirvana Zsh completion configuration\n"
-				"fpath=(" + completions_dir + " $fpath)\n"
-				"\n"
-				"zstyle ':completion:*' list-grouped yes\n"
-				"zstyle ':completion:*' menu select\n"
-				"zstyle ':completion:*' matcher-list '' 'r:|=*'\n"
-				"\n"
-				"setopt menucomplete\n"
-				"setopt autolist\n"
-				"\n"
-				"autoload -Uz compinit && compinit -u\n"
-				"# End Dirvana Zsh completion configuration\n\n";
-		}
+	std::string completion_block;
+	if (zshrc_content.find("# Begin Dirvana Zsh completion configuration") == std::string::npos) {
+		completion_block = "# Begin Dirvana Zsh completion configuration\n"
+			"fpath=(" + completions_dir + " $fpath)\n"
+			"\n"
+			"zstyle ':completion:*' list-grouped yes\n"
+			"zstyle ':completion:*' menu select\n"
+			"zstyle ':completion:*' matcher-list '' 'r:|=*'\n"
+			"\n"
+			"setopt menucomplete\n"
+			"setopt autolist\n"
+			"\n"
+			"autoload -Uz compinit && compinit -u\n"
+			"# End Dirvana Zsh completion configuration\n\n";
 	}
 
 	// Prepend the completion block so compinit runs before any later completion config
