@@ -9,52 +9,16 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest   # arm64 (Apple Silicon)
-            arch: arm64
-          - os: macos-13       # x86_64 (Intel)
-            arch: x86_64
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install CMake
-        run: brew install cmake
-
-      - name: Build
-        run: |
-          VERSION_CLEAN="${GITHUB_REF_NAME#v}"
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDIRVANA_VERSION="${VERSION_CLEAN}"
-          cmake --build build --target dv-binary
-
-      - name: Stage binary
-        run: mv build/dv-binary dv-binary-${{ matrix.arch }}
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dv-binary-${{ matrix.arch }}
-          path: dv-binary-${{ matrix.arch }}
-
   release:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-
       - name: Create GitHub release
         run: |
           gh release create ${{ github.ref_name }} \
-            dv-binary-arm64 \
-            dv-binary-x86_64 \
             --generate-notes \
             --title "Dirvana ${{ github.ref_name }}"
         env:
